@@ -1,0 +1,148 @@
+import { Method, Handler, Route, Match, Guard, WriteType, Context } from '../types';
+import createMatch from './createMatch';
+export const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']);
+
+function isMethod(v: any): v is Method {
+	return methods.has(v);
+}
+function getMethods(methods: Method | Iterable<Method>): Method[] {
+	if (typeof methods === 'string') {
+		return [methods.toUpperCase()].filter(isMethod);
+	}
+	if (methods && typeof methods[Symbol.iterator] === 'function') {
+		return [...methods]
+			.map(v => typeof v === 'string' && v.toUpperCase())
+			.filter(isMethod);
+	}
+	if (length in methods) {
+		return Array.from(methods)
+			.map(v => typeof v === 'string' && v.toUpperCase())
+			.filter(isMethod);
+	}
+	return ['GET', 'POST', 'PUT', 'DELETE'];
+}
+
+
+export default class Router {
+	disabled = false;
+	/** 当前路由路径 */
+	readonly path: string;
+	/** 路由列表 */
+	private readonly __routes: (Route | Router)[] = [];
+	readonly plugin?: string;
+	readonly match: Match;
+	constructor(path: string = '', plugin?: string) {
+		path = path.replace(/(.)\/+$/, '$1').replace(/\/+/g, '/');
+		this.path = path;
+		this.match = createMatch(path, false);
+		this.plugin = plugin;
+	}
+	/** 子路由 */
+	route(path: string | Router, plugins?: string): Router {
+		const router = path instanceof Router ? path : new Router(path, plugins);
+		this.__routes.push(router);
+		return router;
+	}
+	readonly guards = new Set<Guard<any, any, any>>();
+	/**
+	 * 注册处理函数
+	 * @param method  要注册的方法
+	 * @param path    要注册的路径
+	 * @param handlers 要注册的处理函数
+	 */
+	verb(
+		methods: Method | Iterable<Method> | Method[],
+		path: string,
+		...handlers: Handler[]
+	) {
+		methods = getMethods(methods);
+		if (!(methods as Method[]).length) { return null; }
+
+		const route: Route = {
+			path: path.replace(/(.)\/+$/, '$1').replace(/\/+/g, '/'),
+			match: createMatch(path, true),
+			methods: new Set(methods),
+			handlers,
+		};
+		const routes = this.__routes;
+		routes.push(route);
+		let removed = false;
+		return () => {
+			if (removed) { return; }
+			const index = routes.indexOf(route);
+			if (index < 0) { return; }
+			routes.splice(index, 1);
+		};
+	}
+
+	/**
+	 * 注册 HTTP GET 处理函数
+	 * @param path     要注册的路径
+	 * @param handlers 要注册的处理函数
+	 */
+	 get(path: string, ...handlers: Handler[]) {
+		return this.verb('GET', path, ...handlers);
+	}
+	/**
+	 * 注册 HTTP POST 处理函数
+	 * @param path     要注册的路径
+	 * @param handlers 要注册的处理函数
+	 */
+	post(path: string, ...handlers: Handler[]) {
+		return this.verb('POST', path, ...handlers);
+	}
+	/**
+	 * 注册 HTTP PUT 处理函数
+	 * @param path     要注册的路径
+	 * @param handlers 要注册的处理函数
+	 */
+	put(path: string, ...handlers: Handler[]) {
+		return this.verb('PUT', path, ...handlers);
+	}
+	/**
+	 * 注册 HTTP DELETE 处理函数
+	 * @param path     要注册的路径
+	 * @param handlers 要注册的处理函数
+	 */
+	delete(path: string, ...handlers: Handler[]) {
+		return this.verb('DELETE', path, ...handlers);
+	}
+	/**
+	 * 注册 HTTP HEAD 处理函数
+	 * @param path     要注册的路径
+	 * @param handlers 要注册的处理函数
+	 */
+	head(path: string, ...handlers: Handler[]) {
+		return this.verb('HEAD', path, ...handlers);
+	}
+	/**
+	 * 对处理函数的结果进行处理
+	 * @description 如果需要自定义处理，需要重载此方法
+	 * @description 此方法由路由调用
+	 * @param result 处理函数的结果
+	 */
+	return(ctx: Context, result: any): void | boolean | PromiseLike<void | boolean> {
+		if (typeof result === 'boolean') { return result; }
+		return ctx.write(result as WriteType).then(async e => {
+			if (e) { return; }
+			if (typeof result !== 'object') { return; }
+			ctx.responseType = 'application/json';
+			await ctx.write(JSON.stringify(result));
+			return false;
+		});
+	}
+	/**
+	 * 处理完成后，实例销毁前，如果有错误未被处理，将会交由此参数处理
+	 * @description 如果需要自定义处理，需要重载此方法
+	 * @description 此方法由路由调用
+	 */
+	 catch(ctx: Context, e: any): void | PromiseLike<void> {
+		return ctx.log.error(e).then(() => {});
+	}
+	/**
+	 * 处理完成后，实例即将销毁时的处理函数
+	 * @description 如果有销毁操作，应当在 finally 中通过实现
+	 * @description 此方法由 destroy 调用
+	 */
+	 finally(ctx: Context): void | PromiseLike<void> {}
+}
