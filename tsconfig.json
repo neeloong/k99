@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "baseUrl": "./",
+    "paths": {
+      "k99": ["src/core"],
+      "k99/cli": ["src/cli"],
+      "k99/node": ["src/node"]
+    },
+    "esModuleInterop": true
+  },
+  "include": ["src"],
+}
