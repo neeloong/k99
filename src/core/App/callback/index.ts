@@ -9,7 +9,6 @@ import type {
 	Handler,
 	Guard,
 } from '../../types';
-import type Router from '../../Router';
 import type App from '..';
 import createRequest from '../../utils/createRequest';
 import find from './find';
@@ -27,7 +26,6 @@ function run(
 	app: App,
 	{ method, url, pathname, search, query, read, headers } : K99Request,
 	services: Map<Service<any, any, any>, object>,
-	router: Router,
 	handlers: Handler[],
 	params: any,
 	abortPromise: Promise<null>,
@@ -153,8 +151,8 @@ function run(
 		},
 	};
 	Promise.race([
-		abortPromise.finally(() => abortResponse),
-		main(app, context, router, handlers),
+		abortPromise.finally(abortResponse),
+		main(context, handlers).catch(async e => { await app.log.error(e); }),
 	]).finally(() => {
 		destroyed = true;
 		let promise: Promise<void> = Promise.resolve();
@@ -194,12 +192,11 @@ export default function callback(
 
 	return Promise.race([abortPromise, findPromise]).then(it => {
 		if (!it) { return destroyServices(app, guards); }
-		const {router, handlers, params} = it;
+		const {handlers, params} = it;
 		return run(
 			app,
 			request,
 			guards,
-			router,
 			handlers,
 			params,
 			abortPromise,

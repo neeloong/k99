@@ -115,34 +115,4 @@ export default class Router {
 	head(path: string, ...handlers: Handler[]) {
 		return this.verb('HEAD', path, ...handlers);
 	}
-	/**
-	 * 对处理函数的结果进行处理
-	 * @description 如果需要自定义处理，需要重载此方法
-	 * @description 此方法由路由调用
-	 * @param result 处理函数的结果
-	 */
-	return(ctx: Context, result: any): void | boolean | PromiseLike<void | boolean> {
-		if (typeof result === 'boolean') { return result; }
-		return ctx.write(result as WriteType).then(async e => {
-			if (e) { return; }
-			if (typeof result !== 'object') { return; }
-			ctx.responseType = 'application/json';
-			await ctx.write(JSON.stringify(result));
-			return false;
-		});
-	}
-	/**
-	 * 处理完成后，实例销毁前，如果有错误未被处理，将会交由此参数处理
-	 * @description 如果需要自定义处理，需要重载此方法
-	 * @description 此方法由路由调用
-	 */
-	 catch(ctx: Context, e: any): void | PromiseLike<void> {
-		return ctx.log.error(e).then(() => {});
-	}
-	/**
-	 * 处理完成后，实例即将销毁时的处理函数
-	 * @description 如果有销毁操作，应当在 finally 中通过实现
-	 * @description 此方法由 destroy 调用
-	 */
-	 finally(ctx: Context): void | PromiseLike<void> {}
 }

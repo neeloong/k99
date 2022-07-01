@@ -18,7 +18,6 @@ function matchRoute(
 }
 
 interface Item {
-	router: Router;
 	params: any;
 	handlers: Handler[];
 }
@@ -74,7 +73,7 @@ export default async function find(
 			route, method, path, params, thisPath, keyLen
 		);
 		if (!newParams) { continue; }
-		return { handlers: route.handlers, router, params: newParams };
+		return { handlers: route.handlers, params: newParams };
 	}
 	return null;
 }
