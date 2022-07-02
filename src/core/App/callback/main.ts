@@ -1,8 +1,8 @@
 
-import type { Context, Handler, WriteType } from '../../types';
+import type { ActionContext, Handler, WriteType } from '../../types';
 
 async function runHandle(
-	context: Context,
+	context: ActionContext,
 	handle: Handler
 ) {
 	const result = await handle(context);
@@ -20,7 +20,7 @@ async function runHandle(
 }
 
 export default async function main(
-	context: Context,
+	context: ActionContext,
 	handlers: Handler[],
 ) {
 	for (const handle of handlers) {

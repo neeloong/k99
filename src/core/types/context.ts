@@ -10,28 +10,18 @@ import type { Log } from './Log';
 import type { K99Request } from './K99Request';
 import type { MaybePromise } from './promise';
 
-interface ServiceExecContext<D> extends Context { readonly channel: 'exec'; readonly state: D; }
-interface ServiceDestroyContext<D> extends Context { readonly channel: 'destroy'; readonly state: D; }
-interface GuardTestContext<D> { readonly channel: 'test'; readonly state: D; }
-interface GuardClearContext<D> { readonly channel: 'clear'; readonly state: D; }
+export interface ServiceExecContext<D> extends Context { readonly channel: 'exec'; readonly state: D; }
+export interface ServiceDestroyContext<D> extends Context { readonly channel: 'destroy'; readonly state: D; }
 export type ServiceContext<D> =
 	| ServiceExecContext<D>
-	| ServiceDestroyContext<D>
-	| GuardTestContext<D>
-	| GuardClearContext<D>;
+	| ServiceDestroyContext<D>;
 
 export interface Service<T, D extends object, P extends any[] = []> {
 	(ctx: ServiceExecContext<D>, ...p: P): T;
 	(ctx: ServiceDestroyContext<D>): MaybePromise<void>;
 }
-export interface Guard<T, D extends object, P extends any[] = any[]> extends Service<T, D, P> {
-	(ctx: GuardTestContext<D>, params: any, method: Method): MaybePromise<boolean | D>;
-	(ctx: GuardClearContext<D>): MaybePromise<any>;
-}
 
 export interface Context {
-	/** 渠道，仅在服务中有效 */
-	readonly channel?: string;
 	/** 当前的路由 */
 	readonly app: App;
 	readonly setting: Setting;
@@ -96,8 +86,6 @@ export interface Context {
 
 	/** 会话是否已经结束 */
 	readonly destroyed: boolean;
-	/** 输出是否已经因为各种原因结束 */
-	readonly finished: boolean;
 	/** 响应头是否已经被发送 */
 	readonly headersSent: boolean;
 	/** 状态码 */
@@ -149,6 +137,10 @@ export interface Context {
 		name: T,
 		value?: K99Headers[T]
 	): void;
+}
+export interface ActionContext extends Context {
+	/** 输出是否已经因为各种原因结束 */
+	readonly finished: boolean;
 	/** 将数据写入相应 */
 	write(chunk: WriteType): Promise<boolean>;
 }

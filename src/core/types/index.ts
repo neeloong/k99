@@ -1,4 +1,5 @@
 export * from './context';
+export * from './guard';
 export * from './promise';
 export * from './cookie';
 export * from './handle';

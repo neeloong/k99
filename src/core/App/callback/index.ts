@@ -2,12 +2,11 @@ import type {
 	K99Request,
 	K99Headers,
 	CookieClearOption,
-	Context,
+	ActionContext,
 	WriteType,
 	K99Response,
 	Service,
-	Handler,
-	Guard,
+	Context,
 } from '../../types';
 import type App from '..';
 import createRequest from '../../utils/createRequest';
@@ -20,42 +19,47 @@ import createRead from './createRead';
 import main from './main';
 
 
+function destroyServices(
+	context: Context,
+	services: Map<Service<any, any, any>, object>,
+) {
+	let promise: Promise<void> = Promise.resolve();
+	const {app} = context;
+	for (const [service, state] of [...services.entries()]) {
+		promise = promise.then(() => service(Object.create(context, {
+			channel: {value: 'destroy'},
+			state: {value: state},
+		}))).catch(e => app.log.error(e));
+	}
+	return promise;
+}
+
 const hostRegex = /^(\[[^\]]+\]|^:):(\d+)$/;
 
-function run(
+export default function callback(
 	app: App,
-	{ method, url, pathname, search, query, read, headers } : K99Request,
-	services: Map<Service<any, any, any>, object>,
-	handlers: Handler[],
-	params: any,
-	abortPromise: Promise<null>,
+	{ method, url, pathname, search, query, read, headers, aborted } : K99Request,
 	parent?: Context,
 ) {
 	const host = headers.host || '';
 	const hostInfo = hostRegex.exec(host);
 	const [hostname, port] = hostInfo ? [hostInfo[1], hostInfo[2]] : [host, ''];
 
+	const services = new Map<Service<any, any, any>, object>();
 	const cookies = getRequestCookies(headers['cookie'] || '');
 	const sentCookies: CookieInfo[] = [];
-	const [writable, readable, abortResponse] = createWrite();
+
+	const abortPromise: Promise<null> = aborted
+		? aborted.then(e => Promise.reject(e))
+		: new Promise(() =>{});
+
 	let status = 200;
 	let resHeaders: K99Headers = {};
-	let resolve: ((any: K99Response) => void) | undefined;
-	let response: K99Response | undefined;
+	let headersSent = false;
 	let destroyed = false;
-	function send() {
-		if (response) { return; }
-		response = {
-			...readable,
-			get status() { return status; },
-			get finished() { return writable.ended; },
-			headers: Object.freeze({...resHeaders}),
-			[Symbol.asyncIterator]() { return readable; },
-		};
-		if (resolve) { resolve(response); }
-	}
 	const root = parent?.root;
 
+	let params: any = {};
 	const context: Context = {
 		app, setting: app.setting, asset: app.asset, log: app.log,
 		parent,
@@ -74,7 +78,8 @@ function run(
 			}), ...p);
 		},
 
-		method, url, pathname, search, query, params,
+		method, url, pathname, search, query,
+		get params() { return params; },
 		headers: Object.freeze({...headers}),
 		host, hostname, port,
 		requestType: headers['content-type'] || '',
@@ -87,38 +92,23 @@ function run(
 		cookies,
 		read: createRead(read),
 
-		/** 当前对象是否已经被销毁 */
 		get destroyed() { return destroyed; },
-		/** 相应是否已结束 */
-		get finished() { return writable.ended; },
-		/** 响应头是否已经被发送 */
-		get headersSent() { return Boolean(response); },
-		/** 状态码 */
+		get headersSent() { return headersSent; },
 		get status() { return status; },
-		set status(v) { if (response) { return; } status = v; },
+		set status(v) { if (headersSent) { return; } status = v; },
 		get location() { return resHeaders['location'] || ''; },
-		set location(url) { if (!response) { resHeaders['location'] = url; } },
-		/** 相应头中的 contentType */
+		set location(url) { if (!headersSent) { resHeaders['location'] = url; } },
 		get responseType() { return resHeaders['content-type'] || ''; },
 		set responseType(v) {
-			if (!response) { resHeaders['content-type'] = v; }
+			if (!headersSent) { resHeaders['content-type'] = v; }
 		},
-		/**
-		 * 获取已设置的 cookie 信息
-		 */
 		getCookie(name?: string) { return getCookie(sentCookies, name); },
-		/**
-		 * 设置 cookie
-		 * @param name cookie 名称
-		 * @param value cookie 内容
-		 * @param option 选项
-		 */
 		setCookie(
 			name,
 			value,
 			{ expire, domain, path, secure, httpOnly } = {},
 		) {
-			if (response) { return; }
+			if (headersSent) { return; }
 			sentCookies.push({
 				name, value, expire, domain, path, secure, httpOnly,
 			});
@@ -128,7 +118,7 @@ function run(
 			name?: string | CookieClearOption,
 			opt?: CookieClearOption | boolean,
 		): void {
-			if (response) { return; }
+			if (headersSent) { return; }
 			clearCookie(sentCookies, cookies, name, opt);
 			resHeaders['set-cookie'] = getCookieHeader(sentCookies);
 		},
@@ -138,71 +128,72 @@ function run(
 		getHeaders() { return {...resHeaders}; },
 		getHeader(n) { return resHeaders[n]; },
 		setHeader(n, v) {
-			if (response) { return; }
+			if (headersSent) { return; }
 			if (v === undefined) {
 				delete resHeaders[n];
 			} else {
 				resHeaders[n] = v;
 			}
 		},
-		write(chunk: WriteType): Promise<boolean> {
-			send();
-			return writable.write(chunk);
-		},
 	};
-	Promise.race([
-		abortPromise.finally(abortResponse),
-		main(context, handlers).catch(async e => { await app.log.error(e); }),
-	]).finally(() => {
-		destroyed = true;
-		let promise: Promise<void> = Promise.resolve();
-		for (const [service, state] of [...services.entries()]) {
-			promise = promise.then(() => service(Object.create(context, {
-				channel: {value: 'destroy'},
-				state: {value: state},
-			}))).catch(e => app.log.error(e));
+
+	return Promise.race([
+		abortPromise,
+		find(app, context, v => params = v, {}, '', 0),
+	]).then(handlers => {
+		if (!handlers) {
+			destroyed = true;
+			headersSent = true;
+			destroyServices(context, services);
+			return null;
 		}
-		return promise.then(send).then(() => writable.end());
-	});
 
-	return new Promise<K99Response>(r => {
-		if (response) { r(response); } else { resolve = r; }
-	});
-}
-function destroyServices(app: App, guards: Map<Guard<any, any, any>, object>) {
-	let promise: Promise<void> = Promise.resolve();
-	for (const [guard, state] of [...guards.entries()]) {
-		promise = promise
-			.then(() => guard({ channel: 'clear', state }))
-			.catch(e => app.log.error(e));
-	}
-	return promise.then(() => null);
-}
-export default function callback(
-	app: App,
-	request: K99Request,
-	parent?: Context,
-): Promise<null | K99Response> {
-	const { aborted, method, pathname } = request;
-	const guards = new Map<Guard<any, any, any>, object>();
-	const abortPromise: Promise<null> = aborted
-		? aborted.then(e => Promise.reject(e))
-		: new Promise(() =>{});
-	const findPromise = find(app, method, pathname, guards, {}, '', 0);
+		const [writable, readable, abortResponse] = createWrite();
+		 abortPromise.finally(abortResponse);
 
-	return Promise.race([abortPromise, findPromise]).then(it => {
-		if (!it) { return destroyServices(app, guards); }
-		const {handlers, params} = it;
-		return run(
-			app,
-			request,
-			guards,
-			handlers,
-			params,
-			abortPromise,
-			parent,
+		let resolve: ((any: K99Response) => void) | undefined;
+		let response: K99Response | undefined;
+		function send() {
+			if (response) { return; }
+			headersSent = true;
+			response = {
+				...readable,
+				get status() { return status; },
+				get finished() { return writable.ended; },
+				headers: Object.freeze({...resHeaders}),
+				[Symbol.asyncIterator]() { return readable; },
+			};
+			if (resolve) { resolve(response); }
+		}
+		const contextS: Omit<ActionContext, keyof Context> = {
+			get finished() { return writable.ended; },
+			write(chunk: WriteType): Promise<boolean> {
+				send();
+				return writable.write(chunk);
+			},
+		};
+
+		const actionContext: ActionContext = Object.create(
+			context,
+			Object.getOwnPropertyDescriptors(contextS),
 		);
-	}, e => findPromise
-		.then(() => destroyServices(app, guards))
-		.then(() => Promise.reject(e)));
+		Promise.race([
+			abortPromise,
+			main(actionContext, handlers).catch(e => app.log.error(e)),
+		]).finally(() => {
+			destroyed = true;
+			send();
+			destroyServices(context, services);
+			writable.end();
+		});
+
+		return new Promise<K99Response>(r => {
+			if (response) { r(response); } else { resolve = r; }
+		});
+	}, e => {
+		destroyed = true;
+		headersSent = true;
+		destroyServices(context, services);
+		return Promise.reject(e);
+	});
 }

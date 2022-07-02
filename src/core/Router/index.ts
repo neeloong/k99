@@ -1,4 +1,4 @@
-import { Method, Handler, Route, Match, Guard, WriteType, Context } from '../types';
+import { Method, Handler, Route, Match, Guard } from '../types';
 import createMatch from './createMatch';
 export const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']);
 
@@ -43,7 +43,7 @@ export default class Router {
 		this.__routes.push(router);
 		return router;
 	}
-	readonly guards = new Set<Guard<any, any, any>>();
+	readonly guards = new Set<Guard>();
 	/**
 	 * 注册处理函数
 	 * @param method  要注册的方法

@@ -1,4 +1,4 @@
-import { Route, Method, Guard, Handler, Service } from '../../types';
+import { Route, Method, Handler, Context } from '../../types';
 import Router from '../../Router';
 
 
@@ -17,38 +17,28 @@ function matchRoute(
 	return params;
 }
 
-interface Item {
-	params: any;
-	handlers: Handler[];
-}
 export default async function find(
 	router: Router,
-	method: Method,
-	path: string,
-	guards: Map<Guard<any, any, any>, object>,
+	context: Context,
+	setParams: (v: any) => void,
 	baseParams: object,
 	parentPath: string,
 	key: number
-): Promise<Item | null> {
+): Promise<Handler[] | null> {
 	if (router.disabled) { return null; }
 	const {match} = router;
+	const {pathname: path, method} = context;
 	const result = match(path, parentPath, key);
 	if (!result) { return null; }
 	const params = match.isRoot ? result : {...baseParams, ...result};
-
+	setParams(params);
 	for (const guard of router.guards) {
 		try {
-			const v = guards.get(guard);
-			const ret = await guard({
-				channel: 'test',
-				state: v,
-			}, params, method);
+			if (context.destroyed) { return null; }
+			const ret = await guard(Object.create(context, {
+				params: {value: params},
+			}));
 			if (!ret) { return null; }
-			if (typeof ret === 'object') {
-				guards.set(guard, ret);
-			} else if (!v) {
-				guards.set(guard, {});
-			}
 		} catch {
 			return null;
 		}
@@ -56,12 +46,12 @@ export default async function find(
 	const keyLen = match.isRoot ? match.keyLen : match.keyLen + key;
 	const thisPath = result.$path;
 	for (const route of Array.from((router as any).__routes) as (Route | Router)[]) {
+		if (context.destroyed) { return null; }
 		if (route instanceof Router) {
 			const res = await find(
 				route,
-				method,
-				path,
-				guards,
+				context,
+				setParams,
 				params,
 				thisPath,
 				keyLen
@@ -73,7 +63,8 @@ export default async function find(
 			route, method, path, params, thisPath, keyLen
 		);
 		if (!newParams) { continue; }
-		return { handlers: route.handlers, params: newParams };
+		setParams(newParams);
+		return route.handlers;
 	}
 	return null;
 }
