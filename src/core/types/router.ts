@@ -3,13 +3,7 @@ import { Handler } from './handle';
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD';
 
 interface Match {
-	(
-		pathname: string,
-		parent: string,
-		key: number,
-	): null | Match.Result;
-	keyLen: number;
-	isRoot?: boolean;
+	(pathname: string, parent: string): null | Match.Result;
 }
 declare namespace Match {
 	export interface Result {

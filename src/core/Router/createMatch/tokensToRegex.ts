@@ -1,67 +1,55 @@
-import { Key, Token } from './toTokens';
+import { Token } from './toTokens';
 
 export function escapeString(str: string) {
 	return decodeURIComponent(str).replace(/([.+*?=^!:${}()[\]|\\])/g, '\\$1');
 }
 
 function createSetFn(
-	{name, modifier, suffix, prefix}: Key
-): (p: Record<string, any>, s: string, k: number) => void {
-	if (!['*', '+'].includes(modifier) || !prefix && !suffix) {
-		if (typeof name === 'number') {
-			return (p, s, k) => p[name + k] = decodeURIComponent(s);
-		}
+	name: string,
+	prefix: string,
+	pattern: string,
+	suffix: string,
+	modifier: string,
+): (p: Record<string, any>, s: string) => void {
+	if (!['*', '+'].includes(modifier)) {
 		return (p, s) => p[name] = decodeURIComponent(s);
 	}
-	const split = prefix + suffix;
-	if (typeof name === 'number') {
-		return (p, s, k) => {
-			p[name + k] = s.split(split).map(value =>  decodeURIComponent(value));
-		};
-	}
 	return (p, s) => {
-		p[name] = s.split(split).map(value =>  decodeURIComponent(value));
+		const list: string[] = p[name] = [];
+		const regex = new RegExp(`${ prefix }(${ pattern })${ suffix }`, 'g');
+		let result: RegExpExecArray | null = null;
+		// eslint-disable-next-line no-cond-assign
+		while (result = regex.exec(s)) {
+			if (!result[0]) { break; }
+			list.push(decodeURIComponent(result[1]));
+		}
 	};
 }
 const defaultPattern = '[^/]+?';
 
 function tokenToFragment(
 	token: Token,
-	setFns: ((p: Record<string, any>, s: string, key: number) => void)[],
+	setFns: ((p: Record<string, any>, s: string) => void)[],
 ): string {
 	if (typeof token === 'string') { return escapeString(token); }
 
 	const prefix = escapeString(token.prefix);
 	const suffix = escapeString(token.suffix);
-	const {name, modifier} = token;
-
-	if (name === '') { return `(?:${ prefix }${ suffix })${ modifier }`; }
-
-	setFns.push(createSetFn(token));
 	const pattern = token.pattern || defaultPattern;
-	if (!prefix && !suffix) {
-		return `((?:${ pattern })${ modifier })`;
-	}
-
-	if (modifier === '?') {
-		return `(?:${ prefix }(${ pattern })${ suffix })?`;
-	}
-	if (modifier === '+') {
-		return `${ prefix }(${ pattern }(?:${ suffix }${ prefix }${ pattern })*)${ suffix }`;
-	}
-	if (modifier === '*') {
-		return `(?:${ prefix }(${ pattern }(?:${ suffix }${ prefix }${ pattern })*)${ suffix })?`;
-	}
-	return `${ prefix }(${ pattern })${ suffix }`;
+	const {name, modifier} = token;
+	const regex = `(?:${ prefix }${ pattern }${ suffix })${ modifier }`;
+	if (!name) { return regex; }
+	setFns.push(createSetFn(name, prefix, pattern, suffix, modifier));
+	return `(${ regex })`;
 }
 
 export default function tokensToRegex(
-	paramsSetters: ((p: Record<string, any>, s: string, key: number) => void)[],
+	paramsSetters: ((p: Record<string, any>, s: string) => void)[],
 	tokens: Token[],
 	end: boolean,
 ) {
 	const tokenRegex = tokens.map(t => tokenToFragment(t, paramsSetters));
 	tokenRegex.unshift('^');
 	tokenRegex.push(end ? '$' : '(?=/|$)');
-	return new RegExp(tokenRegex.join(''), 'i');
+	return new RegExp(tokenRegex.join(''));
 }

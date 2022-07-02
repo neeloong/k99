@@ -2,7 +2,7 @@ import { CHAR, CLOSE, ESCAPED_CHAR, LexToken, LexTokenType, MODIFIER, NAME, OPEN
 const prefixes = '-/.:';
 
 export interface Key {
-	name: string | number;
+	name?: string;
 	prefix: string;
 	suffix: string;
 	pattern?: string;
@@ -67,7 +67,6 @@ export default function *toTokens(tokens: LexToken[]): Iterable<Token> {
 		if ((char || escaped) && modifier) {
 			yield {
 				prefix: char || escaped,
-				name: '',
 				suffix: '',
 				pattern: undefined,
 				modifier,
@@ -96,7 +95,7 @@ export default function *toTokens(tokens: LexToken[]): Iterable<Token> {
 
 			yield {
 				prefix,
-				name: name || '',
+				name,
 				suffix: '',
 				pattern,
 				modifier: groupModifier,
@@ -139,7 +138,7 @@ export default function *toTokens(tokens: LexToken[]): Iterable<Token> {
 		const groupModifier = get(MODIFIER) || '';
 		yield {
 			prefix,
-			name: groupName || '',
+			name: groupName,
 			pattern: groupPattern,
 			suffix,
 			modifier: groupModifier,
