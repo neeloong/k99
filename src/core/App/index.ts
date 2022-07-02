@@ -24,10 +24,10 @@ class App extends Router {
 	readonly log: Log;
 	readonly plugins: Record<string, Plugin>;
 	constructor(
-		{router, setting, asset, log, path }: App.Options = {},
+		{router, setting, asset, log }: App.Options = {},
 		plugins: Record<string, Plugin> = {},
 	) {
-		super(path);
+		super();
 
 		this.setting = initSettings(setting, plugins);
 		this.asset = initAssets(asset, plugins);
@@ -47,7 +47,6 @@ class App extends Router {
 }
 declare namespace App {
 	export interface Options {
-		path?: string;
 		router?: Router;
 		asset?: Asset.Api;
 		setting?: Setting.Api;

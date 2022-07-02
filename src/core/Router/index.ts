@@ -1,4 +1,4 @@
-import { Method, Handler, Route, Match, Guard } from '../types';
+import type { Method, Handler, Route, Guard, RouterRoute } from '../types';
 import createMatch from './createMatch';
 export const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']);
 
@@ -25,22 +25,32 @@ function getMethods(methods: Method | Iterable<Method>): Method[] {
 
 export default class Router {
 	disabled = false;
-	/** 当前路由路径 */
-	readonly path: string;
 	/** 路由列表 */
-	private readonly __routes: (Route | Router)[] = [];
+	private readonly __routes: (Route | RouterRoute)[] = [];
 	readonly plugin?: string;
-	readonly match: Match;
-	constructor(path: string = '', plugin?: string) {
-		path = path.replace(/(.)\/+$/, '$1').replace(/\/+/g, '/');
-		this.path = path;
-		this.match = createMatch(path, false);
+	constructor( plugin?: string) {
 		this.plugin = plugin;
 	}
 	/** 子路由 */
-	route(path: string | Router, plugins?: string): Router {
-		const router = path instanceof Router ? path : new Router(path, plugins);
-		this.__routes.push(router);
+	route(router: Router): Router;
+	route(path: string, router: Router): Router;
+	route(path: string, plugin?: string): Router;
+	route(path: string | Router, plugins?: string | Router): Router {
+		if (typeof path === 'string') {
+			const router = plugins instanceof Router ? plugins : new Router(plugins);
+			this.__routes.push({
+				path,
+				match: createMatch(path, false),
+				router,
+			});
+			return router;
+		}
+		const router = path instanceof Router ? path : new Router();
+		this.__routes.push({
+			path: '',
+			match: createMatch('', false),
+			router,
+		});
 		return router;
 	}
 	readonly guards = new Set<Guard>();

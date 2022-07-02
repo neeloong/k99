@@ -1,4 +1,4 @@
-import { Route, Method, Handler, Context } from '../../types';
+import { Route, Method, Handler, Context, RouterRoute } from '../../types';
 import Router from '../../Router';
 
 
@@ -25,11 +25,7 @@ export default async function find(
 	parentPath: string,
 ): Promise<Handler[] | null> {
 	if (router.disabled) { return null; }
-	const {match} = router;
-	const {pathname: path, method} = context;
-	const result = match(path, parentPath);
-	if (!result) { return null; }
-	const params = {...baseParams, ...result};
+	const params = {...baseParams };
 	setParams(params);
 	for (const guard of router.guards) {
 		try {
@@ -42,18 +38,23 @@ export default async function find(
 			return null;
 		}
 	}
-	const thisPath = result.$path;
-	for (const route of Array.from((router as any).__routes) as (Route | Router)[]) {
+
+	const {pathname, method} = context;
+	for (const route of Array.from((router as any).__routes) as (Route | RouterRoute)[]) {
 		if (context.destroyed) { return null; }
-		if (route instanceof Router) {
-			const res = await find(route, context, setParams, params, thisPath);
-			if (res) { return res; }
-			continue;
+		if (!route.router && !route.methods.has(method)) { continue; }
+		const {match} = route;
+		const result = match(pathname, parentPath);
+		if (!result) { continue; }
+		const thisParams = {...baseParams, ...result};
+		if (!route.router) {
+			setParams(thisParams);
+			return route.handlers;
 		}
-		const newParams = matchRoute(route, method, path, params, thisPath);
-		if (!newParams) { continue; }
-		setParams(newParams);
-		return route.handlers;
+		const {router} = route;
+		const path = result.$path;
+		const res = await find(router, context, setParams, thisParams,  path);
+		if (res) { return res; }
 	}
 	return null;
 }
