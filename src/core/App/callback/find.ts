@@ -1,59 +1,48 @@
-import { Route, Method, Handler, Context, RouterRoute } from '../../types';
+import { Method, Handler, Context, Guard } from '../../types';
 import Router from '../../Router';
 
 
-function matchRoute(
-	route: Route,
-	method: Method,
-	path: string,
-	baseParams: object,
-	parentPath: string,
+async function execGuard(
+	guards: Set<Guard>,
+	ctx: Context,
+	setParams: (v: any) => void,
+	params: object,
 ) {
-	if (!route.methods.has(method)) { return null; }
-	const {match} = route;
-	const result = match(path, parentPath);
-	if (!result) { return null; }
-	const params = {...baseParams, ...result};
-	return params;
+	if (!guards.size) { return true; }
+	setParams(params);
+	for (const guard of guards) {
+		try {
+			if (ctx.destroyed) { return false; }
+			const ret = await guard(Object.create(ctx, {
+				params: {value: {...params }},
+			}));
+			if (!ret) { return false; }
+		} catch {
+			return false;
+		}
+	}
+	return true;
 }
 
 export default async function find(
 	router: Router,
-	context: Context,
+	method: Method,
+	path: string,
+	ctx: Context,
 	setParams: (v: any) => void,
-	baseParams: object,
-	parentPath: string,
+	params: object,
 ): Promise<Handler[] | null> {
 	if (router.disabled) { return null; }
-	const params = {...baseParams };
-	setParams(params);
-	for (const guard of router.guards) {
-		try {
-			if (context.destroyed) { return null; }
-			const ret = await guard(Object.create(context, {
-				params: {value: params},
-			}));
-			if (!ret) { return null; }
-		} catch {
-			return null;
+	if (!await execGuard(router.guards, ctx, setParams, params)) { return null; }
+	if (ctx.destroyed) { return null; }
+	for (const [subpath, result, route] of router.find(method, path)) {
+		if (ctx.destroyed) { return null; }
+		const newParams = {...params, ...result};
+		if (!(route instanceof Router)) {
+			setParams(newParams);
+			return route;
 		}
-	}
-
-	const {pathname, method} = context;
-	for (const route of Array.from((router as any).__routes) as (Route | RouterRoute)[]) {
-		if (context.destroyed) { return null; }
-		if (!route.router && !route.methods.has(method)) { continue; }
-		const {match} = route;
-		const result = match(pathname, parentPath);
-		if (!result) { continue; }
-		const thisParams = {...baseParams, ...result};
-		if (!route.router) {
-			setParams(thisParams);
-			return route.handlers;
-		}
-		const {router} = route;
-		const path = result.$path;
-		const res = await find(router, context, setParams, thisParams,  path);
+		const res = await find(route, method, subpath, ctx, setParams, newParams);
 		if (res) { return res; }
 	}
 	return null;

@@ -3,16 +3,9 @@ import { Handler } from './handle';
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD';
 
-interface Match {
-	(pathname: string, parent: string): null | Match.Result;
+export interface Match {
+	(pathname: string): null | [string, Record<string, any>];
 }
-declare namespace Match {
-	export interface Result {
-		$path: string;
-		[key: string]: any;
-	}
-}
-export { Match };
 export interface Route {
 	/** 请求路径 */
 	path: string;

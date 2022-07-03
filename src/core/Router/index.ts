@@ -26,7 +26,7 @@ function getMethods(methods: Method | Iterable<Method>): Method[] {
 export default class Router {
 	disabled = false;
 	/** 路由列表 */
-	private readonly __routes: (Route | RouterRoute)[] = [];
+	readonly #routes: (Route | RouterRoute)[] = [];
 	readonly plugin?: string;
 	constructor( plugin?: string) {
 		this.plugin = plugin;
@@ -38,7 +38,7 @@ export default class Router {
 	route(path: string | Router, plugins?: string | Router): Router {
 		if (typeof path === 'string') {
 			const router = plugins instanceof Router ? plugins : new Router(plugins);
-			this.__routes.push({
+			this.#routes.push({
 				path,
 				match: createMatch(path, false),
 				router,
@@ -46,12 +46,27 @@ export default class Router {
 			return router;
 		}
 		const router = path instanceof Router ? path : new Router();
-		this.__routes.push({
+		this.#routes.push({
 			path: '',
 			match: createMatch('', false),
 			router,
 		});
 		return router;
+	}
+	*find(method: Method, pathname: string): Iterable<[string, Record<string, any>, Handler[] | Router]> {
+		for (const route of Array.from(this.#routes) as (Route | RouterRoute)[]) {
+			if (!route.router && !route.methods.has(method)) { continue; }
+			const {match} = route;
+			const result = match(pathname);
+			if (!result) { continue; }
+
+			const {router} = route;
+			if (router) {
+				yield [...result, router];
+			} else {
+				yield [...result, route.handlers];
+			}
+		}
 	}
 	readonly guards = new Set<Guard>();
 	/**
@@ -74,7 +89,7 @@ export default class Router {
 			methods: new Set(methods),
 			handlers,
 		};
-		const routes = this.__routes;
+		const routes = this.#routes;
 		routes.push(route);
 		let removed = false;
 		return () => {
