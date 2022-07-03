@@ -11,9 +11,10 @@
     "paths": {
       "k99": ["src/core"],
       "k99/cli": ["src/cli"],
+      "k99/services": ["src/services"],
       "k99/node": ["src/node"]
     },
     "esModuleInterop": true
   },
-  "include": ["src"],
+  "include": ["src", "test"],
 }
