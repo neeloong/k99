@@ -139,7 +139,7 @@ export default function callback(
 
 	return Promise.race([
 		abortPromise,
-		find(app, method, pathname, context, v => params = v, {}),
+		find(app, method, pathname.split('/').filter(Boolean), context, v => params = v, {}),
 	]).then(handlers => {
 		if (!handlers) {
 			destroyed = true;

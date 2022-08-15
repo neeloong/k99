@@ -1,21 +1,23 @@
 import Router from '../Router';
 import { Handler } from './handle';
 
-export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD';
+export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
-export interface Match {
-	(pathname: string): null | [string, Record<string, any>];
+export interface Pattern {
+	name: string;
+	optional: boolean;
+	many: boolean;
+	pattern: RegExp;
 }
+export type Match = (Pattern | string)[];
 export interface Route {
-	/** 请求路径 */
-	path: string;
 	/** 路径匹配 */
 	match: Match;
 
+	router?: null;
+
 	/** 所属插件 */
 	plugin?: string;
-
-	router?: null;
 
 	/** 处理函数 */
 	handlers: Handler[]
@@ -23,8 +25,6 @@ export interface Route {
 	methods: Set<Method>;
 }
 export interface RouterRoute {
-	/** 请求路径 */
-	path: string;
 	/** 路径匹配 */
 	match: Match;
 

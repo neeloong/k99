@@ -35,7 +35,7 @@ function getHandlers(v: any): Handler[] | undefined {
 	if (list.length) { return list; }
 }
 /** 方法列表 */
-const methods = new Set<Method>(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']);
+const methods = new Set<Method>(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']);
 
 /** 资源的处理函数配置 */
 const resourceHandleMap: Record<string, {methods: Method[], path: string}> = {

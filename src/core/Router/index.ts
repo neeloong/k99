@@ -1,26 +1,7 @@
 import type { Method, Handler, Route, Guard, RouterRoute } from '../types';
-import createMatch from './createMatch';
-export const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD']);
-
-function isMethod(v: any): v is Method {
-	return methods.has(v);
-}
-function getMethods(methods: Method | Iterable<Method>): Method[] {
-	if (typeof methods === 'string') {
-		return [methods.toUpperCase()].filter(isMethod);
-	}
-	if (methods && typeof methods[Symbol.iterator] === 'function') {
-		return [...methods]
-			.map(v => typeof v === 'string' && v.toUpperCase())
-			.filter(isMethod);
-	}
-	if (length in methods) {
-		return Array.from(methods)
-			.map(v => typeof v === 'string' && v.toUpperCase())
-			.filter(isMethod);
-	}
-	return ['GET', 'POST', 'PUT', 'DELETE'];
-}
+import toMatch from './toMatch';
+import exec from './exec';
+import getMethods from './getMethods';
 
 
 export default class Router {
@@ -28,51 +9,73 @@ export default class Router {
 	/** 路由列表 */
 	readonly #routes: (Route | RouterRoute)[] = [];
 	readonly plugin?: string;
-	constructor( plugin?: string) {
+	constructor(plugin?: string) {
 		this.plugin = plugin;
 	}
-	/** 子路由 */
+	/**
+	 * 添加子路由
+	 * @param router 要注册的子路由
+	 */
 	route(router: Router): Router;
+	/**
+	 * 添加子路由
+	 * @param path   要注册的路径
+	 * @param router 要注册的子路由
+	 */
 	route(path: string, router: Router): Router;
+	/**
+	 * 添加子路由
+	 * @param path   要注册的路径
+	 * @param plugin 要注册的子路由所属的插件
+	 */
 	route(path: string, plugin?: string): Router;
 	route(path: string | Router, plugins?: string | Router): Router {
 		if (typeof path === 'string') {
-			const router = plugins instanceof Router ? plugins : new Router(plugins);
+			const router = plugins instanceof Router
+				? plugins
+				: new Router(plugins);
 			this.#routes.push({
-				path,
-				match: createMatch(path, false),
+				match: toMatch(path, false),
 				router,
 			});
 			return router;
 		}
 		const router = path instanceof Router ? path : new Router();
 		this.#routes.push({
-			path: '',
-			match: createMatch('', false),
+			match: toMatch('', false),
 			router,
 		});
 		return router;
 	}
-	*find(method: Method, pathname: string): Iterable<[string, Record<string, any>, Handler[] | Router]> {
-		for (const route of Array.from(this.#routes) as (Route | RouterRoute)[]) {
-			if (!route.router && !route.methods.has(method)) { continue; }
-			const {match} = route;
-			const result = match(pathname);
-			if (!result) { continue; }
-
-			const {router} = route;
-			if (router) {
-				yield [...result, router];
-			} else {
-				yield [...result, route.handlers];
+	*find(
+		method: Method, path: string[],
+	): Iterable<[Handler[] | Router, Record<string, any>, string[]]> {
+		if (!path.length){
+			for (const route of Array.from(this.#routes)) {
+				if (route.match.length) { continue; }
+				if (!route.router && !route.methods.has(method)) { continue; }
+				yield [route.router || route.handlers, {}, []];
 			}
+			return;
+		}
+		for (const route of Array.from(this.#routes)) {
+			const end = !route.router;
+			if (end && !route.methods.has(method)) { continue; }
+			const {match} = route;
+			const result = exec(match, path, end);
+			if (!result) { continue; }
+			yield [
+				route.router || route.handlers,
+				result,
+				path.slice(match.length),
+			];
 		}
 	}
 	readonly guards = new Set<Guard>();
 	/**
 	 * 注册处理函数
-	 * @param method  要注册的方法
-	 * @param path    要注册的路径
+	 * @param method   要注册的方法
+	 * @param path     要注册的路径
 	 * @param handlers 要注册的处理函数
 	 */
 	verb(
@@ -84,8 +87,7 @@ export default class Router {
 		if (!(methods as Method[]).length) { return null; }
 
 		const route: Route = {
-			path: path.replace(/(.)\/+$/, '$1').replace(/\/+/g, '/'),
-			match: createMatch(path, true),
+			match: toMatch(path, true),
 			methods: new Set(methods),
 			handlers,
 		};
@@ -139,5 +141,13 @@ export default class Router {
 	 */
 	head(path: string, ...handlers: Handler[]) {
 		return this.verb('HEAD', path, ...handlers);
+	}
+	/**
+	 * 注册 HTTP OPTIONS 处理函数
+	 * @param path     要注册的路径
+	 * @param handlers 要注册的处理函数
+	 */
+	options(path: string, ...handlers: Handler[]) {
+		return this.verb('OPTIONS', path, ...handlers);
 	}
 }
