@@ -10,8 +10,14 @@ import type { Log } from './Log';
 import type { K99Request } from './K99Request';
 import type { MaybePromise } from './promise';
 
-export interface ServiceExecContext<D> extends Context { readonly channel: 'exec'; readonly state: D; }
-export interface ServiceDestroyContext<D> extends Context { readonly channel: 'destroy'; readonly state: D; }
+export interface ServiceExecContext<D> extends Context {
+	readonly destroying: false;
+	readonly state: D;
+}
+export interface ServiceDestroyContext<D> extends Context {
+	readonly destroying: true;
+	readonly state: D;
+}
 export type ServiceContext<D> =
 	| ServiceExecContext<D>
 	| ServiceDestroyContext<D>;

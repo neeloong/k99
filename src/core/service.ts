@@ -12,13 +12,11 @@ function service<T, D extends object, P extends any[]>(
 	destroy?: ((ctx: ServiceDestroyContext<D>) => MaybePromise<void>) | undefined | null,
 ): Service<T, D, P> {
 	return function(ctx: ServiceContext<D>, ...any: any[]): any {
-		if (ctx.channel === 'exec') {
+		if (!ctx.destroying) {
 			return exec(ctx, ...any as P);
 		}
-		if (ctx.channel === 'destroy') {
-			if (typeof destroy === 'function') {
-				return destroy(ctx);
-			}
+		if (typeof destroy === 'function') {
+			return destroy(ctx);
 		}
 	};
 }

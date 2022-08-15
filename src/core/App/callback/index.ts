@@ -27,7 +27,7 @@ function destroyServices(
 	const {app} = context;
 	for (const [service, state] of [...services.entries()]) {
 		promise = promise.then(() => service(Object.create(context, {
-			channel: {value: 'destroy'},
+			destroying: {value: true},
 			state: {value: state},
 		}))).catch(e => app.log.error(e));
 	}
@@ -73,7 +73,7 @@ export default function callback(
 			let state = services.get(service);
 			if (!services.has(service)) { services.set(service, state = {}); }
 			return service(Object.create(context, {
-				channel: {value: 'exec'},
+				destroying: {value: false},
 				state: {value: state},
 			}), ...p);
 		},

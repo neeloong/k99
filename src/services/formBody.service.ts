@@ -1,4 +1,4 @@
-import type { Context, ServiceContext } from 'k99';
+import type { Context, ServiceContext, ServiceDestroyContext, ServiceExecContext } from 'k99';
 import readText from './readText.util';
 
 
@@ -40,13 +40,21 @@ function exec(ctx: Context) {
 	if (charset && charset !== 'charset=UTF-8') { return null; }
 	return parse(ctx);
 }
-export default function formBodyService(
+
+function formBodyService(
+	ctx: ServiceExecContext<{result?: Promise<any> | null}>,
+): Promise<any> | null;
+function formBodyService(
+	ctx: ServiceDestroyContext<{result?: Promise<any> | null}>,
+): void;
+function formBodyService(
 	ctx: ServiceContext<{result?: Promise<any> | null}>,
-): Promise<any> | null {
-	if (ctx.channel !== 'exec') { return null; }
+): Promise<any> | null | void {
+	if (ctx.destroying) { return; }
 	const res = ctx.state.result;
 	if (res !== undefined) { return res; }
 	const result = exec(ctx);
 	ctx.state.result = result;
 	return result;
 }
+export default formBodyService;
