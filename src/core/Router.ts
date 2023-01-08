@@ -8,7 +8,9 @@ export default abstract class Router {
 
 	abstract find(
 		method: Method, path: string[],
-	): Iterable<[Handler[] | Router, Record<string, any>, string[]]>;
+	):
+	| AsyncIterable<[Handler[] | Router, Record<string, any>, string[]]>
+	| Iterable<[Handler[] | Router, Record<string, any>, string[]]>;
 
 	readonly guards = new Set<Guard>();
 }

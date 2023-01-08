@@ -35,7 +35,7 @@ export default async function find(
 	if (router.disabled) { return null; }
 	if (!await execGuard(router.guards, ctx, setParams, params)) { return null; }
 	if (ctx.destroyed) { return null; }
-	for (const [route, result, subpath] of router.find(method, path)) {
+	for await (const [route, result, subpath] of router.find(method, path)) {
 		if (ctx.destroyed) { return null; }
 		const newParams = {...params, ...result};
 		if (!(route instanceof Router)) {
