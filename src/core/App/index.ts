@@ -6,6 +6,7 @@ import type {
 	Setting,
 } from '../types';
 
+import ApiRouter from '../ApiRouter';
 import Router from '../Router';
 import type Plugin from '../Plugin';
 
@@ -15,7 +16,7 @@ import initSettings from './initSettings';
 import initAssets from './initAssets';
 
 
-class App extends Router {
+class App extends ApiRouter {
 	/** 设置接口 */
 	readonly setting: Setting;
 	/** 资产接口 */

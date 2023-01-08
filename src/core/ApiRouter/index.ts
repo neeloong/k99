@@ -1,46 +1,42 @@
-import type { Method, Handler, Route, Guard, RouterRoute } from '../types';
+import type { Method, Handler, Route, RouterRoute } from '../types';
 import toMatch from './toMatch';
 import exec from './exec';
 import getMethods from './getMethods';
+import Router from '../Router';
 
 
-export default class Router {
-	disabled = false;
+export default class ApiRouter extends Router {
 	/** 路由列表 */
 	readonly #routes: (Route | RouterRoute)[] = [];
-	readonly plugin?: string;
-	constructor(plugin?: string) {
-		this.plugin = plugin;
-	}
 	/**
 	 * 添加子路由
 	 * @param router 要注册的子路由
 	 */
-	route(router: Router): Router;
+	route<T extends Router>(router: T): T;
 	/**
 	 * 添加子路由
 	 * @param path   要注册的路径
 	 * @param router 要注册的子路由
 	 */
-	route(path: string, router: Router): Router;
+	route<T extends Router>(path: string, router: T): T;
 	/**
 	 * 添加子路由
 	 * @param path   要注册的路径
 	 * @param plugin 要注册的子路由所属的插件
 	 */
-	route(path: string, plugin?: string): Router;
+	route(path: string, plugin?: string): ApiRouter;
 	route(path: string | Router, plugins?: string | Router): Router {
 		if (typeof path === 'string') {
 			const router = plugins instanceof Router
 				? plugins
-				: new Router(plugins);
+				: new ApiRouter(plugins);
 			this.#routes.push({
 				match: toMatch(path, false),
 				router,
 			});
 			return router;
 		}
-		const router = path instanceof Router ? path : new Router();
+		const router = path instanceof Router ? path : new ApiRouter();
 		this.#routes.push({
 			match: toMatch('', false),
 			router,
@@ -71,7 +67,6 @@ export default class Router {
 			];
 		}
 	}
-	readonly guards = new Set<Guard>();
 	/**
 	 * 注册处理函数
 	 * @param method   要注册的方法

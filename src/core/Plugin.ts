@@ -1,3 +1,4 @@
+import ApiRouter from './ApiRouter';
 import Router from './Router';
 
 export default abstract class Plugin {
@@ -41,7 +42,7 @@ export default abstract class Plugin {
 			.then(() => router);
 	}
 	get router() {
-		const router = new Router();
+		const router = new ApiRouter();
 		Reflect.defineProperty(this, 'router', {
 			value: router,
 			configurable: true,

@@ -1,5 +1,5 @@
 import * as pathFn from 'node:path';
-import type { Router } from 'k99';
+import type { ApiRouter } from 'k99';
 import { App } from 'k99';
 import FsPlugin from './FsPlugin';
 import createFsLogApi from './createFsLogApi';
@@ -21,7 +21,6 @@ class NodeApp extends App {
 		const newLogsPath     = pathFn.resolve(cwd, logPath     || 'logs');
 
 		super({
-			path: cwd,
 			setting: createFsSettingsApi(newSettingsPath),
 			asset: createFsAssetsApi(newAssetsPath),
 			log: createFsLogApi(newLogsPath),
@@ -45,7 +44,7 @@ declare namespace NodeApp {
 		settingPath?: string;
 		/** 日志路径，仅入口有效 */
 		logPath?: string;
-		router?: Router;
+		router?: ApiRouter;
 	}
 
 }
