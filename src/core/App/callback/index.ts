@@ -140,30 +140,27 @@ export default function callback(
 	return Promise.race([
 		abortPromise,
 		find(app, method, pathname.split('/').filter(Boolean), context, v => params = v, {}),
-	]).then(handlers => {
+	]).then(handlers => new Promise<K99Response | null>(resolve => {
 		if (!handlers) {
 			destroyed = true;
 			headersSent = true;
 			destroyServices(context, services);
-			return null;
+			return resolve(null);
 		}
 
 		const [writable, readable, abortResponse] = createWrite();
-		 abortPromise.finally(abortResponse);
+		abortPromise.finally(abortResponse);
 
-		let resolve: ((any: K99Response) => void) | undefined;
-		let response: K99Response | undefined;
 		function send() {
-			if (response) { return; }
+			if (headersSent) { return; }
 			headersSent = true;
-			response = {
+			resolve({
 				...readable,
 				get status() { return status; },
 				get finished() { return writable.ended; },
 				headers: Object.freeze({...resHeaders}),
 				[Symbol.asyncIterator]() { return readable; },
-			};
-			if (resolve) { resolve(response); }
+			});
 		}
 		const contextS: Omit<ActionContext, keyof Context> = {
 			get finished() { return writable.ended; },
@@ -186,11 +183,7 @@ export default function callback(
 			destroyServices(context, services);
 			writable.end();
 		});
-
-		return new Promise<K99Response>(r => {
-			if (response) { r(response); } else { resolve = r; }
-		});
-	}, e => {
+	}), e => {
 		destroyed = true;
 		headersSent = true;
 		destroyServices(context, services);
