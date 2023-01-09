@@ -10,21 +10,15 @@ import type { Log } from './Log';
 import type { K99Request } from './K99Request';
 import type { MaybePromise } from './promise';
 
-export interface ServiceExecContext<D> extends Context {
-	readonly destroying: false;
-	readonly state: D;
+export interface ServiceContext<T, D extends boolean = boolean> extends Context {
+	readonly destroying: D;
+	state?: T;
+	[key: string]: any;
 }
-export interface ServiceDestroyContext<D> extends Context {
-	readonly destroying: true;
-	readonly state: D;
-}
-export type ServiceContext<D> =
-	| ServiceExecContext<D>
-	| ServiceDestroyContext<D>;
 
 export interface Service<T, D extends object, P extends any[] = []> {
-	(ctx: ServiceExecContext<D>, ...p: P): T;
-	(ctx: ServiceDestroyContext<D>): MaybePromise<void>;
+	(ctx: ServiceContext<D, false>, ...p: P): T;
+	(ctx: ServiceContext<D, true>): MaybePromise<void>;
 }
 
 export interface Context {

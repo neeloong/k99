@@ -7,6 +7,7 @@ import type {
 	K99Response,
 	Service,
 	Context,
+	ServiceContext,
 } from '../../types';
 import type App from '..';
 import createRequest from '../../utils/createRequest';
@@ -20,15 +21,17 @@ import main from './main';
 
 
 function destroyServices(
-	context: Context,
+	app: App,
 	services: Map<Service<any, any, any>, object>,
 ) {
 	let promise: Promise<void> = Promise.resolve();
-	const {app} = context;
-	for (const [service, state] of [...services.entries()]) {
+	for (const [service, context] of [...services.entries()]) {
 		promise = promise.then(() => service(Object.create(context, {
-			destroying: {value: true},
-			state: {value: state},
+			destroying: {
+				value: true,
+				configurable: true,
+				enumerable: true,
+			},
 		}))).catch(e => app.log.error(e));
 	}
 	return promise;
@@ -45,7 +48,7 @@ export default function callback(
 	const hostInfo = hostRegex.exec(host);
 	const [hostname, port] = hostInfo ? [hostInfo[1], hostInfo[2]] : [host, ''];
 
-	const services = new Map<Service<any, any, any>, object>();
+	const services = new Map<Service<any, any, any>, ServiceContext<any, false>>();
 	const cookies = getRequestCookies(headers['cookie'] || '');
 	const sentCookies: CookieInfo[] = [];
 
@@ -70,12 +73,25 @@ export default function callback(
 			return callback(app, request, context);
 		},
 		service(service, ...p) {
-			let state = services.get(service);
-			if (!services.has(service)) { services.set(service, state = {}); }
-			return service(Object.create(context, {
-				destroying: {value: false},
-				state: {value: state},
-			}), ...p);
+			let serviceContext = services.get(service);
+			if (!serviceContext) {
+				let state: any;
+				serviceContext = Object.create(context, {
+					destroying: {
+						value: false,
+						configurable: true,
+						enumerable: true,
+					},
+					state: {
+						configurable: true,
+						enumerable: true,
+						get(){ return state; },
+						set(s){ state = s; },
+					},
+				}) as ServiceContext<any, false>;
+				services.set(service, serviceContext);
+			}
+			return service(serviceContext, ...p);
 		},
 
 		method, url, pathname, search, query,
@@ -144,7 +160,7 @@ export default function callback(
 		if (!handlers) {
 			destroyed = true;
 			headersSent = true;
-			destroyServices(context, services);
+			destroyServices(app, services);
 			return resolve(null);
 		}
 
@@ -180,13 +196,13 @@ export default function callback(
 		]).finally(() => {
 			destroyed = true;
 			send();
-			destroyServices(context, services);
+			destroyServices(app, services);
 			writable.end();
 		});
 	}), e => {
 		destroyed = true;
 		headersSent = true;
-		destroyServices(context, services);
+		destroyServices(app, services);
 		return Promise.reject(e);
 	});
 }
