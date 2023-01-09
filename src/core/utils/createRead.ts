@@ -14,7 +14,9 @@ function mergeArrayBuffer(data: Uint8Array[], length: number): Uint8Array {
 }
 function getBuffer(data: Uint8Array[], size?: number): Uint8Array {
 	if (!size) {
-		return mergeArrayBuffer(data, data.reduce((a, b) => a + b.byteLength, 0));
+		const ret = mergeArrayBuffer(data, data.reduce((a, b) => a + b.byteLength, 0));
+		data.length = 0;
+		return ret;
 	}
 	let length = 0;
 	const list: Uint8Array[] = [];
@@ -31,7 +33,7 @@ function getBuffer(data: Uint8Array[], size?: number): Uint8Array {
 		length += it.byteLength;
 		if (length === size) { break; }
 	}
-	return mergeArrayBuffer(data, length);
+	return mergeArrayBuffer(list, length);
 }
 
 async function *toAsyncIterable(
