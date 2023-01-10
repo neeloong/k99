@@ -1,6 +1,5 @@
 import type { Method, Handler, Route, RouterRoute } from '../types';
 import toMatch from './toMatch';
-import exec from './exec';
 import getMethods from './getMethods';
 import Router from '../Router';
 
@@ -48,23 +47,22 @@ export default class ApiRouter extends Router {
 	): Iterable<[Handler[] | Router, Record<string, any>, string[]]> {
 		if (!path.length){
 			for (const route of Array.from(this.#routes)) {
-				if (route.match.length) { continue; }
+				if (route.match) { continue; }
 				if (!route.router && !route.methods.has(method)) { continue; }
 				yield [route.router || route.handlers, {}, []];
 			}
 			return;
 		}
 		for (const route of Array.from(this.#routes)) {
-			const end = !route.router;
-			if (end && !route.methods.has(method)) { continue; }
+			if (!route.router && !route.methods.has(method)) { continue; }
 			const {match} = route;
-			const result = exec(match, path, end);
+			if (!match) {
+				yield [route.router || route.handlers, {}, path];
+				continue;
+			}
+			const result = match(path);
 			if (!result) { continue; }
-			yield [
-				route.router || route.handlers,
-				result,
-				path.slice(match.length),
-			];
+			yield [route.router || route.handlers, ...result];
 		}
 	}
 	/**

@@ -3,16 +3,12 @@ import { Handler } from './handle';
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
-export interface Pattern {
-	name: string;
-	optional: boolean;
-	many: boolean;
-	pattern: RegExp;
+export interface Match {
+	(paths: string[]): [Record<string, string | string[]>, string[]] | undefined;
 }
-export type Match = (Pattern | string)[];
 export interface Route {
 	/** 路径匹配 */
-	match: Match;
+	match?: Match;
 
 	router?: null;
 
@@ -26,7 +22,7 @@ export interface Route {
 }
 export interface RouterRoute {
 	/** 路径匹配 */
-	match: Match;
+	match?: Match;
 
 	router: Router;
 }

@@ -1,5 +1,11 @@
-import { Match, Pattern } from '../types';
-const regex = /^:([a-zA-Z][a-zA-Z0-9]*)(?:\((.+)\))?([iu])?([?+*]?)$/;
+import { Match } from '../types';
+interface Pattern {
+	name: string;
+	optional: boolean;
+	many: boolean;
+	pattern: RegExp;
+}
+const regex = /^:([a-zA-Z][a-zA-Z0-9]*)(?:\((.+)\))?([ius]+)?([?+*]?)$/;
 function parse(p: string): Pattern | string {
 	const res = regex.exec(p);
 	if (!res) { return p; }
@@ -46,16 +52,46 @@ function parse(p: string): Pattern | string {
 	};
 
 }
+function exec(
+	match: (Pattern | string)[],
+	path: string[],
+	end: boolean
+): [Record<string, string | string[]>, string[]] | undefined {
+	const params: Record<string, string | string[]> = {};
+	for (let i = 0; i < match.length; i++) {
+		const m = match[i];
+		const p = path[i];
+		if (m === p) { continue; }
+		if (typeof m === 'string') { return; }
+		if (!p) {
+			if (!m.optional) { return; }
+			return [params, []];
+		}
+		if (!m.pattern.test(p)) { return; }
+		params[m.name] = p;
+	}
+	if (!end) { return [params, path.slice(match.length)]; }
+	const last = match[match.length - 1];
+	if (typeof last === 'string') { return; }
+	if (!last.many && path.length > match.length) { return; }
+	for (let j = match.length; j < path.length; j++) {
+		if (!last.pattern.test(path[j])) { return; }
+	}
+	params[last.name] = path.slice(match.length - 1);
+	return [params, []];
+
+}
 
 export default function toMatch(
 	path: string,
 	end: boolean,
-): Match {
-	const list: Match = [];
+): Match | undefined {
+	const list: (Pattern | string)[] = [];
 	for (const p of path.split('/')) {
 		if (!p) { continue; }
 		if (/^\.+$/.test(p)) { continue; }
 		list.push(parse(p));
 	}
-	return list;
+	if (!list.length) { return; }
+	return path => exec(list, path, end);
 }
