@@ -1,5 +1,5 @@
-import str2bin from '../../utils/str2bin';
-import { WriteType } from '../../types';
+import type { WriteType } from '../types';
+import str2bin from '../utils/str2bin';
 
 type Item = [Uint8Array | undefined, ((v: boolean) => void)];
 

@@ -1,4 +1,5 @@
-import { Log } from '../types';
+import type { Log } from '../types';
+
 import extendsInterface from './extendsInterface';
 
 /**
@@ -64,12 +65,10 @@ export default function initLog({
 	write = defaultWrite,
 	clear = defaultClear,
 }: Log.Api = {}): Log {
-	async function readLog(path: string) { return read(path); }
-	async function clearLog(path: string) { return clear(path); }
 	function writeLog(path: string, log: string, opt?: Log.Options) {
 		return write(path, pack(log, opt));
 	}
-	return extendsInterface({read: readLog, write: writeLog, clear: clearLog}, {
+	return extendsInterface({read, write: writeLog, clear }, {
 		async debug(log: string, opt?: Log.Options) {
 			return writeLog('debug', log, opt);
 		},

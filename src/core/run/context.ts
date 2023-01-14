@@ -2,26 +2,24 @@ import type {
 	K99Request,
 	K99Headers,
 	CookieClearOption,
-	ActionContext,
 	WriteType,
-	K99Response,
 	Service,
 	Context,
 	ServiceContext,
-} from '../../types';
-import type App from '..';
-import createRequest from '../../utils/createRequest';
-import find from './find';
-import createWrite from './createWrite';
+	Method,
+	Log,
+	Setting,
+	Asset,
+} from '../types';
+
 import {
 	clearCookie, getCookie, getRequestCookies, getCookieHeader, CookieInfo,
 } from './cookie';
 import createRead from './createRead';
-import main from './main';
 
 
 function destroyServices(
-	app: App,
+	log: Log,
 	services: Map<Service<any, any, any>, object>,
 ) {
 	let promise: Promise<void> = Promise.resolve();
@@ -32,29 +30,37 @@ function destroyServices(
 				configurable: true,
 				enumerable: true,
 			},
-		}))).catch(e => app.log.error(e));
+		}))).catch(e => log.error(e));
 	}
 	return promise;
 }
 
 const hostRegex = /^(\[[^\]]+\]|^:):(\d+)$/;
 
-export default function callback(
-	app: App,
-	{ method, url, pathname, search, query, read, headers, aborted } : K99Request,
+export default function createContext(
+	{ method, url, pathname, search, query, read, headers } : K99Request,
+	setting: Setting,
+	asset: Asset,
+	log: Log,
+	abort: Promise<null>,
+	request: (opt: {
+		method: Method;
+		path: string;
+		body?: WriteType | K99Request.Reader | undefined;
+		headers?: K99Headers | undefined;
+		abort?: Promise<void> | undefined;
+	}) => Promise<any>,
 	parent?: Context,
 ) {
+	const services = new Map<Service<any, any, any>, ServiceContext<any, false>>();
+
 	const host = headers.host || '';
 	const hostInfo = hostRegex.exec(host);
 	const [hostname, port] = hostInfo ? [hostInfo[1], hostInfo[2]] : [host, ''];
 
-	const services = new Map<Service<any, any, any>, ServiceContext<any, false>>();
 	const cookies = getRequestCookies(headers['cookie'] || '');
 	const sentCookies: CookieInfo[] = [];
 
-	const abortPromise: Promise<null> = aborted
-		? aborted.then(e => Promise.reject(e))
-		: new Promise(() =>{});
 
 	let status = 200;
 	let resHeaders: K99Headers = {};
@@ -64,14 +70,10 @@ export default function callback(
 
 	let params: any = {};
 	const context: Context = {
-		app, setting: app.setting, asset: app.asset, log: app.log,
+		setting, asset, log,
 		parent,
 		get root() { return root || this; },
-		abort: abortPromise,
-		request(opt) {
-			const request = createRequest(opt);
-			return callback(app, request, context);
-		},
+		abort, request,
 		service(service, ...p) {
 			let serviceContext = services.get(service);
 			if (!serviceContext) {
@@ -152,57 +154,19 @@ export default function callback(
 			}
 		},
 	};
-
-	return Promise.race([
-		abortPromise,
-		find(app, method, pathname.split('/').filter(Boolean), context, v => params = v, {}),
-	]).then(handlers => new Promise<K99Response | null>(resolve => {
-		if (!handlers) {
+	return {
+		context,
+		setParams: (v: any) => { params = v; },
+		 destroy: () => {
+			if (destroyed) { return; }
 			destroyed = true;
 			headersSent = true;
-			destroyServices(app, services);
-			return resolve(null);
-		}
-
-		const [writable, readable, abortResponse] = createWrite();
-		abortPromise.finally(abortResponse);
-
-		function send() {
-			if (headersSent) { return; }
+			destroyServices(log, services);
+		}, sendHeaders(){
+			if (headersSent) {
+				return false;
+			}
 			headersSent = true;
-			resolve({
-				...readable,
-				get status() { return status; },
-				get finished() { return writable.ended; },
-				headers: Object.freeze({...resHeaders}),
-				[Symbol.asyncIterator]() { return readable; },
-			});
-		}
-		const contextS: Omit<ActionContext, keyof Context> = {
-			get finished() { return writable.ended; },
-			write(chunk: WriteType): Promise<boolean> {
-				send();
-				return writable.write(chunk);
-			},
-		};
-
-		const actionContext: ActionContext = Object.create(
-			context,
-			Object.getOwnPropertyDescriptors(contextS),
-		);
-		Promise.race([
-			abortPromise,
-			main(actionContext, handlers).catch(e => app.log.error(e)),
-		]).finally(() => {
-			destroyed = true;
-			send();
-			destroyServices(app, services);
-			writable.end();
-		});
-	}), e => {
-		destroyed = true;
-		headersSent = true;
-		destroyServices(app, services);
-		return Promise.reject(e);
-	});
+			return true;
+		}};
 }

@@ -7,7 +7,7 @@ const regex = new RegExp(regexText);
 
 export default function getPluginPath(
 	path: string,
-	plugins: Record<string, Plugin>
+	plugins?: Record<string, Plugin>
 ): [Plugin, string] | null {
 	if (!plugins) { return null; }
 	const r = regex.exec(path);

@@ -22,8 +22,6 @@ export interface Service<T, D extends object, P extends any[] = []> {
 }
 
 export interface Context {
-	/** 当前的路由 */
-	readonly app: App;
 	readonly setting: Setting;
 	readonly asset: Asset;
 	readonly log: Log;

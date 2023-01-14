@@ -1,5 +1,5 @@
 
-import { CookieOptionInfo, CookieClearOption } from '../../types';
+import type { CookieOptionInfo, CookieClearOption } from '../types';
 
 export interface CookieInfo extends CookieOptionInfo {
 	name: string;

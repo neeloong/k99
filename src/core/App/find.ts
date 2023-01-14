@@ -1,5 +1,5 @@
-import { Method, Handler, Context, Guard } from '../../types';
-import Router from '../../Router';
+import { Method, Handler, Context, Guard } from '../types';
+import Router from '../Router';
 
 
 async function execGuard(
