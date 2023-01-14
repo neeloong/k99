@@ -47,7 +47,7 @@ export default function main(
 ): Promise<K99Response | null> {
 	const { aborted } = req;
 	const abortPromise: Promise<null> = aborted
-		? aborted.then(() => {}, () => {}).then(e => Promise.reject(e))
+		? aborted.then(e => Promise.reject(e))
 		: new Promise(() =>{});
 
 	const {context, setParams, destroy, sendHeaders} = createContext(
@@ -104,7 +104,6 @@ export default function main(
 		});
 	}), e => {
 		destroy();
-		if (e === undefined){ return null; }
 		return Promise.reject(e);
 	});
 }
