@@ -1,21 +1,19 @@
 import type {
 	Asset,
-	K99Request,
-	K99Response,
 	Log,
 	Setting,
+	K99Request,
+	K99Response,
 } from '../types';
-
-import ApiRouter from '../ApiRouter';
-import Router from '../Router';
 import type Plugin from '../Plugin';
+import Router from '../Router';
 import run from '../run';
 
 import initSettings from './initSettings';
 import initAssets from './initAssets';
 import find from './find';
 
-class App extends ApiRouter {
+class App {
 	/** 设置接口 */
 	readonly setting?: Setting.Api;
 	/** 资产接口 */
@@ -27,34 +25,38 @@ class App extends ApiRouter {
 		{router, setting, asset, log }: App.Options = {},
 		plugins: Record<string, Plugin> = {},
 	) {
-		super();
-
 		this.setting = initSettings(setting, plugins);
 		this.asset = initAssets(asset, plugins);
 		this.log = log;
 
 		this.plugins = plugins;
 		for (const plugin of Object.values(plugins)) {
-			this.route(plugin.router);
+			this.#routers.push(plugin.router);
 		}
 		if (router instanceof Router) {
-			this.route(router);
+			this.#routers.push(router);
 		}
+	}
+	readonly #routers: Router[] = [];
+	route(router: Router): Router {
+		this.#routers.push(router);
+		return router;
 	}
 	request(request: K99Request): Promise<null | K99Response> {
 		const {setting, asset, log } = this;
+		const routers = this.#routers;
 		return run(request, {
 			setting,
 			asset,
 			log,
-			getHandlers: (ctx, s) => find(
-				this,
-				ctx.method,
-				ctx.pathname.split('/').filter(Boolean),
-				ctx,
-				s,
-				{}
-			),
+			getHandlers: (ctx, setParams) => {
+				const path = ctx.pathname.split('/').filter(Boolean);
+				return find(
+					routers.map(router => [router, {}, path]),
+					ctx,
+					setParams,
+					{}
+				); },
 		});
 	}
 }

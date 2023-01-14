@@ -1,4 +1,4 @@
-import { Method, Handler, Context, Guard } from '../types';
+import { Handler, Context, Guard } from '../types';
 import Router from '../Router';
 
 
@@ -25,24 +25,23 @@ async function execGuard(
 }
 
 export default async function find(
-	router: Router,
-	method: Method,
-	path: string[],
+	list:  AsyncIterable<[Router | Handler[], Record<string, any>, string[]]>
+	| Iterable<[Router | Handler[], Record<string, any>, string[]]>,
 	ctx: Context,
 	setParams: (v: any) => void,
 	params: object,
 ): Promise<Handler[] | null> {
-	if (router.disabled) { return null; }
-	if (!await execGuard(router.guards, ctx, setParams, params)) { return null; }
-	if (ctx.destroyed) { return null; }
-	for await (const [route, result, subpath] of router.find(method, path)) {
+	for await (const [route, result, path] of list) {
 		if (ctx.destroyed) { return null; }
 		const newParams = {...params, ...result};
 		if (!(route instanceof Router)) {
 			setParams(newParams);
 			return route;
 		}
-		const res = await find(route, method, subpath, ctx, setParams, newParams);
+		if (route.disabled) { continue; }
+		if (!await execGuard(route.guards, ctx, setParams, params)) { continue; }
+		if (ctx.destroyed) { continue; }
+		const res = await find(route.find(ctx.method, path), ctx, setParams, params);
 		if (res) { return res; }
 	}
 	return null;
