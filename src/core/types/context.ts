@@ -1,4 +1,3 @@
-import type App from '../App';
 import type { Method } from './router';
 import type { K99Headers } from './K99Headers';
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';

@@ -1,22 +1,16 @@
-import {
-	MaybePromise,
-	Service,
-	ServiceContext,
-	ServiceDestroyContext,
-	ServiceExecContext,
-} from './types';
+import { MaybePromise, Service, ServiceContext } from './types';
 
 
 function service<T, D extends object, P extends any[]>(
-	exec: (ctx: ServiceExecContext<D>, ...p: P) => T,
-	destroy?: ((ctx: ServiceDestroyContext<D>) => MaybePromise<void>) | undefined | null,
+	exec: (ctx: ServiceContext<D, false>, ...p: P) => T,
+	destroy?: ((ctx: ServiceContext<D, true>) => MaybePromise<void>) | undefined | null,
 ): Service<T, D, P> {
 	return function(ctx: ServiceContext<D>, ...any: any[]): any {
 		if (!ctx.destroying) {
-			return exec(ctx, ...any as P);
+			return exec(ctx as ServiceContext<D, false>, ...any as P);
 		}
 		if (typeof destroy === 'function') {
-			return destroy(ctx);
+			return destroy(ctx as ServiceContext<D, true>);
 		}
 	};
 }
