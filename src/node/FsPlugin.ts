@@ -1,18 +1,18 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
 import type { MaybePromise } from 'k99';
-import { Plugin, ApiRouter } from 'k99';
+import { Plugin, Router, ApiRouter } from 'k99';
 import Scanner from './Scanner';
 
 async function getRouters(
-	router?: ApiRouter | (() => MaybePromise<ApiRouter>),
-	routers?: (ApiRouter | (() => MaybePromise<ApiRouter>))[],
-): Promise<ApiRouter[] | undefined> {
+	router?: Router | (() => MaybePromise<Router>),
+	routers?: (Router | (() => MaybePromise<Router>))[],
+): Promise<Router[] | undefined> {
 	const r = await getRouter(router);
 	if (!Array.isArray(routers)) {
 		return r ? [r] : undefined;
 	}
-	const list: ApiRouter[] = r ? [r] : [];
+	const list: Router[] = r ? [r] : [];
 	for (const router of routers) {
 		const r = await getRouter(router);
 		if (r) { list.push(r); }
@@ -21,16 +21,16 @@ async function getRouters(
 }
 
 async function getRouter(
-	router?: ApiRouter | (() => MaybePromise<ApiRouter>),
-): Promise<ApiRouter | undefined> {
+	router?: Router | (() => MaybePromise<Router>),
+): Promise<Router | undefined> {
 	if (typeof router === 'function') {
 		router = await router();
 	}
-	if (router instanceof ApiRouter) { return router; }
+	if (router instanceof Router) { return router; }
 }
 
 
-class FsPlugin extends Plugin {
+class FsPlugin extends Plugin<ApiRouter> {
 	/** 路径 */
 	readonly path: string;
 
@@ -74,6 +74,9 @@ class FsPlugin extends Plugin {
 		this.path = path;
 	}
 
+	protected _createRouter() {
+		return new ApiRouter();
+	}
 	protected async _initRouter(pluginRouter: ApiRouter) {
 		const {_config} = this;
 		const list = await getRouters(_config.router, _config.routers);
@@ -126,8 +129,8 @@ declare namespace FsPlugin {
 		 */
 		scan?: string;
 
-		router?: ApiRouter | (() => MaybePromise<ApiRouter>);
-		routers?: (ApiRouter | (() => MaybePromise<ApiRouter>))[];
+		router?: Router | (() => MaybePromise<Router>);
+		routers?: (Router | (() => MaybePromise<Router>))[];
 	}
 
 }

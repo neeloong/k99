@@ -1,7 +1,6 @@
-import ApiRouter from './ApiRouter';
 import Router from './Router';
 
-export default abstract class Plugin {
+export default abstract class Plugin<T extends Router = Router> {
 	/** 包名 */
 	readonly name: string;
 	/** 版本 */
@@ -29,20 +28,21 @@ export default abstract class Plugin {
 
 	abstract readSettings(path: string): any | Promise<any>;
 	abstract readAsset(path: string): Promise<Uint8Array | null>;
+	protected abstract _createRouter(): T;
+	protected abstract _initRouter(router: T): Promise<void> | void;
 
-	private __initRouterPromise: Promise<Router> | undefined;
-	protected _initRouter(router: Router): Promise<void> | void {}
+	private __initRouterPromise: Promise<T> | undefined;
 	initRouter() {
 		const {router} = this;
 		if (this.__initRouterPromise) {
 			return this.__initRouterPromise;
 		}
-		return this.__initRouterPromise = Promise.resolve()
-			.then(() => this._initRouter(router))
-			.then(() => router);
+		return this.__initRouterPromise
+			= Promise.resolve(this._initRouter(router))
+				.then(() => router);
 	}
-	get router() {
-		const router = new ApiRouter();
+	get router(): T {
+		const router = this._createRouter();
 		Reflect.defineProperty(this, 'router', {
 			value: router,
 			configurable: true,
