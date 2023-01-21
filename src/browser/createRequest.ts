@@ -41,13 +41,13 @@ export default function createRequest(
 
 	const aborted = new Promise<void>((_, reject) => {
 		if (signal.aborted) {
-			return reject(new DOMException('The user aborted a request.'));
+			return reject(signal.reason);
 		}
-		const abort = () => {
-			signal.removeEventListener('abort', abort);
-			reject(new DOMException('The user aborted a request.'));
-		};
-		signal.addEventListener('abort', abort);
+		signal.addEventListener(
+			'abort',
+			() => reject(signal.reason),
+			{ once: true }
+		);
 	});
 	return {
 		method: (request.method || 'GET').toUpperCase()  as Method,

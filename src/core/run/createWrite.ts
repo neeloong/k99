@@ -20,7 +20,7 @@ function isBaseWriteType(
 export default function createWrite(): [
 	Writable,
 	AsyncGenerator<Uint8Array, any, unknown>,
-	() => boolean
+	(e?: any) => boolean
 ] {
 	let finished = false;
 
@@ -43,7 +43,7 @@ export default function createWrite(): [
 		next() {
 			const promise = nextPromise.then(cb =>{
 				if (!cb) { return; }
-				if (aboutDOMException) {
+				if (abortException) {
 					cb(false);
 					return abortedPromise;
 				}
@@ -58,8 +58,8 @@ export default function createWrite(): [
 					};
 				}).then<Item | void>(value => {
 					const [data, cb] = value;
-					if (!aboutDOMException && data !== undefined) { return value; }
-					cb(!aboutDOMException);
+					if (!abortException && data !== undefined) { return value; }
+					cb(!abortException);
 				})]);
 			});
 			nextPromise = promise.then(value => {
@@ -83,19 +83,19 @@ export default function createWrite(): [
 		},
 		[Symbol.asyncIterator]() { return readable; },
 	};
-	let aboutDOMException: DOMException | undefined;
+	let abortException: any;
 	let abortReject: ((any?: any) => void) | undefined;
 	let abortedPromise = new Promise<void>((_, reject) => {
-		if (aboutDOMException) {
-			reject(aboutDOMException);
+		if (abortException) {
+			reject(abortException);
 		} else {
 			abortReject = reject;
 		}
 	});
-	function abort() {
-		if (aboutDOMException) { return false; }
-		aboutDOMException = new DOMException('The user aborted a request.');
-		if (abortReject) { abortReject(new DOMException('The user aborted a request.')); }
+	function abort(e?: any) {
+		if (abortException) { return false; }
+		abortException = e || new DOMException('The user aborted a request.');
+		if (abortReject) { abortReject(abortException); }
 		return true;
 
 	}

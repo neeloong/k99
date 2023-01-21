@@ -106,11 +106,11 @@ function createRequest(req: IncomingMessage | Http2ServerRequest): K99Request {
 		search: 'search' in req && req['search']  as string || urlInfo.search || '',
 		query: 'query' in req && req['query'] as {} || urlInfo.query || {},
 		read: createRead(req),
-		aborted: new Promise((r1, r2) => {
+		aborted: new Promise((_, r) => {
 			const end = (err?: Error) => {
 				req.off('end', end);
 				req.off('error', end);
-				if (err) { r2(err); } else { r1(); }
+				if (err) { r(err); }
 			};
 			req.on('end', end);
 			req.on('error', end);

@@ -157,7 +157,7 @@ export default function createContext(
 	return {
 		context,
 		setParams: (v: any) => { params = v; },
-		 destroy: () => {
+		destroy: () => {
 			if (destroyed) { return; }
 			destroyed = true;
 			headersSent = true;

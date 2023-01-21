@@ -36,31 +36,30 @@ async function runHandles(
 
 export default function main(
 	req: K99Request,
-	setting: Setting,
-	asset: Asset,
-	log: Log,
 	getHandlers:(
 		ctx: Context,
 		setParams: (v: any) => void,
 	) => Promise<Handler[] | null>,
+	setting: Setting,
+	asset: Asset,
+	log: Log,
 	parent?: Context,
 ): Promise<K99Response | null> {
-	const { aborted } = req;
-	const abortPromise: Promise<null> = aborted
-		? aborted.then(e => Promise.reject(e))
-		: new Promise(() =>{});
+	const aborted: Promise<null> = req.aborted
+		?.then(e => Promise.reject(e))
+		|| new Promise(() =>{});
 
 	const {context, setParams, destroy, sendHeaders} = createContext(
 		req,
 		setting,
 		asset,
 		log,
-		abortPromise,
-		opt => main(createRequest(opt), setting, asset, log, getHandlers, context),
+		aborted,
+		opt => main(createRequest(opt), getHandlers, setting, asset, log, context),
 		parent,
 	);
 	return Promise.race([
-		abortPromise,
+		aborted,
 		getHandlers(context, setParams),
 	]).then(handlers => new Promise<K99Response | null>(resolve => {
 		if (!handlers) {
@@ -69,7 +68,7 @@ export default function main(
 		}
 
 		const [writable, readable, abortResponse] = createWrite();
-		abortPromise.finally(abortResponse);
+		aborted.catch(e => abortResponse(e));
 
 		function send() {
 			if (!sendHeaders()) { return; }
@@ -95,10 +94,16 @@ export default function main(
 			Object.getOwnPropertyDescriptors(contextS),
 		);
 		Promise.race([
-			abortPromise,
-			runHandles(actionContext, handlers).catch(e => log.error(e)),
-		]).finally(() => {
+			aborted,
+			runHandles(actionContext, handlers),
+		]).then(() => {
 			send();
+			destroy();
+			writable.end();
+		}, e => {
+			context.status = 500;
+			send();
+			abortResponse(e);
 			destroy();
 			writable.end();
 		});
