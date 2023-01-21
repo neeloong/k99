@@ -1,7 +1,7 @@
 import type { ServerResponse, IncomingMessage } from 'node:http';
 import type { Http2ServerRequest } from 'node:http2';
 import { Http2ServerResponse } from 'node:http2';
-import type { K99Response, App, K99Request, Method } from 'k99';
+import type { K99Response, K99Request, Method } from 'k99';
 import type { Readable } from 'node:stream';
 import * as urlFn from 'node:url';
 
@@ -100,11 +100,11 @@ function createRequest(req: IncomingMessage | Http2ServerRequest): K99Request {
 		method: (req.method || 'GET').toUpperCase()  as Method,
 		url: req.url || '/',
 		headers: req.headers,
-		pathname: 'pathname' in req && req['pathname']
+		pathname: 'pathname' in req && req['pathname'] as string
 		|| urlInfo.pathname
 		|| '/',
-		search: 'search' in req && req['search'] || urlInfo.search || '',
-		query: 'query' in req && req['query'] || urlInfo.query || {},
+		search: 'search' in req && req['search']  as string || urlInfo.search || '',
+		query: 'query' in req && req['query'] as {} || urlInfo.query || {},
 		read: createRead(req),
 		aborted: new Promise((r1, r2) => {
 			const end = (err?: Error) => {
@@ -145,11 +145,11 @@ export default function createHttpCallback<
 	TReq extends IncomingMessage | Http2ServerRequest,
 	TRes extends ServerResponse | Http2ServerResponse,
 >(
-	app: App,
+	run: (request: K99Request) => Promise<K99Response | null>,
 	notFound?: (req: TReq, res: TRes, next?: () => void) => any
 ): (req: TReq, res: TRes, next?: () => void) => any {
 	return async function httpCallback(req, res, next) {
-		const r = await app.request(createRequest(req)).then(r => {
+		const r = await run(createRequest(req)).then(r => {
 			if (r) { return sendResponse(res, r); }
 			if (notFound) { return notFound(req, res, next); }
 			if (next) { return next(); }

@@ -15,18 +15,17 @@ import initLog from './initLog';
 
 export default function run(
 	req: K99Request,
+	getHandlers: (
+		ctx: Context,
+		setParams: (v: any) => void,
+	) => Promise<Handler[] | null>,
 	options: {
 		setting?: Setting.Api,
 		asset?: Asset.Api,
 		log?: Log.Api,
-		getHandlers(
-			ctx: Context,
-			setParams: (v: any) => void,
-		): Promise<Handler[] | null>,
 	},
 	parent?: Context,
 ): Promise<K99Response | null> {
-	const {getHandlers} = options;
 	const asset = initAssets(options.asset);
 	const setting = initSettings(options.setting);
 	const log = initLog(options.log);

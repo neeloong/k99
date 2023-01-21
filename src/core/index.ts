@@ -6,3 +6,4 @@ export { default as ApiRouter } from './ApiRouter';
 export { default as Plugin    } from './Plugin';
 export { default as App       } from './App';
 export { default as service   } from './service';
+export { default as bindAsset } from './utils/bindAsset';
