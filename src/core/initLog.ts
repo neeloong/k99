@@ -1,6 +1,5 @@
-import type { Log } from '../types';
 
-import extendsInterface from './extendsInterface';
+import type Log from './types/Log';
 
 /**
  * 包装日志文本
@@ -68,7 +67,7 @@ export default function initLog({
 	function writeLog(path: string, log: string, opt?: Log.Options) {
 		return write(path, pack(log, opt));
 	}
-	return extendsInterface({read, write: writeLog, clear }, {
+	return {read, write: writeLog, clear,
 		async debug(log: string, opt?: Log.Options) {
 			return writeLog('debug', log, opt);
 		},
@@ -81,5 +80,5 @@ export default function initLog({
 		async error(log: string, opt?: Log.Options) {
 			return writeLog('error', getErrorLog(log), opt);
 		},
-	});
+	};
 }

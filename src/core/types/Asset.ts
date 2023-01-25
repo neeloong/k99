@@ -1,9 +1,7 @@
-import { Encoding, HexEncoding } from './writeType';
+import type Encoding from './Encoding';
+import type HexEncoding from './HexEncoding';
 
-export interface Asset {
-	(): string;
-	(path: string): this;
-	(path: string, mark: true): this;
+interface Asset {
 
 	/** 读取文件 */
 	read(path: string, encoding?: null): Promise<Uint8Array | null>;
@@ -18,7 +16,7 @@ export interface Asset {
 	/** 获取文件信息 */
 	stat(path: string): Promise<Asset.Stats | null>;
 }
-export declare namespace Asset {
+declare namespace Asset {
 	export interface Stats {
 		isDirectory: boolean;
 		size: number;
@@ -37,3 +35,4 @@ export declare namespace Asset {
 		stat?(path: string): Promise<Stats | null>;
 	}
 }
+export default Asset;

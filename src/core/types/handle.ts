@@ -1,12 +1,13 @@
-import { MaybePromise } from './promise';
-import { ActionContext } from './context';
-import { WriteType } from './writeType';
+import ActionContext from './ActionContext';
+import type WriteType from './WriteType';
 
 
 /** 处理函数定义 */
-interface Handler {
-	(ctx: ActionContext): MaybePromise<void | undefined | WriteType | object | boolean>;
+export default interface Handler {
+	(
+		ctx: ActionContext
+	): PromiseLike<void | undefined | WriteType | object | boolean>
+	 | void | undefined | WriteType | object | boolean;
 	/** 所属组 */
 	plugin?: string;
 }
-export { Handler };

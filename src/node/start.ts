@@ -2,8 +2,7 @@ import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
 import JSON5 from 'json5';
 import yaml from 'yaml';
-import FsPlugin from './FsPlugin';
-import NodeApp from './NodeApp';
+import { FsPlugin, NodeApp } from 'k99/node';
 
 const idRegex = '[a-zA-Z][a-zA-Z0-9_-]*(?:.[a-zA-Z][a-zA-Z0-9_-]*)*';
 const nsPluginRegex = new RegExp(`^(?:@${ idRegex }/)?${ idRegex }$`);

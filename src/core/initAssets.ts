@@ -1,8 +1,9 @@
-import type { Asset, Encoding, HexEncoding } from '../types';
-import bin2str from '../utils/bin2str';
-import str2bin from '../utils/str2bin';
+import type Asset from './types/Asset';
+import type Encoding from './types/Encoding';
+import type HexEncoding from './types/HexEncoding';
+import bin2str from './bin2str';
+import str2bin from './str2bin';
 
-import extendsInterface from './extendsInterface';
 
 async function defaultRead() { return null; }
 async function defaultWrite() { return false; }
@@ -51,10 +52,10 @@ export default function initAssets(
 	async function statAsset(path: string): Promise<Asset.Stats | null> {
 		return stat(path);
 	}
-	return extendsInterface({
+	return {
 		read: readAsset,
 		write: writeAsset,
 		delete: deleteAsset,
 		stat: statAsset,
-	}, {});
+	};
 }

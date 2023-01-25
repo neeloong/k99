@@ -1,6 +1,6 @@
 import * as pathFn from 'node:path';
 import type { Handler, Method } from 'k99';
-import { ApiRouter } from 'k99';
+import Router from 'k99/router';
 import type Scanner from '.';
 
 const registers: { [key: string]: Scanner.Register; } = {};
@@ -18,7 +18,7 @@ export function setRegister(
 /** 注册文件 */
 export async function register(
 	file: Scanner.FileItem,
-	router: ApiRouter,
+	router: Router.Api,
 	list?: Record<string, Scanner.Register>,
 ): Promise<boolean> {
 	const { extname, type } = file;
@@ -47,7 +47,7 @@ const resourceHandleMap: Record<string, {methods: Method[], path: string}> = {
 	destroy: { methods: ['DELETE'], path: ':id' },
 };
 
-function setHandleWithMethod(router: ApiRouter, path: string, item: any) {
+function setHandleWithMethod(router: Router.Api, path: string, item: any) {
 	if (typeof item !== 'object') { return; }
 	for (const method of methods) {
 		const fn = item[method];
@@ -57,7 +57,7 @@ function setHandleWithMethod(router: ApiRouter, path: string, item: any) {
 
 }
 const AllMethod: Method[] = ['GET', 'DELETE', 'HEAD', 'POST', 'PUT'];
-function setHandleItem(router: ApiRouter, path: string, item: any): void {
+function setHandleItem(router: Router.Api, path: string, item: any): void {
 	if (!item) { return; }
 	const list = getHandlers(item);
 	if (list) {
@@ -86,11 +86,11 @@ function get(
 }
 
 function createRegister(
-	run: (router: ApiRouter, value: any) => void,
+	run: (router: Router.Api, value: any) => void,
 	test: (v: any) => boolean,
 	onlyDefault?: boolean
 ) {
-	return async function(file: Scanner.FileItem, router: ApiRouter): Promise<boolean> {
+	return async function(file: Scanner.FileItem, router: Router.Api): Promise<boolean> {
 		try {
 			const exports = await import(pathFn.join(file.root, file.path));
 			const item = get(exports, test, onlyDefault);
@@ -143,7 +143,7 @@ const guard = createRegister((router, exports) => {
 }, v => typeof v === 'function', true);
 const router = createRegister((router, exports) => {
 	router.route(exports);
-}, v => v instanceof ApiRouter, true);
+}, v => v instanceof Router.Api, true);
 
 
 setRegister({ extname: 'js', register: collection });

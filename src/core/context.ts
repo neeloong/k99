@@ -1,17 +1,12 @@
-import type {
-	K99Request,
-	K99Headers,
-	CookieClearOption,
-	WriteType,
-	Service,
-	Context,
-	ServiceContext,
-	Method,
-	Log,
-	Setting,
-	Asset,
-} from '../types';
-
+import type Asset from './types/Asset';
+import type { Context, Service, ServiceContext } from './types/context';
+import type { CookieClearOption } from './types/cookie';
+import type K99Headers from './types/K99Headers';
+import type K99Request from './types/K99Request';
+import type Log from './types/Log';
+import type Method from './types/method';
+import type Setting from './types/Setting';
+import type WriteType from './types/WriteType';
 import {
 	clearCookie, getCookie, getRequestCookies, getCookieHeader, CookieInfo,
 } from './cookie';

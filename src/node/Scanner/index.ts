@@ -1,4 +1,4 @@
-import type { ApiRouter } from 'k99';
+import type Router from 'k99/router';
 import { setRegister } from './register';
 import scan from './scan';
 
@@ -15,7 +15,7 @@ class Scanner {
 	 * @param root    要扫描的路径
 	 * @param router  被注册的路由
 	 */
-	static scan(root: string, router: ApiRouter): Promise<void> {
+	static scan(root: string, router: Router.Api): Promise<void> {
 		return scan(root, router);
 	}
 	/** 注册器列表 */
@@ -25,7 +25,7 @@ class Scanner {
 	 * @param root    要扫描的路径
 	 * @param router  被注册的路由
 	 */
-	scan(root: string, router: ApiRouter): Promise<void> {
+	scan(root: string, router: Router.Api): Promise<void> {
 		return scan(root, router, this.__registers);
 	}
 	/** 为当前路由设置注册器 */
@@ -59,7 +59,7 @@ declare namespace Scanner {
 	 * @param opt 注册选项
 	 * @param router 当前的路由
 	 */
-		register(file: FileItem, router: ApiRouter): boolean | Promise<boolean>;
+		register(file: FileItem, router: Router.Api): boolean | Promise<boolean>;
 	}
 
 }

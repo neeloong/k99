@@ -1,4 +1,6 @@
-import { Encoding, HexEncoding } from '../types';
+import type Encoding from './types/Encoding';
+import type HexEncoding from './types/HexEncoding';
+
 function str2utf8bin(str: string): Uint8Array {
 	let out: number[] = [];
 	let i = 0;

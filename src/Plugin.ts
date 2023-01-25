@@ -1,6 +1,39 @@
-import Router from './Router';
+import type { Asset } from 'k99';
+import type Router from 'k99/router';
+
+const idRegexText = '[a-zA-Z][a-zA-Z0-9_-]*';
+const kRegexText = `${ idRegexText }(?:.${ idRegexText })*`;
+const regexText = `^/(${ idRegexText })/((?:@${ kRegexText }/)?${ kRegexText })/(.+)$`;
+const regex = new RegExp(regexText);
 
 export default abstract class Plugin<T extends Router = Router> {
+	static bindAsset(
+		api: Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
+	): Asset.Api;
+	static bindAsset(
+		api?: Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
+	): Asset.Api | undefined;
+	static bindAsset(
+		api?: Asset.Api, plugins?: Record<string, Plugin>, pluginPath = 'plugins'
+	): Asset.Api | undefined {
+		if (!plugins) { return api; }
+		const read = api?.read;
+		if (typeof read !== 'function') { return api; }
+		return {...api, read: async path => {
+			const ret = await read(path);
+			if (ret !== null) { return ret; }
+			if (!plugins) { return null; }
+			const r = regex.exec(path);
+			if (!r) { return null; }
+			const [, base, name, subpath] = r;
+			if (base !== pluginPath) { return null; }
+			if (!(name in plugins)) { return null; }
+			const plugin = plugins[name];
+			if (!plugin) { return null; }
+			return plugin.readAsset(subpath);
+		}};
+	}
+
 	/** 包名 */
 	readonly name: string;
 	/** 版本 */

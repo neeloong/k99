@@ -1,14 +1,7 @@
-import type {
-	Asset,
-	Log,
-	Setting,
-	K99Request,
-	K99Response,
-} from './types';
-import type Plugin from './Plugin';
-import Router from './Router';
-
-import bindAsset from './utils/bindAsset';
+import type { Asset, Log, Setting, K99Request, K99Response } from 'k99';
+import run from 'k99';
+import Plugin from 'k99/plugin';
+import Router from 'k99/router';
 
 class App {
 	/** 设置接口 */
@@ -25,7 +18,7 @@ class App {
 		plugins: Record<string, Plugin> = {},
 	) {
 		this.setting = setting;
-		this.asset = bindAsset(asset, plugins);
+		this.asset = Plugin.bindAsset(asset, plugins);
 		this.log = log;
 
 		this.plugins = plugins;
@@ -36,7 +29,7 @@ class App {
 		if (router instanceof Router) {
 			routers.push(router);
 		}
-		this.run = Router.make(this, routers);
+		this.run = run.make(Router.make(routers), this);
 	}
 }
 declare namespace App {

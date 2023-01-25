@@ -1,5 +1,6 @@
-import type { Encoding, HexEncoding } from '../types';
-import bin2str from '../utils/bin2str';
+import type Encoding from './types/Encoding';
+import type HexEncoding from './types/HexEncoding';
+import bin2str from './bin2str';
 
 export default function createRead(
 	get: (size?: number) => Promise<Uint8Array | null>

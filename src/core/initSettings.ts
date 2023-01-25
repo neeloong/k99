@@ -1,11 +1,9 @@
-import type { Setting } from '../types';
-
-import extendsInterface from './extendsInterface';
+import type Setting from './types/Setting';
 
 async function defaultRead() { return undefined; }
 async function defaultWrite() { return false; }
 export default function initSettings(
 	{ read = defaultRead, write = defaultWrite }: Setting.Api = {},
 ): Setting {
-	return extendsInterface({ read, write}, {});
+	return { read, write};
 }

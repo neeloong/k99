@@ -1,4 +1,4 @@
-import { WriteType } from '../types';
+import type WriteType from './types/WriteType';
 import str2bin from './str2bin';
 
 

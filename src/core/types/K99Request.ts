@@ -1,5 +1,5 @@
-import { Method } from './router';
-import { K99Headers } from './K99Headers';
+import type K99Headers from './K99Headers';
+import type Method from './method';
 
 interface K99Request {
 	readonly method: Method;
@@ -21,4 +21,4 @@ declare namespace K99Request {
 		(size?: number): Promise<Uint8Array | null>;
 	}
 }
-export { K99Request };
+export default K99Request;

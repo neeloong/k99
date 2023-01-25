@@ -1,13 +1,13 @@
 import * as pathFn from 'node:path';
-import type {
+import k99, {
 	Asset,
 	K99Request,
 	K99Response,
 	Log,
-	Plugin,
 	Setting,
 } from 'k99';
-import { Router, bindAsset } from 'k99';
+import Router from 'k99/router';
+import Plugin from 'k99/plugin';
 import createFsLogApi from './createFsLogApi';
 import createFsSettingsApi from './createFsSettingsApi';
 import createFsAssetsApi from './createFsAssetsApi';
@@ -34,7 +34,7 @@ class NodeApp {
 
 
 		const setting = createFsSettingsApi(newSettingsPath);
-		const asset = bindAsset(createFsAssetsApi(newAssetsPath));
+		const asset = Plugin.bindAsset(createFsAssetsApi(newAssetsPath));
 		const log = createFsLogApi(newLogsPath);
 		this.cwd = cwd;
 		this.settingsPath = newSettingsPath;
@@ -53,7 +53,7 @@ class NodeApp {
 		if (router instanceof Router) {
 			routers.push(router);
 		}
-		this.run = Router.make({setting, asset, log}, routers);
+		this.run = k99.make(Router.make(routers), {setting, asset, log});
 	}
 }
 

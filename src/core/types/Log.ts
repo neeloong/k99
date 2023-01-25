@@ -1,9 +1,5 @@
 
-export interface Log {
-	(): string;
-	(path: string): this;
-	(path: string, mark: true): this;
-
+interface Log {
 	/** 读取日志 */
 	read(path: string): Promise<string>;
 	/** 写入日志 */
@@ -20,7 +16,7 @@ export interface Log {
 	/** 输出错误日志 */
 	error(log: any, opt?: Log.Options): Promise<boolean>;
 }
-export declare namespace Log {
+declare namespace Log {
 	export interface Options {
 		/** 是否添加时间标签 */
 		date?: boolean;
@@ -38,3 +34,4 @@ export declare namespace Log {
 		clear?(path: string): Promise<void>;
 	}
 }
+export default Log;

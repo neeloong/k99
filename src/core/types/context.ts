@@ -1,13 +1,14 @@
-import type { Method } from './router';
-import type { K99Headers } from './K99Headers';
+import Asset from './Asset';
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
-import type { Encoding, HexEncoding, WriteType } from './writeType';
-import type {K99Response} from './K99Response';
-import type { Setting } from './Setting';
-import type { Asset } from './Asset';
-import type { Log } from './Log';
-import type { K99Request } from './K99Request';
-import type { MaybePromise } from './promise';
+import type K99Headers  from './K99Headers';
+import type K99Request  from './K99Request';
+import type K99Response  from './K99Response';
+import type Log from './Log';
+import type Method from './method';
+import type Setting from './Setting';
+import type WriteType from './WriteType';
+import type Encoding from './Encoding';
+import type HexEncoding from './HexEncoding';
 
 export interface ServiceContext<T, D extends boolean = boolean> extends Context {
 	readonly destroying: D;
@@ -17,7 +18,7 @@ export interface ServiceContext<T, D extends boolean = boolean> extends Context 
 
 export interface Service<T, D extends object, P extends any[] = []> {
 	(ctx: ServiceContext<D, false>, ...p: P): T;
-	(ctx: ServiceContext<D, true>): MaybePromise<void>;
+	(ctx: ServiceContext<D, true>): PromiseLike<void> | void;
 }
 
 export interface Context {
@@ -134,10 +135,4 @@ export interface Context {
 		name: T,
 		value?: K99Headers[T]
 	): void;
-}
-export interface ActionContext extends Context {
-	/** 输出是否已经因为各种原因结束 */
-	readonly finished: boolean;
-	/** 将数据写入相应 */
-	write(chunk: WriteType): Promise<boolean>;
 }
