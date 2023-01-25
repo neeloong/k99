@@ -11,6 +11,9 @@
     "paths": {
       "k99": ["src/core"],
       "k99/cli": ["src/cli"],
+      "k99/plugin": ["src/Plugin"],
+      "k99/router": ["src/router"],
+      "k99/app": ["src/App"],
       "k99/services": ["src/services"],
       "k99/node": ["src/node"]
     },

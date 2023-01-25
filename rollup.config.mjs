@@ -17,16 +17,65 @@ await fsPromises.writeFile('build/package.json', JSON.stringify({
 	bin: {k99: 'cli.mjs', 'k99-start': 'starter.mjs'},
 	unpkg: './index.min.js', jsdelivr: './index.min.js',
 	author, license, homepage, repository, bugs,
+	exports: {
+		".": {
+			node:"./index.cjs",
+			module: './index.mjs',
+			unpkg: './index.min.js',
+			jsdelivr: './index.min.js',
+		},
+		"./browser": {
+			node:"./browser.cjs",
+			module: './browser.mjs',
+			unpkg: './browser.min.js',
+			jsdelivr: './browser.min.js',
+		},
+		"./plugin": {
+			node:"./plugin.cjs",
+			module: './plugin.mjs',
+			unpkg: './plugin.min.js',
+			jsdelivr: './plugin.min.js',
+		},
+		"./router": {
+			node:"./router.cjs",
+			module: './router.mjs',
+			unpkg: './router.min.js',
+			jsdelivr: './router.min.js',
+		},
+		"./app": {
+			node:"./app.cjs",
+			module: './app.mjs',
+			unpkg: './app.min.js',
+			jsdelivr: './app.min.js',
+		},
+		"./services": {
+			node:"./services.cjs",
+			module: './services.mjs',
+			unpkg: './services.min.js',
+			jsdelivr: './services.min.js',
+		},
+		"./cli": "./cli/index.cjs",
+		"./starter": "./starter.cjs",
+		"./node": "./node/index.cjs"
+	}
 }, null, 2));
 
 const external = [
 	...Object.keys(dependencies),
 	'k99',
+	'k99/router',
+	'k99/plugin',
 	'k99/node',
 	'k99/cli',
 	'node:http',
 	'node:http2',
 ];
+const globals = {
+	'k99': 'k99',
+	'k99/router': 'k99Router',
+	'k99/plugin': 'k99Plugin',
+	
+}
 
 const bYear = 2019;
 const year = new Date().getFullYear();
@@ -37,20 +86,6 @@ const banner = `\
  * (c) ${ date } ${ author }
  * @license ${ license }
  */`;
-
-const browserPackage = JSON.stringify({
-	'main': './index.mjs',
-	'type': 'module',
-	'browser': './index.min.js',
-	'unpkg': './index.min.js',
-	'jsdelivr': './index.min.js',
-}, null, 2);
-
-const nodePackage = JSON.stringify({
-	'main': './index.mjs',
-	'type': 'module',
-}, null, 2);
-
 
 function plugins() {
 	const plugins = [
@@ -66,27 +101,22 @@ function plugins() {
 }
 
 async function createBaseItem(id) {
-	await fsPromises.mkdir(`build/${ id }`, {recursive: true}).catch(() => {});
-	await fsPromises.writeFile(`build/${ id }/package.json`, nodePackage);
 	const input = `src/${ id }/index.ts`;
 	return [{ input, external, plugins: plugins(), output: [
-		{ banner, file: `build/${ id }/index.mjs`, format: 'esm' },
+		{ banner, file: `build/${ id }/index.js`, format: 'cjs' },
 	]}, { input, external, plugins: [ dts() ], output: [
 		{ format: 'esm', banner, file: `build/${ id }/index.d.ts` },
 	] }];
 }
-async function createBrowserItem(id, name = 'k99') {
-	if (id) {
-		await fsPromises.mkdir(`build/${ id }`, {recursive: true}).catch(() => {});
-		await fsPromises.writeFile(`build/${ id }/package.json`, browserPackage);
-	}
-	const input = `src/${ id || 'core' }/index.ts`;
-	const output = `build/${ id ? `${ id }/` : '' }index`;
+async function createBrowserItem(id, name = 'k99', main) {
+	const input = `src/${ id || 'core' }${main ? '' : '/index'}.ts`;
+	const output = `build/${ id ? `${ id.toLowerCase() }` : 'index' }`;
 	return [ { input, external, plugins: plugins(), output: [
+		{ format: 'cjs', banner, file: `${ output }.cjs` },
 		{ format: 'esm', banner, file: `${ output }.mjs` },
-		{ format: 'umd', banner, file: `${ output }.js`, exports: 'named', name },
+		{ format: 'umd', banner, file: `${ output }.js`, name, globals },
 		{ format: 'esm', banner, file: `${ output }.min.mjs`, plugins: [terser()] },
-		{ format: 'umd', banner, file: `${ output }.min.js`, plugins: [terser()], exports: 'named', name },
+		{ format: 'umd', banner, file: `${ output }.min.js`, plugins: [terser()], name, globals },
 	] }, { input, external, plugins: [ dts() ], output: [
 		{ format: 'esm', banner, file: `${ output }.d.ts` },
 	] } ];
@@ -94,12 +124,15 @@ async function createBrowserItem(id, name = 'k99') {
 export default [
 	...await createBrowserItem(),
 	...await createBrowserItem('browser', 'k99Browser'),
+	...await createBrowserItem('Plugin', 'k99Plugin', true),
+	...await createBrowserItem('App', 'k99App', true),
+	...await createBrowserItem('router', 'k99Router'),
 	...await createBrowserItem('services', 'k99Services'),
 	...await createBaseItem('node'),
 	...await createBaseItem('cli'),
 	{ input: 'src/cli/cli.ts', external, plugins: plugins(), output: [
-		{ format: 'esm', banner: `#!/usr/bin/env node\n${ banner }`,  file: 'build/cli.mjs'  },
+		{ format: 'cjs', banner: `#!/usr/bin/env node\n${ banner }`,  file: 'build/cli.cjs'  },
 	] }, { input: 'src/starter.ts', external, plugins: plugins(), output: [
-		{ format: 'esm', banner: `#!/usr/bin/env node\n${ banner }`,  file: 'build/starter.mjs' },
+		{ format: 'cjs', banner: `#!/usr/bin/env node\n${ banner }`,  file: 'build/starter.cjs' },
 	] },
 ];
