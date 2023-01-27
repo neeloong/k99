@@ -10,7 +10,7 @@ const {
 	author, license, homepage, repository, bugs,
 } = info;
 await fsPromises.rm('build', { recursive: true }).catch(() =>{})
-await fsPromises.mkdir('build', {recursive: true});
+await fsPromises.mkdir('build', {recursive: true });
 await fsPromises.writeFile('build/package.json', JSON.stringify({
 	name, description, version, engines, dependencies, keywords,
 	type: 'module', main: 'index.mjs',
