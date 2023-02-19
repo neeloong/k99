@@ -3,9 +3,9 @@ import * as pathFn from 'node:path';
 import type { Asset } from 'k99';
 
 export default function createFsAssetsApi(
-	assetsPath: string,
+	...assetsPath: string[]
 ): Asset.Api {
-	const basePath = pathFn.resolve(assetsPath, '.');
+	const basePath = pathFn.resolve(...assetsPath, '.');
 	return {
 		async read(path: string): Promise<Uint8Array | null> {
 			const p = `${ basePath }/${ path }`;

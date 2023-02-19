@@ -1,5 +1,28 @@
-import type { Method, Handler } from 'k99';
+import type Handler from './types/handle';
+import type Method from './types/method';
+
 import Router from './Router';
+
+
+export interface Match {
+	(paths: string[]): [Record<string, string | string[]>, string[]] | undefined;
+}
+export interface Route {
+	/** 路径匹配 */
+	match?: Match;
+	router?: null;
+	/** 所属插件 */
+	plugin?: string;
+	/** 处理函数 */
+	handlers: Handler[]
+	/** 方法列表 */
+	methods: Set<Method>;
+}
+export interface RouterRoute {
+	/** 路径匹配 */
+	match?: Match;
+	router: Router;
+}
 
 const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']);
 
@@ -9,6 +32,7 @@ interface Pattern {
 	many: boolean;
 	pattern: RegExp;
 }
+
 const regex = /^:([a-zA-Z][a-zA-Z0-9]*)(?:\((.+)\))?([ius]+)?([?+*]?)$/;
 function parse(p: string): Pattern | string {
 	const res = regex.exec(p);
@@ -85,7 +109,7 @@ function exec(
 function toMatch(
 	path: string,
 	end: boolean,
-): ApiRouter.Match | undefined {
+): Match | undefined {
 	const list: (Pattern | string)[] = [];
 	for (const p of path.split('/')) {
 		if (!p || /^\.+$/.test(p)) { continue; }
@@ -114,9 +138,9 @@ function getMethods(methods: Method | Iterable<Method>): Method[] {
 	return ['GET', 'POST', 'PUT', 'DELETE'];
 }
 
-class ApiRouter extends Router {
+export default class ApiRouter extends Router {
 	/** 路由列表 */
-	readonly #routes: (ApiRouter.Route | ApiRouter.RouterRoute)[] = [];
+	readonly #routes: (Route | RouterRoute)[] = [];
 	/**
 	 * 添加子路由
 	 * @param router 要注册的子路由
@@ -171,7 +195,7 @@ class ApiRouter extends Router {
 		methods = getMethods(methods);
 		if (!(methods as Method[]).length) { return null; }
 
-		const route: ApiRouter.Route = {
+		const route: Route = {
 			match: toMatch(path, true),
 			methods: new Set(methods),
 			handlers,
@@ -237,25 +261,3 @@ class ApiRouter extends Router {
 		return this.verb('OPTIONS', path, ...handlers);
 	}
 }
-namespace ApiRouter {
-	export interface Match {
-		(paths: string[]): [Record<string, string | string[]>, string[]] | undefined;
-	}
-	export interface Route {
-		/** 路径匹配 */
-		match?: Match;
-		router?: null;
-		/** 所属插件 */
-		plugin?: string;
-		/** 处理函数 */
-		handlers: Handler[]
-		/** 方法列表 */
-		methods: Set<Method>;
-	}
-	export interface RouterRoute {
-		/** 路径匹配 */
-		match?: Match;
-		router: Router;
-	}
-}
-export default ApiRouter;

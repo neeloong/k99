@@ -2,7 +2,7 @@ import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
 import JSON5 from 'json5';
 import yaml from 'yaml';
-import { FsPlugin, NodeApp } from 'k99/node';
+import { FsPlugin } from 'k99/node';
 
 const idRegex = '[a-zA-Z][a-zA-Z0-9_-]*(?:.[a-zA-Z][a-zA-Z0-9_-]*)*';
 const nsPluginRegex = new RegExp(`^(?:@${ idRegex }/)?${ idRegex }$`);
@@ -155,7 +155,7 @@ async function findSubPackages(
 }
 
 
-export default async function start(): Promise<NodeApp> {
+export default async function start() {
 	const cwd = process.cwd();
 	/** 入口模块 */
 	const main: FsPlugin.Config = await readConfig(process.cwd()) || {
@@ -191,7 +191,5 @@ export default async function start(): Promise<NodeApp> {
 	}
 
 	await mainPlugin.initRouter();
-	const app = new NodeApp(mainPlugin, plugins);
-
-	return app;
+	return FsPlugin.make(plugins, mainPlugin);
 }

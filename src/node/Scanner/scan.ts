@@ -1,6 +1,6 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import type Router from 'k99/router';
+import type {ApiRouter} from 'k99';
 import type Scanner from '.';
 import { register } from './register';
 
@@ -79,12 +79,12 @@ async function isDir(path: string) {
 
 export default async function scan(
 	root: string,
-	router: Router.Api,
+	router: ApiRouter,
 	registers?:  Record<string, Scanner.Register>,
 	path: string = '',
 	scope: string[] = [],
 ): Promise<void> {
-	const routers: Record<string, Router.Api> = {};
+	const routers: Record<string, ApiRouter> = {};
 	function getRouter(name: string) {
 		if (!name) { return router; }
 		let child = name in routers && routers[name];

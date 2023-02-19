@@ -1,6 +1,6 @@
-import type Asset from './types/Asset';
-import type Encoding from './types/Encoding';
-import type HexEncoding from './types/HexEncoding';
+import type Asset from '../types/Asset';
+import type Encoding from '../types/Encoding';
+import type HexEncoding from '../types/HexEncoding';
 import bin2str from './bin2str';
 import str2bin from './str2bin';
 

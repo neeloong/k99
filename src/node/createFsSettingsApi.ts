@@ -3,9 +3,9 @@ import * as pathFn from 'node:path';
 import type { Setting } from 'k99';
 
 export default function createFsSettingsApi(
-	settingsPath: string,
+	...settingsPath: string[]
 ): Setting.Api {
-	const basePath = pathFn.resolve(settingsPath, '.');
+	const basePath = pathFn.resolve(...settingsPath, '.');
 	return {
 		async read(path: string) {
 			const p = `${ basePath }/${ path }.json`;

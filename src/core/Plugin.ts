@@ -1,5 +1,8 @@
-import type { Asset } from 'k99';
-import type Router from 'k99/router';
+import make from './make';
+import Router from './Router';
+import type Asset from './types/Asset';
+import type Log from './types/Log';
+import type Setting from './types/Setting';
 
 const idRegexText = '[a-zA-Z][a-zA-Z0-9_-]*';
 const kRegexText = `${ idRegexText }(?:.${ idRegexText })*`;
@@ -7,6 +10,29 @@ const regexText = `^/(${ idRegexText })/((?:@${ kRegexText }/)?${ kRegexText })/
 const regex = new RegExp(regexText);
 
 export default abstract class Plugin<T extends Router = Router> {
+	static make(
+		plugins: Record<string, Plugin>,
+		{router, setting, asset, log }: {
+			router?: Router;
+			asset?: Asset.Api;
+			setting?: Setting.Api;
+			log?: Log.Api;
+		} = {},
+	) {
+		const routers = [];
+		for (const plugin of Object.values(plugins)) {
+			routers.push(plugin.router);
+		}
+		if (router instanceof Router) {
+			routers.push(router);
+		}
+		return make(Router.make(routers), {
+			setting,
+			asset: Plugin.bindAsset(asset, plugins),
+			log,
+		});
+
+	}
 	static bindAsset(
 		api: Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
 	): Asset.Api;

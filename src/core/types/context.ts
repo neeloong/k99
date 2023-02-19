@@ -29,6 +29,7 @@ export interface Context {
 	readonly parent?: Context;
 	/** 当前的路由 */
 	readonly root: Context;
+	readonly error: any;
 	readonly abort?: Promise<null>;
 	/** 虚拟请求 */
 	request(

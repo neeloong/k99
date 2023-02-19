@@ -1,12 +1,12 @@
-import type ActionContext from './types/ActionContext';
-import type Handler from './types/handle';
-import type WriteType from './types/WriteType';
-import type K99Request from './types/K99Request';
-import type { Context } from './types/context';
-import type Setting from './types/Setting';
-import type Asset from './types/Asset';
-import type Log from './types/Log';
-import type K99Response from './types/K99Response';
+import type ActionContext from '../types/ActionContext';
+import type Handler from '../types/handle';
+import type WriteType from '../types/WriteType';
+import type K99Request from '../types/K99Request';
+import type { Context } from '../types/context';
+import type Setting from '../types/Setting';
+import type Asset from '../types/Asset';
+import type Log from '../types/Log';
+import type K99Response from '../types/K99Response';
 
 import createRequest from './createRequest';
 
@@ -103,11 +103,11 @@ export default function main(
 			context.status = 500;
 			send();
 			abortResponse(e);
-			destroy();
+			destroy(e || true);
 			writable.end();
 		});
 	}), e => {
-		destroy();
+		destroy(e || true);
 		return Promise.reject(e);
 	});
 }

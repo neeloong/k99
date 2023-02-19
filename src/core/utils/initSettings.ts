@@ -1,4 +1,4 @@
-import type Setting from './types/Setting';
+import type Setting from '../types/Setting';
 
 async function defaultRead() { return undefined; }
 async function defaultWrite() { return false; }

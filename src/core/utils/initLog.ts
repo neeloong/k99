@@ -1,5 +1,5 @@
 
-import type Log from './types/Log';
+import type Log from '../types/Log';
 
 /**
  * 包装日志文本

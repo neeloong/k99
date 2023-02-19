@@ -1,12 +1,12 @@
-import type Asset from './types/Asset';
-import type { Context, Service, ServiceContext } from './types/context';
-import type { CookieClearOption } from './types/cookie';
-import type K99Headers from './types/K99Headers';
-import type K99Request from './types/K99Request';
-import type Log from './types/Log';
-import type Method from './types/method';
-import type Setting from './types/Setting';
-import type WriteType from './types/WriteType';
+import type Asset from '../types/Asset';
+import type { Context, Service, ServiceContext } from '../types/context';
+import type { CookieClearOption } from '../types/cookie';
+import type K99Headers from '../types/K99Headers';
+import type K99Request from '../types/K99Request';
+import type Log from '../types/Log';
+import type Method from '../types/method';
+import type Setting from '../types/Setting';
+import type WriteType from '../types/WriteType';
 import {
 	clearCookie, getCookie, getRequestCookies, getCookieHeader, CookieInfo,
 } from './cookie';
@@ -62,11 +62,13 @@ export default function createContext(
 	let headersSent = false;
 	let destroyed = false;
 	const root = parent?.root;
+	let hasError: any = null;
 
 	let params: any = {};
 	const context: Context = {
 		setting, asset, log,
 		parent,
+		get error() { return hasError; },
 		get root() { return root || this; },
 		abort, request,
 		service(service, ...p) {
@@ -152,10 +154,11 @@ export default function createContext(
 	return {
 		context,
 		setParams: (v: any) => { params = v; },
-		destroy: () => {
+		destroy: (error?: boolean) => {
 			if (destroyed) { return; }
 			destroyed = true;
 			headersSent = true;
+			if (error) { hasError = error; }
 			destroyServices(log, services);
 		}, sendHeaders(){
 			if (headersSent) {

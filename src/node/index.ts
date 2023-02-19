@@ -1,5 +1,4 @@
 export { default as FsPlugin            } from './FsPlugin';
-export { default as NodeApp             } from './NodeApp';
 export { default as Scanner             } from './Scanner';
 export { default as createHttpCallback  } from './createHttpCallback';
 export { default as createFsAssetsApi   } from './createFsAssetsApi';

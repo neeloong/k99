@@ -30,24 +30,6 @@ await fsPromises.writeFile('build/package.json', JSON.stringify({
 			unpkg: './browser.min.js',
 			jsdelivr: './browser.min.js',
 		},
-		"./plugin": {
-			node:"./plugin.cjs",
-			module: './plugin.mjs',
-			unpkg: './plugin.min.js',
-			jsdelivr: './plugin.min.js',
-		},
-		"./router": {
-			node:"./router.cjs",
-			module: './router.mjs',
-			unpkg: './router.min.js',
-			jsdelivr: './router.min.js',
-		},
-		"./app": {
-			node:"./app.cjs",
-			module: './app.mjs',
-			unpkg: './app.min.js',
-			jsdelivr: './app.min.js',
-		},
 		"./services": {
 			node:"./services.cjs",
 			module: './services.mjs',
@@ -63,8 +45,6 @@ await fsPromises.writeFile('build/package.json', JSON.stringify({
 const external = [
 	...Object.keys(dependencies),
 	'k99',
-	'k99/router',
-	'k99/plugin',
 	'k99/node',
 	'k99/cli',
 	'node:http',
@@ -72,8 +52,6 @@ const external = [
 ];
 const globals = {
 	'k99': 'k99',
-	'k99/router': 'k99Router',
-	'k99/plugin': 'k99Plugin',
 	
 }
 
@@ -103,13 +81,13 @@ function plugins() {
 async function createBaseItem(id) {
 	const input = `src/${ id }/index.ts`;
 	return [{ input, external, plugins: plugins(), output: [
-		{ banner, file: `build/${ id }/index.js`, format: 'cjs' },
+		{ banner, file: `build/${ id }/index.cjs`, format: 'cjs' },
 	]}, { input, external, plugins: [ dts() ], output: [
 		{ format: 'esm', banner, file: `build/${ id }/index.d.ts` },
 	] }];
 }
-async function createBrowserItem(id, name = 'k99', main) {
-	const input = `src/${ id || 'core' }${main ? '' : '/index'}.ts`;
+async function createBrowserItem(id, name = 'k99') {
+	const input = `src/${ id || 'core' }/index.ts`;
 	const output = `build/${ id ? `${ id.toLowerCase() }` : 'index' }`;
 	return [ { input, external, plugins: plugins(), output: [
 		{ format: 'cjs', banner, file: `${ output }.cjs` },
@@ -124,9 +102,6 @@ async function createBrowserItem(id, name = 'k99', main) {
 export default [
 	...await createBrowserItem(),
 	...await createBrowserItem('browser', 'k99Browser'),
-	...await createBrowserItem('Plugin', 'k99Plugin', true),
-	...await createBrowserItem('App', 'k99App', true),
-	...await createBrowserItem('router', 'k99Router'),
 	...await createBrowserItem('services', 'k99Services'),
 	...await createBaseItem('node'),
 	...await createBaseItem('cli'),

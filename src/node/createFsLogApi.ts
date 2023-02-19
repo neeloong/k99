@@ -1,8 +1,8 @@
 import * as fsPromises from 'node:fs/promises';
 import * as pathFn from 'node:path';
 import type  { Log } from 'k99';
-export default function createFsLogApi(logsPath: string): Log.Api {
-	const basePath = pathFn.resolve(logsPath, '.');
+export default function createFsLogApi(...logsPath: string[]): Log.Api {
+	const basePath = pathFn.resolve(...logsPath, '.');
 	return {
 		async read(path) {
 			path = `${ basePath }/${ path }.log`;

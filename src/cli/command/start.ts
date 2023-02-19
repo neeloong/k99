@@ -11,9 +11,9 @@ export async function exec({
 	if (path) {
 		process.chdir(path);
 	}
-	const router = await start();
-	console.log('K99', '@', router.cwd);
-	const server = http.createServer(createHttpCallback(router.run));
+	const r = await start();
+	console.log('K99', '@');
+	const server = http.createServer(createHttpCallback(r));
 	// (global as any).router = router;
 	if (listen && typeof listen === 'string') {
 		server.listen(listen);

@@ -1,8 +1,11 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import Plugin from 'k99/plugin';
-import Router from 'k99/router';
+import type { Asset, Log, Setting } from 'k99';
+import { ApiRouter, Plugin, Router } from 'k99';
 import Scanner from './Scanner';
+import createFsAssetsApi from './createFsAssetsApi';
+import createFsLogApi from './createFsLogApi';
+import createFsSettingsApi from './createFsSettingsApi';
 
 async function getRouters(
 	router?: Router | (() => PromiseLike<Router> | Router),
@@ -30,7 +33,33 @@ async function getRouter(
 }
 
 
-class FsPlugin extends Plugin<Router.Api> {
+class FsPlugin extends Plugin<ApiRouter> {
+	static make(plugins: Record<string, Plugin>, {
+		path = process.cwd(),
+		settingPath, assetPath, logPath,
+		router, setting, asset, log,
+	}: {
+		/** 工作路径 */
+		path?: string;
+		/** assets 路径 */
+		assetPath?: string;
+		/** 设置路径 */
+		settingPath?: string;
+		/** 日志路径 */
+		logPath?: string;
+		router?: Router;
+		asset?: Asset.Api;
+		setting?: Setting.Api;
+		log?: Log.Api;
+	} = {}) {
+		return Plugin.make(plugins, {
+			setting: setting || createFsSettingsApi(path, settingPath || 'settings'),
+			asset: asset || createFsAssetsApi(path, assetPath || 'assets'),
+			log: log || createFsLogApi(path, logPath || 'logs'),
+			router,
+		});
+
+	}
 	/** 路径 */
 	readonly path: string;
 
@@ -39,7 +68,7 @@ class FsPlugin extends Plugin<Router.Api> {
 		try {
 			const text = await fsPromise.readFile(p, 'utf-8');
 			return JSON.parse(text);
-		} catch {}
+		} catch { }
 	}
 	async readAsset(path: string): Promise<Uint8Array | null> {
 		try {
@@ -66,7 +95,7 @@ class FsPlugin extends Plugin<Router.Api> {
 			settingsPath,
 			logsPath,
 		} = config;
-		super(name, version || '', {author, license});
+		super(name, version || '', { author, license });
 		this._config = config;
 		this.assetsPath = pathFn.resolve(path, assetsPath || 'assets');
 		this.settingsPath = pathFn.resolve(path, settingsPath || 'settings');
@@ -75,10 +104,10 @@ class FsPlugin extends Plugin<Router.Api> {
 	}
 
 	protected _createRouter() {
-		return new Router.Api();
+		return new ApiRouter();
 	}
-	protected async _initRouter(pluginRouter: Router.Api) {
-		const {_config} = this;
+	protected async _initRouter(pluginRouter: ApiRouter) {
+		const { _config } = this;
 		const list = await getRouters(_config.router, _config.routers);
 		for (const router of list || []) {
 			pluginRouter.route(router);
@@ -97,7 +126,7 @@ declare namespace FsPlugin {
 
 	/** 插件配置 */
 	export interface Config {
-	/** assets 路径 */
+		/** assets 路径 */
 		assetsPath?: string;
 		/** 设置路径 */
 		settingsPath?: string;

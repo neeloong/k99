@@ -1,8 +1,16 @@
-import type { Method, Handler, Context, Asset, Log, Setting } from 'k99';
-import ApiRouter from './ApiRouter';
+import type Asset from './types/Asset';
+import type { Context } from './types/context';
+import type Handler from './types/handle';
+import type Log from './types/Log';
+import type Method from './types/method';
+import type Setting from './types/Setting';
+
+export interface Guard {
+	(ctx: Context): boolean | boolean;
+}
 
 async function execGuard(
-	guards: Set<Router.Guard>,
+	guards: Set<Guard>,
 	ctx: Context,
 	setParams: (v: any) => void,
 	params: object,
@@ -60,7 +68,7 @@ abstract class Router {
 			return null;
 		};
 	}
-	readonly guards = new Set<Router.Guard>();
+	readonly guards = new Set<Guard>();
 }
 declare namespace Router {
 	export interface MakeOptions {
@@ -68,9 +76,5 @@ declare namespace Router {
 		setting?: Setting.Api;
 		log?: Log.Api;
 	}
-	export interface Guard {
-		(ctx: Context): boolean | boolean;
-	}
-	export { ApiRouter as Api };
 }
 export default Router;

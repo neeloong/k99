@@ -1,5 +1,5 @@
-import type WriteType from './types/WriteType';
-import str2bin from './str2bin';
+import type WriteType from '../types/WriteType';
+import str2bin from '../utils/str2bin';
 
 
 async function *toAsyncIterable(

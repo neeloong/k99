@@ -1,9 +1,9 @@
 
-import type K99Headers from './types/K99Headers';
-import type K99Request from './types/K99Request';
-import type Method from './types/method';
-import type WriteType from './types/WriteType';
-import str2bin from './str2bin';
+import type K99Headers from '../types/K99Headers';
+import type K99Request from '../types/K99Request';
+import type Method from '../types/method';
+import type WriteType from '../types/WriteType';
+import str2bin from '../utils/str2bin';
 
 function mergeArrayBuffer(data: Uint8Array[], length: number): Uint8Array {
 	if (data.length === 1) { return new Uint8Array(data[0]); }
