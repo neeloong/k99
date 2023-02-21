@@ -10,25 +10,41 @@ import type K99Response from '../types/K99Response';
 
 import createRequest from './createRequest';
 
-import createWrite from './createWrite';
+import createWrite, { isBaseWriteType } from './createWrite';
 import createContext from './context';
 
+
+function isJSON(result: any) {
+	if (!result) { return false; }
+	if (typeof result !== 'object') { return false; }
+	if (Array.isArray(result)) { return true; }
+	if (isBaseWriteType(result)) { return false; }
+	if (Symbol.asyncIterator in result || Symbol.iterator in result) { return false; }
+	return true;
+}
+function replacer(k: any, v: any) {
+	if (typeof v === 'bigint') {
+		return String(v);
+	}
+	return v;
+}
 async function runHandles(
 	context: ActionContext,
 	handlers: Handler[],
 ) {
 	for (const handle of handlers) {
+		if (context.headersSent) { break; }
 		const result = await handle(context);
 		if (context.finished) { break; }
 		if (typeof result === 'boolean') { return result; }
 		if (!result) { continue; }
-		const e = await context.write(result as WriteType);
-		if (context.finished) { break; }
-		if (e) { continue; }
-		if (typeof result !== 'object') { continue; }
-		if (context.headersSent) { break; }
-		context.responseType = 'application/json';
-		await context.write(JSON.stringify(result));
+		if (isJSON(result)) {
+			if (context.headersSent) { break; }
+			context.responseType = 'application/json';
+			await context.write(JSON.stringify(result, replacer));
+			break;
+		}
+		if (await context.write(result as WriteType)) { break; }
 		break;
 	}
 }

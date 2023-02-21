@@ -9,7 +9,7 @@ export interface Writable {
 	readonly ended: boolean
 }
 
-function isBaseWriteType(
+export function isBaseWriteType(
 	chunk: object
 ): chunk is ArrayBuffer | ArrayBufferView{
 	if (chunk instanceof ArrayBuffer) { return true; }
