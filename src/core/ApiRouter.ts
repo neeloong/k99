@@ -37,7 +37,14 @@ const regex = /^:([a-zA-Z][a-zA-Z0-9]*)(?:\((.+)\))?([ius]+)?([?+*]?)$/;
 function parse(p: string): Pattern | string {
 	const res = regex.exec(p);
 	if (!res) { return p; }
-	const [, name, expression, flags, modifier] = res;
+	const [, name, expression = '.*', flags, modifier] = res;
+	if (!expression) {
+		return {
+			name, pattern: new RegExp('^.*$', flags),
+			optional: modifier === '?' || modifier === '*',
+			many: modifier === '+' || modifier === '*',
+		};
+	}
 	let i = 0;
 	let count = 0;
 	const pattern: string[] = ['^'];
