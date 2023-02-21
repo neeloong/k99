@@ -153,6 +153,8 @@ export default function createHttpCallback<
 			if (r) { return sendResponse(res, r); }
 			if (notFound) { return notFound(req, res, next); }
 			if (next) { return next(); }
+			res.statusCode = 404;
+			res.end();
 		}, () => {
 			res.statusCode = 500;
 			res.end();
