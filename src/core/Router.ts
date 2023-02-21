@@ -6,7 +6,7 @@ import type Method from './types/method';
 import type Setting from './types/Setting';
 
 export interface Guard {
-	(ctx: Context): boolean | boolean;
+	(ctx: Context): PromiseLike<boolean | void> | boolean | void;
 }
 
 async function execGuard(
@@ -23,7 +23,7 @@ async function execGuard(
 			const ret = await guard(Object.create(ctx, {
 				params: { value: { ...params } },
 			}));
-			if (!ret) { return false; }
+			if (ret === false) { return false; }
 		} catch {
 			return false;
 		}
