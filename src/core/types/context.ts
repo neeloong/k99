@@ -16,7 +16,7 @@ export interface ServiceContext<T, D extends boolean = boolean> extends Context 
 	[key: string]: any;
 }
 
-export interface Service<T, D extends object, P extends any[] = []> {
+export interface Service<T, D, P extends any[] = []> {
 	(ctx: ServiceContext<D, false>, ...p: P): T;
 	(ctx: ServiceContext<D, true>): PromiseLike<void> | void;
 }

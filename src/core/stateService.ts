@@ -1,9 +1,9 @@
 import { Service, ServiceContext } from './types/context';
 
 
-function stateService<T extends object>(
+function stateService<T>(
 	init: (ctx: ServiceContext<void, false>) => T,
-	destroy?: ((state: T, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | undefined | null,
+	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | undefined | null,
 	exec?: (state: T, ctx: ServiceContext<T, false>) => any,
 ): Service<T, T, []> {
 	return function(ctx: ServiceContext<T>): any {
@@ -19,9 +19,7 @@ function stateService<T extends object>(
 			return state;
 		}
 		if (typeof destroy === 'function') {
-			const {state} = ctx;
-			if (!state) { return; }
-			return destroy(state, ctx as ServiceContext<T, true>);
+			return destroy(ctx.state, ctx as ServiceContext<T, true>);
 		}
 	};
 }

@@ -1,7 +1,7 @@
 import { Service, ServiceContext } from './types/context';
 
 
-function service<T, D extends object, P extends any[]>(
+function service<T, D, P extends any[]>(
 	exec: (ctx: ServiceContext<D, false>, ...p: P) => T,
 	destroy?: ((ctx: ServiceContext<D, true>) => PromiseLike<void> | void) | undefined | null,
 ): Service<T, D, P> {
