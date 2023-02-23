@@ -102,6 +102,7 @@ function exec(
 		params[m.name] = p;
 	}
 	if (!end) { return [params, path.slice(match.length)]; }
+	if (path.length <= match.length) { return [params, []]; }
 	const last = match[match.length - 1];
 	if (typeof last === 'string') { return; }
 	if (!last.many && path.length > match.length) { return; }
@@ -113,10 +114,7 @@ function exec(
 
 }
 
-function toMatch(
-	path: string,
-	end: boolean,
-): Match | undefined {
+function toMatch(path: string, end: boolean): Match | undefined {
 	const list: (Pattern | string)[] = [];
 	for (const p of path.split('/')) {
 		if (!p || /^\.+$/.test(p)) { continue; }
@@ -177,7 +175,9 @@ export default class ApiRouter extends Router {
 			if (!route.router && !route.methods.has(method)) { continue; }
 			const {match} = route;
 			if (!match) {
-				yield [route.router || route.handlers, {}, path];
+				if (route.router || !path.length) {
+					yield [route.router || route.handlers, {}, path];
+				}
 				continue;
 			}
 			if (!path.length) { continue; }
