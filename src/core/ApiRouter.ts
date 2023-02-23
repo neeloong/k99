@@ -1,7 +1,7 @@
 import type Handler from './types/handle';
 import type Method from './types/method';
 
-import Router from './Router';
+import Router, { FindItem } from './Router';
 
 
 export interface Match {
@@ -172,9 +172,7 @@ export default class ApiRouter extends Router {
 		this.#routes.push({ match: toMatch(p, false), router });
 		return router;
 	}
-	*find(
-		method: Method, path: string[],
-	): Iterable<[Handler[] | Router, Record<string, any>, string[]]> {
+	*find(method: Method, path: string[]): Iterable<FindItem> {
 		for (const route of Array.from(this.#routes)) {
 			if (!route.router && !route.methods.has(method)) { continue; }
 			const {match} = route;

@@ -8,6 +8,11 @@ import type Setting from './types/Setting';
 export interface Guard {
 	(ctx: Context): PromiseLike<boolean | void> | boolean | void;
 }
+export type FindItem = [
+	Handler[] | Router,
+	Record<string, any>,
+	string[],
+];
 
 async function execGuard(
 	guards: Set<Guard>,
@@ -55,8 +60,8 @@ async function find(
 abstract class Router {
 	disabled = false;
 	abstract find(method: Method, path: string[]):
-	| AsyncIterable<[Handler[] | Router, Record<string, any>, string[]]>
-	| Iterable<[Handler[] | Router, Record<string, any>, string[]]>;
+	| AsyncIterable<FindItem>
+	| Iterable<FindItem>;
 	static make(routers: Router[]) {
 		return async (ctx: Context, setParams: (v: any) => void) => {
 			const list = routers.flat();

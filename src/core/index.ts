@@ -13,7 +13,7 @@ export type { CookieClearOption, CookieOption, CookieOptionInfo } from './types/
 export type { default as K99Headers } from './types/K99Headers';
 export type { default as ActionContext } from './types/ActionContext';
 
-export type { Guard } from './Router';
+export type { Guard, FindItem } from './Router';
 export type { Match, Route, RouterRoute } from './ApiRouter';
 
 export { default as run } from './run';
