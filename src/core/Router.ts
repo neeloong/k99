@@ -6,7 +6,7 @@ import type Method from './types/method';
 import type Setting from './types/Setting';
 
 export interface Guard {
-	(ctx: Context): PromiseLike<boolean | void> | boolean | void;
+	(ctx: Context): PromiseLike<boolean | Handler | void> | boolean | Handler | void;
 }
 export type FindItem = [
 	Handler[] | Router,
@@ -23,15 +23,12 @@ async function execGuard(
 	if (!guards.size) { return true; }
 	setParams(params);
 	for (const guard of guards) {
-		try {
-			if (ctx.destroyed) { return false; }
-			const ret = await guard(Object.create(ctx, {
-				params: { value: { ...params } },
-			}));
-			if (ret === false) { return false; }
-		} catch {
-			return false;
-		}
+		if (ctx.destroyed) { return false; }
+		const ret = await guard(Object.create(ctx, {
+			params: { value: { ...params } },
+		}));
+		if (ret === false) { return false; }
+		if (typeof ret === 'function') { return ret; }
 	}
 	return true;
 }
@@ -47,7 +44,9 @@ async function find(
 		return route;
 	}
 	if (route.disabled) { return null; }
-	if (!await execGuard(route.guards, ctx, setParams, params)) { return null; }
+	const guardResult = await execGuard(route.guards, ctx, setParams, params);
+	if (!guardResult) { return null; }
+	if (typeof guardResult === 'function') { return [guardResult]; }
 	if (ctx.destroyed) { return null; }
 	for await (const [r, result, p] of route.find(ctx.method, path)) {
 		if (ctx.destroyed) { return null; }
