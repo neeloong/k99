@@ -33,17 +33,16 @@ function destroyServices(
 const hostRegex = /^(\[[^\]]+\]|^:):(\d+)$/;
 
 export default function createContext(
-	{ method, url, pathname, search, query, read, headers } : K99Request,
+	{ method, url, pathname, search, query, read, headers, signal } : K99Request,
 	setting: Setting,
 	asset: Asset,
 	log: Log,
-	abort: Promise<null>,
 	request: (opt: {
 		method: Method;
 		path: string;
 		body?: WriteType | K99Request.Reader | undefined;
 		headers?: K99Headers | undefined;
-		abort?: Promise<void> | undefined;
+		signal?: AbortSignal | undefined;
 	}) => Promise<any>,
 	parent?: Context,
 ) {
@@ -70,7 +69,7 @@ export default function createContext(
 		parent,
 		get error() { return hasError; },
 		get root() { return root || this; },
-		abort, request,
+		signal, request,
 		service(service, ...p) {
 			let serviceContext = services.get(service);
 			if (!serviceContext) {

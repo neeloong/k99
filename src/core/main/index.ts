@@ -49,6 +49,19 @@ async function runHandles(
 	}
 }
 
+function signal2promise(signal: AbortSignal) {
+	return new Promise<void>((_, reject) => {
+		if (signal.aborted) {
+			return reject(signal.reason);
+		}
+		signal.addEventListener(
+			'abort',
+			() => reject(signal.reason),
+			{ once: true }
+		);
+	});
+}
+
 export default function main(
 	req: K99Request,
 	getHandlers:(
@@ -60,16 +73,12 @@ export default function main(
 	log: Log,
 	parent?: Context,
 ): Promise<K99Response | null> {
-	const aborted: Promise<null> = req.aborted
-		?.then(e => Promise.reject(e))
-		|| new Promise(() =>{});
-
+	const aborted = signal2promise(req.signal);
 	const {context, setParams, destroy, sendHeaders} = createContext(
 		req,
 		setting,
 		asset,
 		log,
-		aborted,
 		opt => main(createRequest(opt), getHandlers, setting, asset, log, context),
 		parent,
 	);

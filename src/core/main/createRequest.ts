@@ -167,12 +167,12 @@ function parseUrl(uri: string): [string, string] {
 }
 
 export default function createRequest(
-	{method, path, aborted, body, headers = {}}:{
+	{method, path, signal, body, headers = {}}:{
 		method: Method,
 		path: string,
 		body?: K99Request.Reader | WriteType,
 		headers?: K99Headers,
-		aborted?: Promise<void>,
+		signal?: AbortSignal;
 	}
 ): K99Request {
 	const [pathname, search] = parseUrl(path);
@@ -182,7 +182,7 @@ export default function createRequest(
 		headers,
 		pathname,
 		search,
-		aborted,
+		signal: signal || new AbortController().signal,
 		query: parseQuery(search.substring(1)),
 		read: typeof body === 'function' ? body : createRead(body),
 	};

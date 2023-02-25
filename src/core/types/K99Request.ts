@@ -10,8 +10,7 @@ interface K99Request {
 	readonly search: string;
 	/** 查询参数 */
 	readonly query: Record<string, string | string[] | undefined>;
-
-	readonly aborted?: Promise<void>,
+	readonly signal: AbortSignal;
 	readonly headers: K99Headers;
 	read(size?: number): Promise<Uint8Array | null>
 }

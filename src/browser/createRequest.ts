@@ -39,16 +39,6 @@ export default function createRequest(
 	const url = new URL(request.url);
 	const {body, signal} = request;
 
-	const aborted = new Promise<void>((_, reject) => {
-		if (signal.aborted) {
-			return reject(signal.reason);
-		}
-		signal.addEventListener(
-			'abort',
-			() => reject(signal.reason),
-			{ once: true }
-		);
-	});
 	return {
 		method: (request.method || 'GET').toUpperCase()  as Method,
 		url: `${ url.pathname }${ url.search }` || '/',
@@ -56,7 +46,7 @@ export default function createRequest(
 		pathname:  url.pathname || '/',
 		search: url.search || '',
 		query: searchParser(url.search.substring(1)),
-		aborted,
+		signal,
 		read: body ? createStreamRead(body) : createBufferRead(request),
 	};
 

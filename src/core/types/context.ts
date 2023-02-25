@@ -30,15 +30,15 @@ export interface Context {
 	/** 当前的路由 */
 	readonly root: Context;
 	readonly error: any;
-	readonly abort?: Promise<null>;
+	readonly signal: AbortSignal;
 	/** 虚拟请求 */
 	request(
 		opt: {
-			method: Method,
-			path: string,
-			body?: K99Request.Reader | WriteType,
-			headers?: K99Headers,
-			abort?: Promise<void>,
+			method: Method;
+			path: string;
+			body?: K99Request.Reader | WriteType;
+			headers?: K99Headers;
+			signal?: AbortSignal;
 		}
 	): Promise<null | K99Response>
 	/** 调用服务 */

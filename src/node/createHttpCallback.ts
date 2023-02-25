@@ -94,6 +94,19 @@ function createRead(req: Readable) {
 		});
 	};
 }
+function createAbortSignal(req: IncomingMessage | Http2ServerRequest) {
+	const ac = new AbortController();
+	const end = (err?: Error) => {
+		req.off('end', end);
+		req.off('error', end);
+		if (!err) { return; }
+		ac.abort(err);
+	};
+	req.on('end', end);
+	req.on('error', end);
+
+	return ac.signal;
+}
 function createRequest(req: IncomingMessage | Http2ServerRequest): K99Request {
 	const urlInfo = urlFn.parse(req.url || '/', true);
 	return {
@@ -106,15 +119,7 @@ function createRequest(req: IncomingMessage | Http2ServerRequest): K99Request {
 		search: 'search' in req && req['search']  as string || urlInfo.search || '',
 		query: 'query' in req && req['query'] as {} || urlInfo.query || {},
 		read: createRead(req),
-		aborted: new Promise((_, r) => {
-			const end = (err?: Error) => {
-				req.off('end', end);
-				req.off('error', end);
-				if (err) { r(err); }
-			};
-			req.on('end', end);
-			req.on('error', end);
-		}),
+		signal: createAbortSignal(req),
 	};
 
 }

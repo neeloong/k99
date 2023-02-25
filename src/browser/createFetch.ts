@@ -9,9 +9,7 @@ export default function createFetch(
 	return async function fetch(input: RequestInfo, init?: RequestInit) {
 		const request = new Request(input, init);
 		const {signal} = request;
-		if (signal.aborted) {
-			return Promise.reject(new DOMException('The user aborted a request.'));
-		}
+		signal.throwIfAborted();
 		const r = await run(createRequest(request, searchParser));
 		if (r) { return createResponse(r); }
 		if (typeof notFound === 'function') { return notFound(request); }
