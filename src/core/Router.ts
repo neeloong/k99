@@ -55,6 +55,13 @@ async function find(
 	}
 	return null;
 }
+function uriDecode(t: string) {
+	try {
+		return decodeURIComponent(t);
+	} catch {
+		return t;
+	}
+}
 
 abstract class Router {
 	disabled = false;
@@ -64,7 +71,7 @@ abstract class Router {
 	static make(routers: Router[]) {
 		return async (ctx: Context, setParams: (v: any) => void) => {
 			const list = routers.flat();
-			const path = ctx.pathname.split('/').filter(Boolean);
+			const path = ctx.pathname.split('/').filter(Boolean).map(uriDecode);
 			for (const route of list) {
 				const res = await find(route, path, ctx, setParams, {});
 				if (res) { return res; }
