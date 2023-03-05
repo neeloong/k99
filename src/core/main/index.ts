@@ -14,7 +14,7 @@ import createWrite, { isBaseWriteType } from './createWrite';
 import createContext from './context';
 
 
-function isJSON(result: any) {
+export function isJSON(result: any) {
 	if (!result) { return false; }
 	if (typeof result !== 'object') { return false; }
 	if (Array.isArray(result)) { return true; }
@@ -22,31 +22,27 @@ function isJSON(result: any) {
 	if (Symbol.asyncIterator in result || Symbol.iterator in result) { return false; }
 	return true;
 }
-function replacer(k: any, v: any) {
+export function replacer(k: any, v: any) {
 	if (typeof v === 'bigint') {
 		return String(v);
 	}
 	return v;
 }
-async function runHandles(
+async function runHandle(
 	context: ActionContext,
-	handlers: Handler[],
+	handle: Handler,
 ) {
-	for (const handle of handlers) {
-		if (context.headersSent) { break; }
-		const result = await handle(context);
-		if (context.finished) { break; }
-		if (typeof result === 'boolean') { return result; }
-		if (!result) { continue; }
-		if (isJSON(result)) {
-			if (context.headersSent) { break; }
-			context.responseType = 'application/json';
-			await context.write(JSON.stringify(result, replacer));
-			break;
-		}
-		if (await context.write(result as WriteType)) { break; }
-		break;
+	if (context.headersSent) { return; }
+	const result = await handle(context);
+	if (context.finished) { return; }
+	if (isJSON(result)) {
+		if (context.headersSent) { return; }
+		context.responseType = 'application/json';
+		await context.write(JSON.stringify(result, replacer));
+		return;
 	}
+	return context.write(result as WriteType);
+
 }
 
 function signal2promise(signal: AbortSignal) {
@@ -64,10 +60,10 @@ function signal2promise(signal: AbortSignal) {
 
 export default function main(
 	req: K99Request,
-	getHandlers:(
+	getHandler:(
 		ctx: Context,
 		setParams: (v: any) => void,
-	) => Promise<Handler[] | null>,
+	) => Promise<Handler | null>,
 	setting: Setting,
 	asset: Asset,
 	log: Log,
@@ -79,14 +75,14 @@ export default function main(
 		setting,
 		asset,
 		log,
-		opt => main(createRequest(opt), getHandlers, setting, asset, log, context),
+		opt => main(createRequest(opt), getHandler, setting, asset, log, context),
 		parent,
 	);
 	return Promise.race([
 		aborted,
-		getHandlers(context, setParams),
-	]).then(handlers => new Promise<K99Response | null>(resolve => {
-		if (!handlers) {
+		getHandler(context, setParams),
+	]).then(handler => new Promise<K99Response | null>(resolve => {
+		if (!handler) {
 			destroy();
 			return resolve(null);
 		}
@@ -119,7 +115,7 @@ export default function main(
 		);
 		Promise.race([
 			aborted,
-			runHandles(actionContext, handlers),
+			runHandle(actionContext, handler),
 		]).then(() => {
 			send();
 			destroy();

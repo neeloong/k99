@@ -18,6 +18,7 @@ export type { Match, Route, RouterRoute } from './ApiRouter';
 
 export { default as run } from './run';
 export { default as make } from './make';
+export { default as merge } from './merge';
 export { default as service } from './service';
 export { default as stateService } from './stateService';
 export { default as storeService } from './storeService';

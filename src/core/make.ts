@@ -11,10 +11,10 @@ import main from './main';
 
 
 export default function make(
-	getHandlers: (
+	getHandler: (
 		ctx: Context,
 		setParams: (v: any) => void
-	) => Promise<Handler[] | null> | Handler[] | null,
+	) => Promise<Handler | null> | Handler | null,
 	options?: {
 		setting?: Setting.Api;
 		asset?: Asset.Api;
@@ -24,6 +24,6 @@ export default function make(
 	const asset = initAssets(options?.asset);
 	const setting = initSettings(options?.setting);
 	const log = initLog(options?.log);
-	const get = async (c: Context, s: (v: any) => void) => getHandlers(c, s);
+	const get = async (c: Context, s: (v: any) => void) => getHandler(c, s);
 	return (r: K99Request) => main(r, get, setting, asset, log);
 }

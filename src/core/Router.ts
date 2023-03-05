@@ -9,7 +9,7 @@ export interface Guard {
 	(ctx: Context): PromiseLike<boolean | Handler | void> | boolean | Handler | void;
 }
 export type FindItem = [
-	Handler[] | Router,
+	Handler | Router,
 	Record<string, any>,
 	string[],
 ];
@@ -33,12 +33,12 @@ async function execGuard(
 	return true;
 }
 async function find(
-	route: Router | Handler[],
+	route: Router | Handler,
 	path: string[],
 	ctx: Context,
 	setParams: (v: any) => void,
 	params: object,
-): Promise<Handler[] | null> {
+): Promise<Handler | null> {
 	if (!(route instanceof Router)) {
 		setParams(params);
 		return route;
@@ -46,7 +46,7 @@ async function find(
 	if (route.disabled) { return null; }
 	const guardResult = await execGuard(route.guards, ctx, setParams, params);
 	if (!guardResult) { return null; }
-	if (typeof guardResult === 'function') { return [guardResult]; }
+	if (typeof guardResult === 'function') { return guardResult; }
 	if (ctx.destroyed) { return null; }
 	for await (const [r, result, p] of route.find(ctx.method, path)) {
 		if (ctx.destroyed) { return null; }

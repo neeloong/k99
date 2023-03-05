@@ -1,6 +1,6 @@
 import * as pathFn from 'node:path';
 import type { Handler, Method } from 'k99';
-import { ApiRouter } from 'k99';
+import { ApiRouter, merge } from 'k99';
 import type Scanner from '.';
 
 const registers: { [key: string]: Scanner.Register; } = {};
@@ -28,11 +28,11 @@ export async function register(
 	return register.register({ ...file }, router);
 }
 
-function getHandlers(v: any): Handler[] | undefined {
-	if (typeof v === 'function') { return [v]; }
+function getHandle(v: any): Handler | undefined {
+	if (typeof v === 'function') { return v; }
 	if (!Array.isArray(v)) { return; }
 	const list = v.filter(v => typeof v === 'function') as Handler[];
-	if (list.length) { return list; }
+	if (list.length) { return merge(list); }
 }
 /** 方法列表 */
 const methods = new Set<Method>(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']);
@@ -59,9 +59,9 @@ function setHandleWithMethod(router: ApiRouter, path: string, item: any) {
 const AllMethod: Method[] = ['GET', 'DELETE', 'HEAD', 'POST', 'PUT'];
 function setHandleItem(router: ApiRouter, path: string, item: any): void {
 	if (!item) { return; }
-	const list = getHandlers(item);
-	if (list) {
-		router.verb(AllMethod, path, ...list);
+	const handle = getHandle(item);
+	if (handle) {
+		router.verb(AllMethod, path, handle);
 	} else {
 		setHandleWithMethod(router, path, item);
 	}
@@ -124,16 +124,16 @@ const resource = createRegister((router, exports) => {
 		const item = exports[k] as undefined | Handler;
 		if (!item) { continue; }
 		if (!/^[a-z0-9][a-z0-9A-Z_-]*$/.test(k)) { continue; }
-		const list = getHandlers(item);
-		if (!list) {
+		const handle = getHandle(item);
+		if (!handle) {
 			setHandleWithMethod(router, `:id/${ k }`, item as any);
 			continue;
 		}
 		const info = k in resourceHandleMap && resourceHandleMap[k];
 		if (info) {
-			router.verb(info.methods, info.path, ...list);
+			router.verb(info.methods, info.path, handle);
 		} else {
-			router.verb(AllMethod, `:id/${ k }`, ...list);
+			router.verb(AllMethod, `:id/${ k }`, handle);
 
 		}
 	}
