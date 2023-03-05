@@ -71,6 +71,9 @@ export default function createContext(
 		get root() { return root || this; },
 		signal, request,
 		service(service, ...p) {
+			if (service.rootOnly && root) {
+				return root.service(service, ...p);
+			}
 			let serviceContext = services.get(service);
 			if (!serviceContext) {
 				let state: any;

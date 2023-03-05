@@ -16,9 +16,14 @@ export interface ServiceContext<T, D extends boolean = boolean> extends Context 
 	[key: string]: any;
 }
 
-export interface Service<T, D, P extends any[] = []> {
+export interface Service<T, D, P extends any[] = []> extends Service.Options {
 	(ctx: ServiceContext<D, false>, ...p: P): T;
 	(ctx: ServiceContext<D, true>): PromiseLike<void> | void;
+}
+export declare namespace Service {
+	export interface Options {
+		readonly rootOnly?: boolean;
+	}
 }
 
 export interface Context {
