@@ -1,7 +1,7 @@
 import type Handler from '../types/handle';
 import type Method from '../types/method';
 
-import Router, { FindItem } from '../Router';
+import Router, { Finder, FindItem } from '../Router';
 import toMatch from './toMatch';
 
 import type{ Match } from './toMatch';
@@ -44,14 +44,29 @@ export default class ApiRouter extends Router {
 	/**
 	 * 添加子路由
 	 * @param path   要注册的路径
-	 * @param plugin 要注册的子路由所属的插件
 	 */
-	route(path: string, plugin?: string): ApiRouter;
-	route(path: string | Router, plugins?: string | Router): Router {
-		const r = typeof path === 'string' ? plugins : path;
-		const router = r instanceof Router ? r : new ApiRouter();
-		const p = typeof path === 'string' ? path : '';
-		this.#routes.push({ match: toMatch(p, false), router });
+	route(path: string): ApiRouter;
+	/**
+	 * 添加子路由
+	 * @param find 要注册的子路由的 Finder
+	 */
+	route(find: Finder): Router;
+	/**
+	 * 添加子路由
+	 * @param path 要注册的路径
+	 * @param find 要注册的子路由的 Finder
+	 */
+	route(path: string, find: Finder): Router;
+	route(
+		a: string | Router | Finder,
+		b?: Router | Finder,
+	): Router {
+		const r = typeof a === 'string' ? b : a;
+		const router = r instanceof Router ? r
+			: typeof r === 'function' ? Router.create(r)
+				: new ApiRouter();
+		const path = typeof a === 'string' ? a : '';
+		this.#routes.push({ match: toMatch(path, false), router });
 		return router;
 	}
 	*find(method: Method, path: string[]): Iterable<FindItem> {
