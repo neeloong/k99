@@ -79,6 +79,18 @@ abstract class Router {
 			return null;
 		};
 	}
+
+	static create(
+		find: (method: Method, path: string[]) =>
+		| AsyncIterable<FindItem>
+		| Iterable<FindItem>,
+	) {
+		return new class extends Router{
+			find(method: Method, path: string[]) {
+				return find(method, path);
+			}
+		}();
+	}
 	readonly guards = new Set<Guard>();
 }
 declare namespace Router {
