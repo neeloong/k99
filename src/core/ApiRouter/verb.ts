@@ -6,12 +6,12 @@ import { Route, RouterRoute } from './index';
 export default function verb(
 	routes: (Route | RouterRoute)[],
 	methods: Method[],
-	path?: string,
-	handler?: Handler
+	a?: string | Handler,
+	b?: Handler
 ) {
-	if (!handler) {
-		return;
-	}
+	const path = typeof a === 'string' ? a : '';
+	const handler = [a, b].find((v: any): v is Handler => typeof v === 'function');
+	if (!handler) { return () => {}; }
 	const route: Route = {
 		match: toMatch(path || '', true),
 		methods: new Set(methods),
