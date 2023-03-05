@@ -13,6 +13,12 @@ export type FindItem = [
 	Record<string, any>,
 	string[],
 ];
+export interface Finder {
+	(method: Method, path: string[]):
+	| AsyncIterable<FindItem>
+	| Iterable<FindItem>
+
+}
 
 async function execGuard(
 	guards: Set<Guard>,
@@ -80,16 +86,10 @@ abstract class Router {
 		};
 	}
 
-	static create(
-		find: (method: Method, path: string[]) =>
-		| AsyncIterable<FindItem>
-		| Iterable<FindItem>,
-	) {
-		return new class extends Router{
-			find(method: Method, path: string[]) {
-				return find(method, path);
-			}
-		}();
+	static create(find: Finder): Router {
+		return Object.create(Router.prototype, {
+			'find': { configurable: true, value: find, writable: true },
+		});
 	}
 	readonly guards = new Set<Guard>();
 }
