@@ -23,7 +23,7 @@ function parse(p: string): Pattern | string {
 	}
 	let i = 0;
 	let count = 0;
-	const pattern: string[] = ['^('];
+	const pattern: string[] = ['^(?:'];
 	while (i < expression.length) {
 		const c = expression[i++];
 		pattern.push(c);

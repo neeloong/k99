@@ -14,7 +14,7 @@ export type { default as K99Headers } from './types/K99Headers';
 export type { default as ActionContext } from './types/ActionContext';
 
 export type { Guard, FindItem, Finder } from './Router';
-export type { Match, Route, RouterRoute } from './ApiRouter';
+export type { Match, Route, RouterRoute, RouteBinder, Binder } from './ApiRouter';
 
 export { default as run } from './run';
 export { default as make } from './make';

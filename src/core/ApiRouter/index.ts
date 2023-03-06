@@ -5,9 +5,10 @@ import Router, { Finder, FindItem } from '../Router';
 import toMatch from './toMatch';
 
 import type{ Match } from './toMatch';
-import verb from './verb';
+import verb, { Binder } from './verb';
 import getMethods from './getMethods';
 export type{ Match } from './toMatch';
+export type{ Binder } from './verb';
 
 
 export interface Route {
@@ -26,7 +27,33 @@ export interface RouterRoute {
 	match?: Match;
 	router: Router;
 }
-
+export interface RouteBinder {
+	/**
+	 * 添加子路由
+	 * @param router 要注册的子路由
+	 */
+	<T extends Router>(router: T): T;
+	/**
+	 * 添加子路由
+	 */
+	(): ApiRouter;
+	/**
+	 * 添加子路由
+	 * @param find 要注册的子路由的 Finder
+	 */
+	route(find: Finder): Router;
+}
+function bindRouter<T extends Router>(
+	routes: (Route | RouterRoute)[],
+	path: string,
+	r?: Router | Finder
+): Router {
+	const router = r instanceof Router ? r
+		: typeof r === 'function' ? Router.create(r)
+			: new ApiRouter();
+	routes.push({ match: toMatch(path, false), router });
+	return router;
+}
 export default class ApiRouter extends Router {
 	/** 路由列表 */
 	readonly #routes: (Route | RouterRoute)[] = [];
@@ -57,17 +84,16 @@ export default class ApiRouter extends Router {
 	 * @param find 要注册的子路由的 Finder
 	 */
 	route(path: string, find: Finder): Router;
-	route(
-		a: string | Router | Finder,
-		b?: Router | Finder,
-	): Router {
-		const r = typeof a === 'string' ? b : a;
-		const router = r instanceof Router ? r
-			: typeof r === 'function' ? Router.create(r)
-				: new ApiRouter();
+	route(...path: Parameters<typeof String.raw>): RouteBinder;
+	route(...p: any[]): Router | RouteBinder {
+		const [a] = p;
+		if (a && typeof a === 'object' && !(a instanceof Router)) {
+			const path = String.raw(a, ...p.slice(1));
+			return ((r?: Finder | Router) => bindRouter(this.#routes, path, r))as RouteBinder;
+		}
 		const path = typeof a === 'string' ? a : '';
-		this.#routes.push({ match: toMatch(path, false), router });
-		return router;
+		const r = typeof a === 'string' ? p[1] : a;
+		return bindRouter(this.#routes, path, r);
 	}
 	*find(method: Method, path: string[]): Iterable<FindItem> {
 		for (const route of Array.from(this.#routes)) {
@@ -103,7 +129,17 @@ export default class ApiRouter extends Router {
 	verb(
 		methods: Method | Iterable<Method> | ArrayLike<Method>,
 		path: string,
-		handler: Handler): () => void;
+		handler: Handler
+	): () => void;
+	/**
+	 * 注册处理函数
+	 * @param method 要注册的方法
+	 * @param path   要注册的路径
+	 */
+	verb(
+		methods: Method | Iterable<Method> | ArrayLike<Method>,
+		path: string,
+	): Binder;
 	verb(
 		methods: Method | Iterable<Method> | ArrayLike<Method>,
 		path?: string | Handler,
@@ -111,7 +147,7 @@ export default class ApiRouter extends Router {
 	) {
 		const allMethods = getMethods(methods);
 		if (!allMethods.length) { return () => {}; }
-		return verb(this.#routes, allMethods, path, handler);
+		return verb(this.#routes, allMethods, [path, handler]);
 	}
 	/**
 	 * 注册 HTTP GET/POST/PUT/DELETE 处理函数
@@ -124,11 +160,19 @@ export default class ApiRouter extends Router {
 	 * @param handler 要注册的处理函数
 	 */
 	match(path: string, handler: Handler): () => void;
-	match(path?: string | Handler, handler?: Handler) {
-		const methods: Method[] = ['GET', 'POST', 'PUT', 'DELETE'];
-		return verb(this.#routes, methods, path, handler);
+	/**
+	 * 注册 HTTP GET/POST/PUT/DELETE 处理函数
+	 * @param path 要注册的路径
+	 */
+	match(path: string): Binder;
+	/**
+	 * 注册 HTTP GET/POST/PUT/DELETE 处理函数
+	 * @param path 要注册的路径
+	 */
+	match(...path: Parameters<typeof String.raw>): Binder;
+	match(...p: any[]) {
+		return verb(this.#routes, ['GET', 'POST', 'PUT', 'DELETE'], p);
 	}
-
 	/**
 	 * 注册 HTTP GET 处理函数
 	 * @param handler 要注册的处理函数
@@ -140,9 +184,17 @@ export default class ApiRouter extends Router {
 	 * @param handler 要注册的处理函数
 	 */
 	get(path: string, handler: Handler): () => void;
-	get(path?: string | Handler, handler?: Handler) {
-		return verb(this.#routes, ['GET'], path, handler);
-	}
+	/**
+	 * 注册 HTTP GET 处理函数
+	 * @param path 要注册的路径
+	 */
+	get(path: string): Binder;
+	/**
+	 * 注册 HTTP GET 处理函数
+	 * @param path 要注册的路径
+	 */
+	get(...path: Parameters<typeof String.raw>): Binder;
+	get(...p: any[]) { return verb(this.#routes, ['GET'], p); }
 	/**
 	 * 注册 HTTP POST 处理函数
 	 * @param handler 要注册的处理函数
@@ -154,9 +206,17 @@ export default class ApiRouter extends Router {
 	 * @param handler 要注册的处理函数
 	 */
 	post(path: string, handler: Handler): () => void;
-	post(path?: string | Handler, handler?: Handler) {
-		return verb(this.#routes, ['POST'], path, handler);
-	}
+	/**
+	 * 注册 HTTP POST 处理函数
+	 * @param path 要注册的路径
+	 */
+	post(path: string): Binder;
+	/**
+	 * 注册 HTTP POST 处理函数
+	 * @param path 要注册的路径
+	 */
+	post(...path: Parameters<typeof String.raw>): Binder;
+	post(...p: any[]) { return verb(this.#routes, ['POST'], p); }
 	/**
 	 * 注册 HTTP PUT 处理函数
 	 * @param handler 要注册的处理函数
@@ -168,9 +228,17 @@ export default class ApiRouter extends Router {
 	 * @param handler 要注册的处理函数
 	 */
 	put(path: string, handler: Handler): () => void;
-	put(path?: string | Handler, handler?: Handler) {
-		return verb(this.#routes, ['PUT'], path, handler);
-	}
+	/**
+	 * 注册 HTTP PUT 处理函数
+	 * @param path 要注册的路径
+	 */
+	put(path: string): Binder;
+	/**
+	 * 注册 HTTP PUT 处理函数
+	 * @param path 要注册的路径
+	 */
+	put(...path: Parameters<typeof String.raw>): Binder;
+	put(...p: any[]) { return verb(this.#routes, ['PUT'], p); }
 	/**
 	 * 注册 HTTP DELETE 处理函数
 	 * @param handler 要注册的处理函数
@@ -182,9 +250,17 @@ export default class ApiRouter extends Router {
 	 * @param handler 要注册的处理函数
 	 */
 	delete(path: string, handler: Handler): () => void;
-	delete(path?: string | Handler, handler?: Handler) {
-		return verb(this.#routes, ['DELETE'], path, handler);
-	}
+	/**
+	 * 注册 HTTP DELETE 处理函数
+	 * @param path 要注册的路径
+	 */
+	delete(path: string): Binder;
+	/**
+	 * 注册 HTTP DELETE 处理函数
+	 * @param path 要注册的路径
+	 */
+	delete(...path: Parameters<typeof String.raw>): Binder;
+	delete(...p: any[]) { return verb(this.#routes, ['DELETE'], p); }
 	/**
 	 * 注册 HTTP HEAD 处理函数
 	 * @param handler 要注册的处理函数
@@ -196,9 +272,17 @@ export default class ApiRouter extends Router {
 	 * @param handler 要注册的处理函数
 	 */
 	head(path: string, handler: Handler): () => void;
-	head(path?: string | Handler, handler?: Handler) {
-		return verb(this.#routes, ['HEAD'], path, handler);
-	}
+	/**
+	 * 注册 HTTP HEAD 处理函数
+	 * @param path 要注册的路径
+	 */
+	head(path: string): Binder;
+	/**
+	 * 注册 HTTP HEAD 处理函数
+	 * @param path 要注册的路径
+	 */
+	head(...path: Parameters<typeof String.raw>): Binder;
+	head(...p: any[]) { return verb(this.#routes, ['HEAD'], p); }
 	/**
 	 * 注册 HTTP OPTIONS 处理函数
 	 * @param handler 要注册的处理函数
@@ -210,7 +294,15 @@ export default class ApiRouter extends Router {
 	 * @param handler 要注册的处理函数
 	 */
 	options(path: string, handler: Handler): () => void;
-	options(path?: string | Handler, handler?: Handler) {
-		return verb(this.#routes, ['OPTIONS'], path, handler);
-	}
+	/**
+	 * 注册 HTTP OPTIONS 处理函数
+	 * @param path 要注册的路径
+	 */
+	options(path: string): Binder;
+	/**
+	 * 注册 HTTP OPTIONS 处理函数
+	 * @param path 要注册的路径
+	 */
+	options(...path: Parameters<typeof String.raw>): Binder;
+	options(...p: any[]) { return verb(this.#routes, ['OPTIONS'], p); }
 }
