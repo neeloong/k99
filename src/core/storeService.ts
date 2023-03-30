@@ -22,6 +22,9 @@ function storeService<T>(
 		ctx: ServiceContext<T>,
 		...s: [s?: T]
 	): any {
+		if (ctx.currentService !== service) {
+			return ctx.service(service, ...s);
+		}
 		if (!ctx.destroying) {
 			if (!s.length) {
 				return ctx.state;

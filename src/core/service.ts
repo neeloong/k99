@@ -19,6 +19,9 @@ function service<T, D, P extends any[]>(
 		ctx: ServiceContext<D>,
 		...any: any[]
 	): any {
+		if (ctx.currentService !== service) {
+			return ctx.service(service, ...any as P);
+		}
 		if (!ctx.destroying) {
 			return exec(ctx as ServiceContext<D, false>, ...any as P);
 		}

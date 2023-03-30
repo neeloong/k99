@@ -25,6 +25,9 @@ function stateService<T>(
 	const service: Service<T, T, []> = function(
 		ctx: ServiceContext<T>
 	): any {
+		if (ctx.currentService !== service) {
+			return ctx.service(service);
+		}
 		if (!ctx.destroying) {
 			let {state} = ctx;
 			if (!state) {

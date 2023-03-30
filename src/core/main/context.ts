@@ -83,6 +83,11 @@ export default function createContext(
 						configurable: true,
 						enumerable: true,
 					},
+					currentService: {
+						value: service,
+						configurable: true,
+						enumerable: true,
+					},
 					state: {
 						configurable: true,
 						enumerable: true,

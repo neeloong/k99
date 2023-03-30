@@ -12,6 +12,7 @@ import type HexEncoding from './HexEncoding';
 
 export interface ServiceContext<T, D extends boolean = boolean> extends Context {
 	readonly destroying: D;
+	readonly currentService?: Service<any, any, any>;
 	state?: T;
 	[key: string]: any;
 }
