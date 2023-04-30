@@ -138,6 +138,8 @@ function createRequest(req: IncomingMessage | Http2ServerRequest): K99Request {
 async function sendResponse(
 	res: ServerResponse | Http2ServerResponse,
 	target: K99Response,
+	onError: (e: any) => void,
+	errorInResponse?: boolean,
 ) {
 	res.statusCode = target.status;
 	for (const [k, v] of Object.entries(target.headers)) {
@@ -146,26 +148,52 @@ async function sendResponse(
 		}
 	}
 	const stream = res instanceof Http2ServerResponse ? res.stream : res;
+	let sent = false;
 	try {
 		for await (const data of target) {
 			if (res.finished) { break; }
+			sent = true;
 			if (stream.write(data)) { continue; }
 			await new Promise(cb => stream.once('drain', cb));
 		}
+	} catch (e) {
+		if (errorInResponse && !sent) {
+			if (e instanceof Error) {
+				stream.write(`${ e.stack || '' }`);
+			} else {
+				stream.write(String(e));
+			}
+		}
+		onError(e);
 	} finally {
 		res.end();
 	}
+}
+function echoError(e: any) {
+	console.error(e);
+}
+interface HttpCallbackOptions<
+	TReq extends IncomingMessage | Http2ServerRequest,
+	TRes extends ServerResponse | Http2ServerResponse,
+> {
+	notFound?(req: TReq, res: TRes, next?: () => void): any;
+	onError?(e: any): void;
+	errorInResponse?: boolean;
 }
 export default function createHttpCallback<
 	TReq extends IncomingMessage | Http2ServerRequest,
 	TRes extends ServerResponse | Http2ServerResponse,
 >(
 	run: (request: K99Request) => Promise<K99Response | null>,
-	notFound?: (req: TReq, res: TRes, next?: () => void) => any
+	{
+		notFound,
+		onError = echoError,
+		errorInResponse,
+	}: HttpCallbackOptions<TReq, TRes> = {}
 ): (req: TReq, res: TRes, next?: () => void) => any {
 	return async function httpCallback(req, res, next) {
 		const r = await run(createRequest(req)).then(r => {
-			if (r) { return sendResponse(res, r); }
+			if (r) { return sendResponse(res, r, onError, errorInResponse); }
 			if (notFound) { return notFound(req, res, next); }
 			if (next) { return next(); }
 			res.statusCode = 404;
