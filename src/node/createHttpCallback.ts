@@ -6,7 +6,7 @@ import type { Readable } from 'node:stream';
 import * as urlFn from 'node:url';
 
 
-function createRead(req: Readable) {
+function createRead(req: Readable, length: number) {
 	let current = 0;
 	let cb: null | ((v: Uint8Array | null) => void) = null;
 	let end = false;
@@ -32,9 +32,17 @@ function createRead(req: Readable) {
 		dataList.push(buffer);
 		return dataSize;
 	}
+	let readSize = 0;
 	function nextData(): Buffer | null {
-		const data = current ? req.read(current) : req.read();
-		return typeof data === 'string' ? Buffer.from(data) : data;
+		let t = current;
+		const s = length - readSize;
+		if (s <= 0) { setEnd = true; return null; }
+		t = t && readSize !== Infinity ? Math.min(t, s) : s;
+		const value = t ? req.read(t) : req.read();
+		const data = typeof value === 'string' ? Buffer.from(value) : value;
+		if (data) { readSize += data.length; }
+		if (readSize >= length) { setEnd = true; }
+		return data;
 	}
 	function runCb(v: Buffer | null) {
 		if (!cb) { return; }
@@ -81,6 +89,7 @@ function createRead(req: Readable) {
 			run();
 		}
 	});
+	req.addListener('readable', run);
 	return function read(size: number = 0): Promise<Uint8Array | null> {
 		return new Promise(resolve => {
 			size = Math.max(size, 0);
@@ -109,6 +118,7 @@ function createAbortSignal(req: IncomingMessage | Http2ServerRequest) {
 }
 function createRequest(req: IncomingMessage | Http2ServerRequest): K99Request {
 	const urlInfo = urlFn.parse(req.url || '/', true);
+	const length = req.headers['content-length'];
 	return {
 		method: (req.method || 'GET').toUpperCase()  as Method,
 		url: req.url || '/',
@@ -118,7 +128,7 @@ function createRequest(req: IncomingMessage | Http2ServerRequest): K99Request {
 		|| '/',
 		search: 'search' in req && req['search']  as string || urlInfo.search || '',
 		query: 'query' in req && req['query'] as {} || urlInfo.query || {},
-		read: createRead(req),
+		read: createRead(req, length ? parseInt(length) : Infinity),
 		signal: createAbortSignal(req),
 	};
 
