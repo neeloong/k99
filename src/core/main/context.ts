@@ -1,11 +1,9 @@
-import type Asset from '../types/Asset';
 import type { Context, Service, ServiceContext } from '../types/context';
 import type { CookieClearOption } from '../types/cookie';
+import type Environment from '../types/Environment';
 import type K99Headers from '../types/K99Headers';
 import type K99Request from '../types/K99Request';
-import type Log from '../types/Log';
 import type Method from '../types/method';
-import type Setting from '../types/Setting';
 import type WriteType from '../types/WriteType';
 import {
 	clearCookie, getCookie, getRequestCookies, getCookieHeader, CookieInfo,
@@ -14,8 +12,8 @@ import createRead from './createRead';
 
 
 function destroyServices(
-	log: Log,
 	services: Map<Service<any, any, any>, object>,
+	environment?: Environment,
 ) {
 	let promise: Promise<void> = Promise.resolve();
 	for (const [service, context] of [...services.entries()]) {
@@ -25,7 +23,7 @@ function destroyServices(
 				configurable: true,
 				enumerable: true,
 			},
-		}))).catch(e => log.error(e));
+		}))).catch(e => environment?.error?.(e));
 	}
 	return promise;
 }
@@ -34,9 +32,6 @@ const hostRegex = /^(\[[^\]]+\]|^:):(\d+)$/;
 
 export default function createContext(
 	{ method, url, pathname, search, query, read, headers, signal } : K99Request,
-	setting: Setting,
-	asset: Asset,
-	log: Log,
 	request: (opt: {
 		method: Method;
 		path: string;
@@ -44,6 +39,7 @@ export default function createContext(
 		headers?: K99Headers | undefined;
 		signal?: AbortSignal | undefined;
 	}) => Promise<any>,
+	environment?: Environment,
 	parent?: Context,
 ) {
 	const services = new Map<Service<any, any, any>, ServiceContext<any, false>>();
@@ -65,7 +61,7 @@ export default function createContext(
 
 	let params: any = {};
 	const context: Context = {
-		setting, asset, log,
+		environment,
 		parent,
 		get error() { return hasError; },
 		get root() { return root || this; },
@@ -166,7 +162,7 @@ export default function createContext(
 			destroyed = true;
 			headersSent = true;
 			if (error) { hasError = error; }
-			destroyServices(log, services);
+			destroyServices(services, environment);
 		}, sendHeaders(){
 			if (headersSent) {
 				return false;

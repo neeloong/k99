@@ -3,9 +3,7 @@ import type Handler from '../types/handle';
 import type WriteType from '../types/WriteType';
 import type K99Request from '../types/K99Request';
 import type { Context } from '../types/context';
-import type Setting from '../types/Setting';
-import type Asset from '../types/Asset';
-import type Log from '../types/Log';
+import type Environment from '../types/Environment';
 import type K99Response from '../types/K99Response';
 
 import createRequest from './createRequest';
@@ -63,24 +61,20 @@ export default function main(
 	getHandler:(
 		ctx: Context,
 		setParams: (v: any) => void,
-	) => Promise<Handler | null>,
-	setting: Setting,
-	asset: Asset,
-	log: Log,
+	) => PromiseLike<Handler | null> | Handler | null,
+	environment?: Environment,
 	parent?: Context,
 ): Promise<K99Response | null> {
 	const aborted = signal2promise(req.signal);
 	const {context, setParams, destroy, sendHeaders} = createContext(
 		req,
-		setting,
-		asset,
-		log,
-		opt => main(createRequest(opt), getHandler, setting, asset, log, context),
+		opt => main(createRequest(opt), getHandler, environment, context),
+		environment,
 		parent,
 	);
 	return Promise.race([
 		aborted,
-		getHandler(context, setParams),
+		Promise.resolve().then(() => getHandler(context, setParams)),
 	]).then(handler => new Promise<K99Response | null>(resolve => {
 		if (!handler) {
 			destroy();

@@ -6,10 +6,8 @@ import type { Context } from './types/context';
 import type Asset from './types/Asset';
 import type Log from './types/Log';
 
-import initSettings from './utils/initSettings';
-import initAssets from './utils/initAssets';
-import initLog from './utils/initLog';
 import main from './main';
+import createEnvironment from './createEnvironment';
 
 export default function run(
 	req: K99Request,
@@ -23,9 +21,6 @@ export default function run(
 		log?: Log.Api,
 	},
 ): Promise<K99Response | null> {
-	const asset = initAssets(options?.asset);
-	const setting = initSettings(options?.setting);
-	const log = initLog(options?.log);
-	const get = async (c: Context, s: (v: any) => void) => getHandler(c, s);
-	return main(req, get, setting, asset, log);
+	const environment = createEnvironment(options);
+	return main(req, getHandler, environment);
 }

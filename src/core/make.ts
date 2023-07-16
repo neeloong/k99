@@ -1,13 +1,11 @@
-import K99Request from './types/K99Request';
-import Setting from './types/Setting';
-import Handler from './types/handle';
-import { Context } from './types/context';
-import Asset from './types/Asset';
-import Log from './types/Log';
-import initSettings from './utils/initSettings';
-import initAssets from './utils/initAssets';
-import initLog from './utils/initLog';
+import type K99Request from './types/K99Request';
+import type Setting from './types/Setting';
+import type Handler from './types/handle';
+import type { Context } from './types/context';
+import type Asset from './types/Asset';
+import type Log from './types/Log';
 import main from './main';
+import createEnvironment from './createEnvironment';
 
 
 export default function make(
@@ -21,9 +19,6 @@ export default function make(
 		log?: Log.Api;
 	}
 ) {
-	const asset = initAssets(options?.asset);
-	const setting = initSettings(options?.setting);
-	const log = initLog(options?.log);
-	const get = async (c: Context, s: (v: any) => void) => getHandler(c, s);
-	return (r: K99Request) => main(r, get, setting, asset, log);
+	const environment = createEnvironment(options);
+	return (r: K99Request) => main(r, getHandler, environment);
 }

@@ -1,14 +1,12 @@
-import Asset from './Asset';
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
 import type K99Headers  from './K99Headers';
 import type K99Request  from './K99Request';
 import type K99Response  from './K99Response';
-import type Log from './Log';
 import type Method from './method';
-import type Setting from './Setting';
 import type WriteType from './WriteType';
 import type Encoding from './Encoding';
 import type HexEncoding from './HexEncoding';
+import type Environment from './Environment';
 
 export interface ServiceContext<T, D extends boolean = boolean> extends Context {
 	readonly destroying: D;
@@ -28,9 +26,7 @@ export declare namespace Service {
 }
 
 export interface Context {
-	readonly setting: Setting;
-	readonly asset: Asset;
-	readonly log: Log;
+	readonly environment?: Environment;
 	/** 当前的路由 */
 	readonly parent?: Context;
 	/** 当前的路由 */
