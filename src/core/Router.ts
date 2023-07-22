@@ -56,7 +56,7 @@ async function find(
 	if (ctx.destroyed) { return null; }
 	for await (const [r, result, p] of route.find(ctx.method, path)) {
 		if (ctx.destroyed) { return null; }
-		const res = find(r, p, ctx, setParams, { ...params, ...result });
+		const res = await find(r, p, ctx, setParams, { ...params, ...result });
 		if (res) { return res; }
 	}
 	return null;
