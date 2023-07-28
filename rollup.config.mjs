@@ -14,7 +14,7 @@ await fsPromises.mkdir('build', {recursive: true });
 await fsPromises.writeFile('build/package.json', JSON.stringify({
 	name, description, version, engines, dependencies, keywords,
 	type: 'module', main: 'index.mjs',
-	bin: {k99: 'cli.mjs', 'k99-start': 'starter.mjs'},
+	bin: {k99: 'cli.cjs', 'k99-start': 'starter.cjs'},
 	unpkg: './index.min.js', jsdelivr: './index.min.js',
 	author, license, homepage, repository, bugs,
 	exports: {
