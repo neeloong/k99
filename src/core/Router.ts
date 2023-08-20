@@ -14,7 +14,7 @@ export type FindItem = [
 	string[],
 ];
 export interface Finder {
-	(method: Method, path: string[]):
+	(this: Router, method: Method, path: string[]):
 	| AsyncIterable<FindItem>
 	| Iterable<FindItem>
 
