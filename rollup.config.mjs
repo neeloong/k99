@@ -19,18 +19,21 @@ await fsPromises.writeFile('build/package.json', JSON.stringify({
 	author, license, homepage, repository, bugs,
 	exports: {
 		".": {
+			types: './index.d.ts',
 			node:"./index.cjs",
 			module: './index.mjs',
 			unpkg: './index.min.js',
 			jsdelivr: './index.min.js',
 		},
 		"./browser": {
+			types:"./browser.d.ts",
 			node:"./browser.cjs",
 			module: './browser.mjs',
 			unpkg: './browser.min.js',
 			jsdelivr: './browser.min.js',
 		},
 		"./services": {
+			types:"./services.d.ts",
 			node:"./services.cjs",
 			module: './services.mjs',
 			unpkg: './services.min.js',
@@ -83,7 +86,7 @@ async function createBaseItem(id) {
 	return [{ input, external, plugins: plugins(), output: [
 		{ banner, file: `build/${ id }/index.cjs`, format: 'cjs' },
 	]}, { input, external, plugins: [ dts() ], output: [
-		{ format: 'esm', banner, file: `build/${ id }/index.d.ts` },
+		{ format: 'esm', banner, file: `build/${ id }/index.d.cts` },
 	] }];
 }
 async function createBrowserItem(id, name = 'k99') {
