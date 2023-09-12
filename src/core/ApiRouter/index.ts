@@ -1,11 +1,13 @@
-import type Handler from '../types/handle';
-import type Method from '../types/method';
+import type { Handler } from '../types/handle';
+import type { Method } from '../types/method';
+import type { Finder, FindItem } from '../Router';
+import type { Binder } from './verb';
 
-import Router, { Finder, FindItem } from '../Router';
+import Router from '../Router';
 import toMatch from './toMatch';
 
 import type{ Match } from './toMatch';
-import verb, { Binder } from './verb';
+import verb from './verb';
 import getMethods from './getMethods';
 export type{ Match } from './toMatch';
 export type{ Binder } from './verb';

@@ -1,9 +1,9 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'path';
-import { RouterThis } from 'entry-cli';
-import opt, {List as optList} from '../opt';
-const entryFile =
-`
+import type { RouterThis } from 'entry-cli';
+import type { List as OptList } from '../opt';
+import type opt from '../opt';
+const entryFile = `
 const baseConfig = require('./.k99.config.json');
 Object.assign(exports, baseConfig);
 `;
@@ -40,7 +40,7 @@ export async function exec(this: RouterThis, { path }: opt, name: string, ...arg
 	}, null, 2));
 }
 
-export const opts: optList[] = ['path'];
+export const opts: OptList[] = ['path'];
 export const argv = '<name>';
 export const explain = '创建插件';
-export async function help(opt: opt, ...argv: string[]) {}
+export async function help(opt: opt, ...argv: string[]) { }

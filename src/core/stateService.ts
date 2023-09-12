@@ -1,28 +1,28 @@
-import { Service, ServiceContext } from './types/context';
+import type { Service, ServiceContext, StateService } from './types/context';
 
 
 function stateService<T>(
 	init: (ctx: ServiceContext<void, false>) => T,
 	options?: Service.Options,
-): Service<T, T, []>;
+): StateService<T>;
 function stateService<T>(
 	init: (ctx: ServiceContext<void, false>) => T,
 	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | null,
 	options?: Service.Options,
-): Service<T, T, []>;
+): StateService<T>;
 function stateService<T>(
 	init: (ctx: ServiceContext<void, false>) => T,
 	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | null,
 	exec?: ((state: T, ctx: ServiceContext<T, false>) => any) | null,
 	options?: Service.Options,
-): Service<T, T, []>;
+): StateService<T>;
 function stateService<T>(
 	init: (ctx: ServiceContext<void, false>) => T,
 	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | Service.Options | null,
 	exec?: ((state: T, ctx: ServiceContext<T, false>) => any) | Service.Options | null,
 	options?: Service.Options,
-): Service<T, T, []> {
-	const service: Service<T, T, []> = function(
+): StateService<T> {
+	const service: StateService<T> = function(
 		ctx: ServiceContext<T>
 	): any {
 		if (ctx.currentService !== service) {

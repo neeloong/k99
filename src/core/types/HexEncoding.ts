@@ -1,2 +1,1 @@
-type HexEncoding = 'base64' | 'hex';
-export default HexEncoding;
+export type HexEncoding = 'base64' | 'hex';

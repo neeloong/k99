@@ -1,2 +1,1 @@
-type Encoding = 'utf8';
-export default Encoding;
+export type Encoding = 'utf8';

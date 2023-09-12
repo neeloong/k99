@@ -1,5 +1,5 @@
-import type Encoding from '../types/Encoding';
-import type HexEncoding from '../types/HexEncoding';
+import type { Encoding } from '../types/Encoding';
+import type { HexEncoding } from '../types/HexEncoding';
 
 function str2utf8bin(str: string): Uint8Array {
 	let out: number[] = [];
@@ -79,4 +79,4 @@ function str2bin(value: string | ArrayBuffer | ArrayBufferView | null, encoding?
 		case 'hex': return hex2bin(value);
 	}
 }
-export default  str2bin;
+export default str2bin;

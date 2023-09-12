@@ -1,5 +1,5 @@
-import type Encoding from '../types/Encoding';
-import type HexEncoding from '../types/HexEncoding';
+import type { Encoding } from '../types/Encoding';
+import type { HexEncoding } from '../types/HexEncoding';
 
 function utf8bin2str(code: Uint8Array): string {
 	let ret: number[] = [];
@@ -72,4 +72,4 @@ function bin2str(value: Uint8Array | null, encoding?: Encoding | HexEncoding | n
 	}
 	return value;
 }
-export default  bin2str;
+export default bin2str;

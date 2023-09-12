@@ -1,5 +1,5 @@
-import ActionContext from './types/ActionContext';
-import Handler from './types/handle';
+import type { ActionContext } from './types/ActionContext';
+import type { Handler } from './types/handle';
 
 async function runHandles(
 	context: ActionContext,

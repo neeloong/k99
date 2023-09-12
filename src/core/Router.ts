@@ -1,9 +1,9 @@
-import type Asset from './types/Asset';
+import type { Asset } from './types/Asset';
 import type { Context } from './types/context';
-import type Handler from './types/handle';
-import type Log from './types/Log';
-import type Method from './types/method';
-import type Setting from './types/Setting';
+import type { Handler } from './types/handle';
+import type { Log } from './types/Log';
+import type { Method } from './types/method';
+import type {Setting } from './types/Setting';
 
 export interface Guard {
 	(ctx: Context): PromiseLike<boolean | Handler | void> | boolean | Handler | void;

@@ -1,4 +1,4 @@
-import type Method from '../types/method';
+import type { Method } from '../types/method';
 
 const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']);
 

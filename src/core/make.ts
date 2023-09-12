@@ -1,9 +1,9 @@
-import type K99Request from './types/K99Request';
-import type Setting from './types/Setting';
-import type Handler from './types/handle';
+import type { K99Request } from './types/K99Request';
+import type { Setting } from './types/Setting';
+import type { Handler } from './types/handle';
 import type { Context } from './types/context';
-import type Asset from './types/Asset';
-import type Log from './types/Log';
+import type { Asset } from './types/Asset';
+import type { Log } from './types/Log';
 import main from './main';
 import createEnvironment from './createEnvironment';
 

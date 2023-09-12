@@ -1,4 +1,4 @@
-import type WriteType from '../types/WriteType';
+import type { WriteType } from '../types/WriteType';
 import str2bin from '../utils/str2bin';
 
 
@@ -22,9 +22,9 @@ export default function createReadable(v: any) {
 		async pull(controller) {
 			const { value, done } = await iterator.next();
 			if (done) {
-			  controller.close();
+				controller.close();
 			} else {
-			  controller.enqueue(value);
+				controller.enqueue(value);
 			}
 		},
 		cancel(reason) {

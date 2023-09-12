@@ -1,5 +1,5 @@
-import type Encoding from '../types/Encoding';
-import type HexEncoding from '../types/HexEncoding';
+import type { Encoding } from '../types/Encoding';
+import type { HexEncoding } from '../types/HexEncoding';
 import bin2str from '../utils/bin2str';
 
 export default function createRead(

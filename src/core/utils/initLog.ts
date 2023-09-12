@@ -1,5 +1,5 @@
 
-import type Log from '../types/Log';
+import type { Log } from '../types/Log';
 
 /**
  * 包装日志文本
@@ -58,7 +58,7 @@ async function defaultWrite(path: string, log: string) {
 	return true;
 }
 async function defaultRead() { return ''; }
-async function defaultClear() {}
+async function defaultClear() { }
 export default function initLog({
 	read = defaultRead,
 	write = defaultWrite,
@@ -67,7 +67,8 @@ export default function initLog({
 	function writeLog(path: string, log: string, opt?: Log.Options) {
 		return write(path, pack(log, opt));
 	}
-	return {read, write: writeLog, clear,
+	return {
+		read, write: writeLog, clear,
 		async debug(log: string, opt?: Log.Options) {
 			return writeLog('debug', log, opt);
 		},

@@ -3,8 +3,8 @@ import * as path from './path';
 import * as port from './port';
 import * as bind from './bind';
 
-import {OptType} from 'entry-cli';
-export const opt = {
+import type { OptType } from 'entry-cli';
+const opt = {
 	bind,
 	listen,
 	path,

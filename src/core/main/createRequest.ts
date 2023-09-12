@@ -1,8 +1,8 @@
 
-import type K99Headers from '../types/K99Headers';
-import type K99Request from '../types/K99Request';
-import type Method from '../types/method';
-import type WriteType from '../types/WriteType';
+import type { K99Headers } from '../types/K99Headers';
+import type { K99Request } from '../types/K99Request';
+import type { Method } from '../types/method';
+import type { WriteType } from '../types/WriteType';
 import str2bin from '../utils/str2bin';
 
 function mergeArrayBuffer(data: Uint8Array[], length: number): Uint8Array {
@@ -25,7 +25,7 @@ function getBuffer(data: Uint8Array[], size?: number): Uint8Array {
 	let length = 0;
 	const list: Uint8Array[] = [];
 	// eslint-disable-next-line no-cond-assign
-	for (let it: Uint8Array | undefined; it = data.shift(); ) {
+	for (let it: Uint8Array | undefined; it = data.shift();) {
 		if (length + it.byteLength > size) {
 			const buffer = it.slice(0, size - length);
 			list.push(buffer);
@@ -46,8 +46,8 @@ async function *toAsyncIterable(
 	if (!chunk) { return; }
 	if (typeof chunk === 'string') { return yield str2bin(chunk); }
 	if (typeof chunk !== 'object') { return; }
-	if (chunk instanceof ArrayBuffer) { return yield  str2bin(chunk); }
-	if (ArrayBuffer.isView(chunk)) { return yield  str2bin(chunk); }
+	if (chunk instanceof ArrayBuffer) { return yield str2bin(chunk); }
+	if (ArrayBuffer.isView(chunk)) { return yield str2bin(chunk); }
 	if (!(Symbol.asyncIterator in chunk || Symbol.iterator in chunk)) { return; }
 	for await (const data of chunk) {
 		yield *toAsyncIterable(data);
@@ -91,13 +91,13 @@ async function main(req: WriteType, getNext: () => Promise<Item>) {
 		[size, cb] = await getNext();
 	}
 	cb(null);
-	for (;;) {
+	for (; ;) {
 		[size, cb] = await getNext();
 		cb(null);
 	}
 }
 function createRead(req?: WriteType) {
-	if (!req) { return () =>Promise.resolve(null); }
+	if (!req) { return () => Promise.resolve(null); }
 	const list: Item[] = [];
 	let next: null | ((v: Item) => void) = null;
 	main(req, function getNext() {
@@ -153,7 +153,7 @@ function parseQuery(s: string): Record<string, string | string[]> {
 function parseUrl(uri: string): [string, string] {
 	const result = urlRegex.exec(uri);
 	if (!result) { return ['/', '']; }
-	let [, pathname, search ] = result;
+	let [, pathname, search] = result;
 	const path: string[] = [];
 	for (const p of pathname.replace(/^[\\/]+/, '').replace(/[\\/]+/g, '/').split('/')) {
 		if (p === '.') { continue; }
@@ -167,7 +167,7 @@ function parseUrl(uri: string): [string, string] {
 }
 
 export default function createRequest(
-	{method, path, signal, body, headers = {}}:{
+	{ method, path, signal, body, headers = {} }: {
 		method: Method,
 		path: string,
 		body?: K99Request.Reader | WriteType,

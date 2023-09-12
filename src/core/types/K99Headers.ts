@@ -1,4 +1,4 @@
-export default interface K99Headers {
+export interface K99Headers {
 	'accept'?: string;
 	'accept-language'?: string;
 	'accept-patch'?: string;

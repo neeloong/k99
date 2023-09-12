@@ -1,24 +1,24 @@
-import { Service, ServiceContext } from './types/context';
+import type { Service, ServiceContext, StoreService } from './types/context';
 
 
 function storeService<T>(
 	options?: Service.Options,
-): Service<T | undefined, T, [s?: T]>;
+): StoreService<T>;
 function storeService<T>(
 	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | null,
 	options?: Service.Options,
-): Service<T | undefined, T, [s?: T]>;
+): StoreService<T>;
 function storeService<T>(
 	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | null,
 	exec?: ((state: T | undefined, ctx: ServiceContext<T, false>) => any) | null,
 	options?: Service.Options,
-): Service<T | undefined, T, [s?: T]>;
+): StoreService<T>;
 function storeService<T>(
 	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | Service.Options | null,
 	exec?: ((state: T | undefined, ctx: ServiceContext<T, false>) => any) | Service.Options | null,
 	options?: Service.Options,
-): Service<T | undefined, T, [s?: T]> {
-	const service: Service<T | undefined, T, [s?: T]> = function(
+): StoreService<T> {
+	const service: StoreService<T> = function(
 		ctx: ServiceContext<T>,
 		...s: [s?: T]
 	): any {

@@ -1,6 +1,7 @@
 import * as http from 'node:http';
-import {start, createHttpCallback} from 'k99/node';
-import opt, {List as OptList} from '../opt';
+import { start, createHttpCallback } from 'k99/node';
+import type { List as OptList } from '../opt';
+import type opt from '../opt';
 
 export async function exec({
 	path,
@@ -32,4 +33,4 @@ export const opts: OptList[] = [
 ];
 export const argv = '';
 export const explain = '启动服务器';
-export async function help(...argv: string[]) {}
+export async function help(...argv: string[]) { }

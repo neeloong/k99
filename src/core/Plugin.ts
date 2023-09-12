@@ -1,8 +1,8 @@
 import make from './make';
 import Router from './Router';
-import type Asset from './types/Asset';
-import type Log from './types/Log';
-import type Setting from './types/Setting';
+import type { Asset } from './types/Asset';
+import type { Log } from './types/Log';
+import type { Setting } from './types/Setting';
 
 const idRegexText = '[a-zA-Z][a-zA-Z0-9_-]*';
 const kRegexText = `${ idRegexText }(?:.${ idRegexText })*`;
@@ -12,7 +12,7 @@ const regex = new RegExp(regexText);
 export default abstract class Plugin<T extends Router = Router> {
 	static make(
 		plugins: Record<string, Plugin>,
-		{router, setting, asset, log }: {
+		{ router, setting, asset, log }: {
 			router?: Router;
 			asset?: Asset.Api;
 			setting?: Setting.Api;
@@ -45,19 +45,21 @@ export default abstract class Plugin<T extends Router = Router> {
 		if (!plugins) { return api; }
 		const read = api?.read;
 		if (typeof read !== 'function') { return api; }
-		return {...api, read: async path => {
-			const ret = await read(path);
-			if (ret !== null) { return ret; }
-			if (!plugins) { return null; }
-			const r = regex.exec(path);
-			if (!r) { return null; }
-			const [, base, name, subpath] = r;
-			if (base !== pluginPath) { return null; }
-			if (!(name in plugins)) { return null; }
-			const plugin = plugins[name];
-			if (!plugin) { return null; }
-			return plugin.readAsset(subpath);
-		}};
+		return {
+			...api, read: async path => {
+				const ret = await read(path);
+				if (ret !== null) { return ret; }
+				if (!plugins) { return null; }
+				const r = regex.exec(path);
+				if (!r) { return null; }
+				const [, base, name, subpath] = r;
+				if (base !== pluginPath) { return null; }
+				if (!(name in plugins)) { return null; }
+				const plugin = plugins[name];
+				if (!plugin) { return null; }
+				return plugin.readAsset(subpath);
+			},
+		};
 	}
 
 	/** 包名 */
@@ -72,8 +74,8 @@ export default abstract class Plugin<T extends Router = Router> {
 		name: string,
 		/** 版本 */
 		version: string,
-		{ author, license}: {
-		/** 作者 */
+		{ author, license }: {
+			/** 作者 */
 			author?: string;
 			/** 开源协议 */
 			license?: string;
@@ -92,7 +94,7 @@ export default abstract class Plugin<T extends Router = Router> {
 
 	private __initRouterPromise: Promise<T> | undefined;
 	initRouter() {
-		const {router} = this;
+		const { router } = this;
 		if (this.__initRouterPromise) {
 			return this.__initRouterPromise;
 		}

@@ -1,4 +1,4 @@
-import type WriteType from '../types/WriteType';
+import type { WriteType } from '../types/WriteType';
 import str2bin from '../utils/str2bin';
 
 type Item = [Uint8Array | undefined, ((v: boolean) => void)];
@@ -11,7 +11,7 @@ export interface Writable {
 
 export function isBaseWriteType(
 	chunk: object
-): chunk is ArrayBuffer | ArrayBufferView{
+): chunk is ArrayBuffer | ArrayBufferView {
 	if (chunk instanceof ArrayBuffer) { return true; }
 	if (ArrayBuffer.isView(chunk)) { return true; }
 	return false;
@@ -29,7 +29,7 @@ export default function createWrite(): [
 
 	function done(callback?: ((v: boolean) => void) | null) {
 		if (finished) { return null; }
-		finished  = true;
+		finished = true;
 		if (callback) { callback(false); }
 		// eslint-disable-next-line no-cond-assign
 		for (let value; value = list.shift();) {
@@ -38,10 +38,10 @@ export default function createWrite(): [
 		}
 		return null;
 	}
-	let nextPromise:  Promise<((v: boolean) => void) | null> = Promise.resolve(() => {});
+	let nextPromise: Promise<((v: boolean) => void) | null> = Promise.resolve(() => { });
 	const readable: AsyncGenerator<Uint8Array> = {
 		next() {
-			const promise = nextPromise.then(cb =>{
+			const promise = nextPromise.then(cb => {
 				if (!cb) { return; }
 				if (abortException) {
 					cb(false);
@@ -68,9 +68,9 @@ export default function createWrite(): [
 				return cb;
 			}, () => done());
 			return promise.then(value => {
-				if (!value) { return {done: true, value: undefined}; }
+				if (!value) { return { done: true, value: undefined }; }
 				const [data, cb] = value;
-				return {done: false, value: data} as IteratorYieldResult<Uint8Array>;
+				return { done: false, value: data } as IteratorYieldResult<Uint8Array>;
 			});
 		},
 		throw(e: any) {
@@ -113,7 +113,7 @@ export default function createWrite(): [
 	 * 向可写流中写入数据
 	 * @param chunk 要写入的数据
 	 */
-	 async function write(chunk: WriteType): Promise<boolean | void> {
+	async function write(chunk: WriteType): Promise<boolean | void> {
 		if (finished) { return Promise.resolve(); }
 		if (typeof chunk === 'string') {
 			return new Promise<boolean>(cb => run(str2bin(chunk), cb));

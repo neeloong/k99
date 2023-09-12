@@ -1,2 +1,1 @@
-type WriteType = string | ArrayBuffer | ArrayBufferView | AsyncIterable<WriteType> | Iterable<WriteType>;
-export default WriteType;
+export type WriteType = string | ArrayBuffer | ArrayBufferView | AsyncIterable<WriteType> | Iterable<WriteType>;

@@ -1,6 +1,6 @@
-import type K99Headers from './K99Headers';
+import type { K99Headers } from './K99Headers';
 
-export default interface K99Response {
+export interface K99Response {
 	status: number;
 	finished: boolean;
 	headers: K99Headers;

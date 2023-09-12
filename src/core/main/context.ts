@@ -1,12 +1,13 @@
 import type { Context, Service, ServiceContext } from '../types/context';
 import type { CookieClearOption } from '../types/cookie';
-import type Environment from '../types/Environment';
-import type K99Headers from '../types/K99Headers';
-import type K99Request from '../types/K99Request';
-import type Method from '../types/method';
-import type WriteType from '../types/WriteType';
+import type { Environment } from '../types/Environment';
+import type { K99Headers } from '../types/K99Headers';
+import type { K99Request } from '../types/K99Request';
+import type { Method } from '../types/method';
+import type { WriteType } from '../types/WriteType';
+import type { CookieInfo } from './cookie';
 import {
-	clearCookie, getCookie, getRequestCookies, getCookieHeader, CookieInfo,
+	clearCookie, getCookie, getRequestCookies, getCookieHeader,
 } from './cookie';
 import createRead from './createRead';
 
@@ -31,7 +32,7 @@ function destroyServices(
 const hostRegex = /^(\[[^\]]+\]|^:):(\d+)$/;
 
 export default function createContext(
-	{ method, url, pathname, search, query, read, headers, signal } : K99Request,
+	{ method, url, pathname, search, query, read, headers, signal }: K99Request,
 	request: (opt: {
 		method: Method;
 		path: string;
@@ -87,8 +88,8 @@ export default function createContext(
 					state: {
 						configurable: true,
 						enumerable: true,
-						get(){ return state; },
-						set(s){ state = s; },
+						get() { return state; },
+						set(s) { state = s; },
 					},
 				}) as ServiceContext<any, false>;
 				services.set(service, serviceContext);
@@ -98,7 +99,7 @@ export default function createContext(
 
 		method, url, pathname, search, query,
 		get params() { return params; },
-		headers: Object.freeze({...headers}),
+		headers: Object.freeze({ ...headers }),
 		host, hostname, port,
 		requestType: headers['content-type'] || '',
 		referer: headers.referer || '',
@@ -143,7 +144,7 @@ export default function createContext(
 
 		hasHeader(n) { return n in resHeaders; },
 		getHeaderNames() { return Object.keys(resHeaders); },
-		getHeaders() { return {...resHeaders}; },
+		getHeaders() { return { ...resHeaders }; },
 		getHeader(n) { return resHeaders[n]; },
 		setHeader(n, v) {
 			if (headersSent) { return; }
@@ -163,11 +164,12 @@ export default function createContext(
 			headersSent = true;
 			if (error) { hasError = error; }
 			destroyServices(services, environment);
-		}, sendHeaders(){
+		}, sendHeaders() {
 			if (headersSent) {
 				return false;
 			}
 			headersSent = true;
 			return true;
-		}};
+		},
+	};
 }

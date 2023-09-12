@@ -1,7 +1,7 @@
-import type K99Headers from './K99Headers';
-import type Method from './method';
+import type { K99Headers } from './K99Headers';
+import type { Method } from './method';
 
-interface K99Request {
+export interface K99Request {
 	readonly method: Method;
 	readonly url: string;
 	/** 请求路径 */
@@ -15,9 +15,8 @@ interface K99Request {
 	read(size?: number): Promise<Uint8Array | null>
 }
 
-declare namespace K99Request {
+export declare namespace K99Request {
 	export interface Reader {
 		(size?: number): Promise<Uint8Array | null>;
 	}
 }
-export default K99Request;

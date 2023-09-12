@@ -1,9 +1,9 @@
-import type Asset from './Asset';
-import type Log from './Log';
-import type Setting from './Setting';
+import type { Asset } from './Asset';
+import type { Log } from './Log';
+import type { Setting } from './Setting';
 
 
-export default interface Environment {
+export interface Environment {
 	readonly setting?: Setting;
 	readonly asset?: Asset;
 	readonly log?: Log;

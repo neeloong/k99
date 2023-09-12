@@ -1,12 +1,12 @@
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
-import type K99Headers  from './K99Headers';
-import type K99Request  from './K99Request';
-import type K99Response  from './K99Response';
-import type Method from './method';
-import type WriteType from './WriteType';
-import type Encoding from './Encoding';
-import type HexEncoding from './HexEncoding';
-import type Environment from './Environment';
+import type { K99Headers } from './K99Headers';
+import type { K99Request } from './K99Request';
+import type { K99Response } from './K99Response';
+import type { Method } from './method';
+import type { WriteType } from './WriteType';
+import type { Encoding } from './Encoding';
+import type { HexEncoding } from './HexEncoding';
+import type { Environment } from './Environment';
 
 export interface ServiceContext<T, D extends boolean = boolean> extends Context {
 	readonly destroying: D;
@@ -24,7 +24,8 @@ export declare namespace Service {
 		readonly rootOnly?: boolean;
 	}
 }
-
+export type StoreService<T> = Service<T | undefined, T, [s?: T]>;
+export type StateService<T> = Service<T, T, []>;
 export interface Context {
 	readonly environment?: Environment;
 	/** 当前的路由 */
@@ -50,7 +51,7 @@ export interface Context {
 	/** 请求 url (不含协议及主机名等) */
 	readonly url: string;
 	/** 路径参数 */
-	readonly params: Readonly<{[p: string]: string}>;
+	readonly params: Readonly<{ [p: string]: string }>;
 	/** 请求方法 */
 	readonly method: Method;
 	/** 请求路径 */
