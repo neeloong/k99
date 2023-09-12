@@ -2,6 +2,7 @@ import make from './make';
 import Router from './Router';
 import type { Asset } from './types/Asset';
 import type { Log } from './types/Log';
+import type { Runner } from './types/Runner';
 import type { Setting } from './types/Setting';
 
 const idRegexText = '[a-zA-Z][a-zA-Z0-9_-]*';
@@ -12,11 +13,12 @@ const regex = new RegExp(regexText);
 export default abstract class Plugin<T extends Router = Router> {
 	static make(
 		plugins: Record<string, Plugin>,
-		{ router, setting, asset, log }: {
+		{ router, setting, asset, log, runner}: {
 			router?: Router;
 			asset?: Asset.Api;
 			setting?: Setting.Api;
 			log?: Log.Api;
+			runner?: Runner;
 		} = {},
 	) {
 		const routers = [];
@@ -30,6 +32,7 @@ export default abstract class Plugin<T extends Router = Router> {
 			setting,
 			asset: Plugin.bindAsset(asset, plugins),
 			log,
+			runner,
 		});
 
 	}

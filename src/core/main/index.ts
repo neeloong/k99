@@ -10,6 +10,7 @@ import createRequest from './createRequest';
 
 import createWrite, { isBaseWriteType } from './createWrite';
 import createContext from './context';
+import type { Runner } from '../types/Runner';
 
 
 export function isJSON(result: any) {
@@ -63,66 +64,70 @@ export default function main(
 		setParams: (v: any) => void,
 	) => PromiseLike<Handler | null> | Handler | null,
 	environment?: Environment,
+	runner?: Runner,
 	parent?: Context,
 ): Promise<K99Response | null> {
 	const aborted = signal2promise(req.signal);
 	const {context, setParams, destroy, sendHeaders} = createContext(
 		req,
-		opt => main(createRequest(opt), getHandler, environment, context),
+		opt => main(createRequest(opt), getHandler, environment, runner, context),
 		environment,
 		parent,
 	);
-	return Promise.race([
-		aborted,
-		Promise.resolve().then(() => getHandler(context, setParams)),
-	]).then(handler => new Promise<K99Response | null>(resolve => {
-		if (!handler) {
-			destroy();
-			return resolve(null);
-		}
-
-		const [writable, readable, abortResponse] = createWrite();
-		aborted.catch(e => abortResponse(e));
-
-		function send() {
-			if (!sendHeaders()) { return; }
-			const {status} = context;
-			resolve({
-				...readable,
-				get status() { return status; },
-				get finished() { return writable.ended; },
-				headers: Object.freeze(context.getHeaders()),
-				[Symbol.asyncIterator]() { return readable; },
-			});
-		}
-		const contextS: Omit<ActionContext, keyof Context> = {
-			get finished() { return writable.ended; },
-			write(chunk: WriteType): Promise<boolean> {
-				send();
-				return writable.write(chunk);
-			},
-		};
-
-		const actionContext: ActionContext = Object.create(
-			context,
-			Object.getOwnPropertyDescriptors(contextS),
-		);
-		Promise.race([
+	function run() {
+		return Promise.race([
 			aborted,
-			runHandle(actionContext, handler),
-		]).then(() => {
-			send();
-			destroy();
-			writable.end();
-		}, e => {
-			context.status = 500;
-			send();
-			abortResponse(e);
+			Promise.resolve().then(() => getHandler(context, setParams)),
+		]).then(handler => new Promise<K99Response | null>(resolve => {
+			if (!handler) {
+				destroy();
+				return resolve(null);
+			}
+
+			const [writable, readable, abortResponse] = createWrite();
+			aborted.catch(e => abortResponse(e));
+
+			function send() {
+				if (!sendHeaders()) { return; }
+				const {status} = context;
+				resolve({
+					...readable,
+					get status() { return status; },
+					get finished() { return writable.ended; },
+					headers: Object.freeze(context.getHeaders()),
+					[Symbol.asyncIterator]() { return readable; },
+				});
+			}
+			const contextS: Omit<ActionContext, keyof Context> = {
+				get finished() { return writable.ended; },
+				write(chunk: WriteType): Promise<boolean> {
+					send();
+					return writable.write(chunk);
+				},
+			};
+
+			const actionContext: ActionContext = Object.create(
+				context,
+				Object.getOwnPropertyDescriptors(contextS),
+			);
+			Promise.race([
+				aborted,
+				runHandle(actionContext, handler),
+			]).then(() => {
+				send();
+				destroy();
+				writable.end();
+			}, e => {
+				context.status = 500;
+				send();
+				abortResponse(e);
+				destroy(e || true);
+				writable.end();
+			});
+		}), e => {
 			destroy(e || true);
-			writable.end();
+			return Promise.reject(e);
 		});
-	}), e => {
-		destroy(e || true);
-		return Promise.reject(e);
-	});
+	}
+	return runner ? runner(context, run) : run();
 }

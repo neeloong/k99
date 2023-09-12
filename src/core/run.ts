@@ -8,6 +8,7 @@ import type { Log } from './types/Log';
 
 import main from './main';
 import createEnvironment from './createEnvironment';
+import type { Runner } from './types/Runner';
 
 export default function run(
 	req: K99Request,
@@ -19,8 +20,9 @@ export default function run(
 		setting?: Setting.Api,
 		asset?: Asset.Api,
 		log?: Log.Api,
+		runner?: Runner,
 	},
 ): Promise<K99Response | null> {
 	const environment = createEnvironment(options);
-	return main(req, getHandler, environment);
+	return main(req, getHandler, environment, options?.runner);
 }

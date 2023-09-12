@@ -13,6 +13,7 @@ export type { HexEncoding } from './types/HexEncoding';
 export type { CookieClearOption, CookieOption, CookieOptionInfo } from './types/cookie';
 export type { K99Headers } from './types/K99Headers';
 export type { ActionContext } from './types/ActionContext';
+export type { Runner } from './types/Runner';
 
 export type { Guard, FindItem, Finder } from './Router';
 export type { Match, Route, RouterRoute, RouteBinder, Binder } from './ApiRouter';

@@ -6,6 +6,7 @@ import type { Asset } from './types/Asset';
 import type { Log } from './types/Log';
 import main from './main';
 import createEnvironment from './createEnvironment';
+import type { Runner } from './types/Runner';
 
 
 export default function make(
@@ -17,8 +18,9 @@ export default function make(
 		setting?: Setting.Api;
 		asset?: Asset.Api;
 		log?: Log.Api;
+		runner?: Runner;
 	}
 ) {
 	const environment = createEnvironment(options);
-	return (r: K99Request) => main(r, getHandler, environment);
+	return (r: K99Request) => main(r, getHandler, environment, options?.runner);
 }
