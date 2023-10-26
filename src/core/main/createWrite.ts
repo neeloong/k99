@@ -92,6 +92,7 @@ export default function createWrite(): [
 			abortReject = reject;
 		}
 	});
+	abortedPromise.then(null, () => {});
 	function abort(e?: any) {
 		if (abortException) { return false; }
 		abortException = e || new DOMException('The user aborted a request.');
