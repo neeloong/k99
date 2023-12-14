@@ -1,5 +1,3 @@
-import type { K99Request } from './types/K99Request';
-import type { K99Response } from './types/K99Response';
 import type { Setting } from './types/Setting';
 import type { Handler } from './types/handle';
 import type { Context } from './types/context';
@@ -11,7 +9,7 @@ import createEnvironment from './createEnvironment';
 import type { Runner } from './types/Runner';
 
 export default function run(
-	req: K99Request,
+	req: Request,
 	getHandler: (
 		ctx: Context,
 		setParams: (v: any) => void,
@@ -22,7 +20,7 @@ export default function run(
 		log?: Log.Api,
 		runner?: Runner,
 	},
-): Promise<K99Response | null> {
+): Promise<Response | null> {
 	const environment = createEnvironment(options);
 	return main(req, getHandler, environment, options?.runner);
 }

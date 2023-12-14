@@ -1,107 +1,48 @@
 import type { ServerResponse, IncomingMessage } from 'node:http';
 import type { Http2ServerRequest } from 'node:http2';
 import { Http2ServerResponse } from 'node:http2';
-import type { K99Response, K99Request, Method } from 'k99';
 import type { Readable } from 'node:stream';
-import * as urlFn from 'node:url';
 
-
-function createRead(req: Readable, length: number) {
-	let current = 0;
+function createReadableStream(req: Readable) {
 	let cb: null | ((v: Uint8Array | null) => void) = null;
-	let end = false;
-	const dataList: Buffer[] = [];
-	let dataSize = 0;
-	const list: [number, (v: Uint8Array | null) => void][] = [];
-	let running = false;
-	function get(size?: number) {
-		const chunk = Buffer.concat(dataList, dataSize);
-		if (size && dataSize > size) {
-			dataList.length = 0;
-			dataList.push(chunk.slice(size));
-			dataSize -= size;
-			return chunk.slice(0, size);
-		}
-		dataSize = 0;
-		dataList.length = 0;
-		return chunk;
-	}
-	function add(data: string | Buffer) {
-		const buffer = typeof data === 'string' ? Buffer.from(data) : data;
-		dataSize += buffer.length || 0;
-		dataList.push(buffer);
-		return dataSize;
-	}
-	let readSize = 0;
-	function nextData(): Buffer | null {
-		let t = current;
-		const s = length - readSize;
-		if (s <= 0) { setEnd = true; return null; }
-		t = t && readSize !== Infinity ? Math.min(t, s) : s;
-		const value = t ? req.read(t) : req.read();
-		const data = typeof value === 'string' ? Buffer.from(value) : value;
-		if (data) { readSize += data.length; }
-		if (readSize >= length) { setEnd = true; }
-		return data;
-	}
-	function runCb(v: Buffer | null) {
+	let ended = false;
+	function end() {
+		if (ended) { return; }
+		ended = true;
 		if (!cb) { return; }
-		cb(v);
-		[current, cb] = list.shift() || [0, null];
+		const resolve = cb;
+		cb = null;
+		resolve(null);
+
 	}
-	function runMain() {
-		for (;;) {
-			if (!cb) { return; }
-			if (end) {
-				runCb(dataSize ? get(current) : null);
-				continue;
-			}
-			if (!current && dataSize) {
-				runCb(get(current));
-				continue;
-			}
-			const data: Buffer | null = nextData();
-			if (data === null) { return; }
-			if (current) {
-				if (add(data) < current) { continue; }
-				runCb(get(current));
-				continue;
-			}
-			runCb(data);
-		}
-	}
-	let setEnd = false;
-	function run() {
-		running = true;
-		runMain();
-		if (setEnd) {
-			end = true;
-			runMain();
-		}
-		running = false;
-	}
-	req.addListener('end', () => {
-		if (end || setEnd) { return; }
-		if (running) {
-			setEnd = true;
-		} else {
-			end = true;
-			run();
-		}
+	req.addListener('end', end);
+	req.addListener('readable', () => {
+		if (!cb) { return; }
+		const value = req.read();
+		const data = typeof value === 'string' ? Buffer.from(value) : value;
+		const resolve = cb;
+		cb = null;
+		resolve(data || null);
 	});
-	req.addListener('readable', run);
-	return function read(size: number = 0): Promise<Uint8Array | null> {
-		return new Promise(resolve => {
-			size = Math.max(size, 0);
-			if (cb) {
-				list.push([size, resolve]);
-				return;
-			}
-			current = size;
-			cb = resolve;
-			run();
-		});
-	};
+	return new ReadableStream<Uint8Array>({
+		async pull(controller) {
+			if (ended) { return controller.close(); }
+			const value = req.read();
+			const data = typeof value === 'string' ? Buffer.from(value) : value;
+			if (data) { return controller.enqueue(data); }
+			cb = value => {
+				if (!value) {
+					controller.close();
+				} else {
+					controller.enqueue(value);
+				}
+			};
+		},
+		async cancel(r) {
+			end();
+			req.destroy(r);
+		},
+	});
 }
 function createAbortSignal(req: IncomingMessage | Http2ServerRequest) {
 	const ac = new AbortController();
@@ -116,28 +57,30 @@ function createAbortSignal(req: IncomingMessage | Http2ServerRequest) {
 
 	return ac.signal;
 }
-function createRequest(req: IncomingMessage | Http2ServerRequest): K99Request {
-	const urlInfo = urlFn.parse(req.url || '/', true);
-	const length = req.headers['content-length'];
-	return {
-		method: (req.method || 'GET').toUpperCase()  as Method,
-		url: req.url || '/',
-		headers: req.headers,
-		pathname: 'pathname' in req && req['pathname'] as string
-		|| urlInfo.pathname
-		|| '/',
-		search: 'search' in req && req['search']  as string || urlInfo.search || '',
-		query: 'query' in req && req['query'] as {} || urlInfo.query || {},
-		read: createRead(req, length ? parseInt(length) : Infinity),
-		signal: createAbortSignal(req),
-	};
 
+
+function createRequest(
+	req: IncomingMessage | Http2ServerRequest,
+): Request {
+	const signal = createAbortSignal(req);
+
+	// TODO: url
+	const url = req.url || '/';
+	const method = (req.method || 'GET').toUpperCase();
+	const headers = new Headers();
+	for (const [k, v] of Object.entries(req.headers)) {
+		for (const it of [v].flat()) {
+			headers.append(k.toLowerCase(), String(it));
+		}
+	}
+	const body = ['GET', 'OPTIONS'].includes(method) ? null : createReadableStream(req);
+	return new Request(url, { method, headers, signal, body });
 }
 
 
 async function sendResponse(
 	res: ServerResponse | Http2ServerResponse,
-	target: K99Response,
+	target: Response,
 	onError: (e: any) => void,
 	errorInResponse?: boolean,
 ) {
@@ -150,11 +93,11 @@ async function sendResponse(
 	const stream = res instanceof Http2ServerResponse ? res.stream : res;
 	let sent = false;
 	try {
-		for await (const data of target) {
-			if (res.finished) { break; }
+		const {body} = target;
+		if (body) {
 			sent = true;
-			if (stream.write(data)) { continue; }
-			await new Promise(cb => stream.once('drain', cb));
+			// TODO:
+			stream.write(body);
 		}
 	} catch (e) {
 		if (errorInResponse && !sent) {
@@ -184,7 +127,7 @@ export default function createHttpCallback<
 	TReq extends IncomingMessage | Http2ServerRequest,
 	TRes extends ServerResponse | Http2ServerResponse,
 >(
-	run: (request: K99Request) => Promise<K99Response | null>,
+	run: (request: Request) => Promise<Response | null>,
 	{
 		notFound,
 		onError = echoError,

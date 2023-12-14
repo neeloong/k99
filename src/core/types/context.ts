@@ -1,7 +1,5 @@
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
 import type { K99Headers } from './K99Headers';
-import type { K99Request } from './K99Request';
-import type { K99Response } from './K99Response';
 import type { Method } from './method';
 import type { WriteType } from './WriteType';
 import type { Encoding } from './Encoding';
@@ -39,11 +37,11 @@ export interface Context {
 		opt: {
 			method: Method;
 			path: string;
-			body?: K99Request.Reader | WriteType;
+			body?: WriteType;
 			headers?: K99Headers;
 			signal?: AbortSignal;
 		}
-	): Promise<null | K99Response>
+	): Promise<Response | null>
 	/** 调用服务 */
 	service<T, P extends any[] = []>(Service: Service<T, any, P>, ...p: P): T;
 

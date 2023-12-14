@@ -1,5 +1,3 @@
-export type { K99Request } from './types/K99Request';
-export type { K99Response } from './types/K99Response';
 export type { Setting } from './types/Setting';
 export type { Handler } from './types/handle';
 export type { Environment } from './types/Environment';

@@ -1,4 +1,3 @@
-import type { K99Request } from './types/K99Request';
 import type { Setting } from './types/Setting';
 import type { Handler } from './types/handle';
 import type { Context } from './types/context';
@@ -22,5 +21,5 @@ export default function make(
 	}
 ) {
 	const environment = createEnvironment(options);
-	return (r: K99Request) => main(r, getHandler, environment, options?.runner);
+	return (r: Request) => main(r, getHandler, environment, options?.runner);
 }

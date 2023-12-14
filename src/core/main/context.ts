@@ -2,7 +2,6 @@ import type { Context, Service, ServiceContext } from '../types/context';
 import type { CookieClearOption } from '../types/cookie';
 import type { Environment } from '../types/Environment';
 import type { K99Headers } from '../types/K99Headers';
-import type { K99Request } from '../types/K99Request';
 import type { Method } from '../types/method';
 import type { WriteType } from '../types/WriteType';
 import type { CookieInfo } from './cookie';
@@ -11,6 +10,38 @@ import {
 } from './cookie';
 import createRead from './createRead';
 
+function getNameValue(s: string): [string, string] {
+	const index = s.indexOf('=');
+	if (index < 0) {
+		return [decodeURIComponent(s), ''];
+	}
+	return [
+		decodeURIComponent(s.substring(0, index)),
+		decodeURIComponent(s.substring(index + 1)),
+	];
+
+}
+function parseQuery(s: string): Record<string, string | string[]> {
+	const query: Record<string, string | string[]> = {};
+	for (const k of s.split('&').filter(Boolean)) {
+		const [index, value] = getNameValue(k);
+		if (index in query) {
+			query[index] = [query[index], value].flat();
+		} else {
+			query[index] = value;
+		}
+	}
+	return query;
+}
+
+
+function getHeaders(h: Headers) {
+	const headers: K99Headers = {};
+	for (const [k, v] of h.entries()) {
+		headers[k.toLowerCase()] = v;
+	}
+	return headers;
+}
 
 function destroyServices(
 	services: Map<Service<any, any, any>, object>,
@@ -32,17 +63,26 @@ function destroyServices(
 const hostRegex = /^(\[[^\]]+\]|^:):(\d+)$/;
 
 export default function createContext(
-	{ method, url, pathname, search, query, read, headers, signal }: K99Request,
+	req: Request,
 	request: (opt: {
 		method: Method;
 		path: string;
-		body?: WriteType | K99Request.Reader | undefined;
+		body?: WriteType | undefined;
 		headers?: K99Headers | undefined;
 		signal?: AbortSignal | undefined;
-	}) => Promise<any>,
+	}) => Promise<Response | null>,
 	environment?: Environment,
 	parent?: Context,
 ) {
+	const method = (req.method || 'GET').toUpperCase()  as Method;
+	const urlObj = new URL(req.url);
+	const url = `${ urlObj.pathname }${ urlObj.search }` || '/';
+	const {body, signal} = req;
+	const headers = getHeaders(req.headers);
+	const pathname =  urlObj.pathname || '/';
+	const search = urlObj.search || '';
+	const query = parseQuery(search.substring(1));
+
 	const services = new Map<Service<any, any, any>, ServiceContext<any, false>>();
 
 	const host = headers.host || '';
@@ -109,7 +149,7 @@ export default function createContext(
 			.split(/,\s*/)
 			.filter(Boolean),
 		cookies,
-		read: createRead(read),
+		read: createRead(body),
 
 		get destroyed() { return destroyed; },
 		get headersSent() { return headersSent; },

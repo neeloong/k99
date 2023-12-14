@@ -1,10 +1,8 @@
 import type { ActionContext } from '../types/ActionContext';
 import type { Handler } from '../types/handle';
 import type { WriteType } from '../types/WriteType';
-import type { K99Request } from '../types/K99Request';
 import type { Context } from '../types/context';
 import type { Environment } from '../types/Environment';
-import type { K99Response } from '../types/K99Response';
 
 import createRequest from './createRequest';
 
@@ -58,7 +56,7 @@ function signal2promise(signal: AbortSignal) {
 }
 
 export default function main(
-	req: K99Request,
+	request: Request,
 	getHandler:(
 		ctx: Context,
 		setParams: (v: any) => void,
@@ -66,10 +64,10 @@ export default function main(
 	environment?: Environment,
 	runner?: Runner,
 	parent?: Context,
-): Promise<K99Response | null> {
-	const aborted = signal2promise(req.signal);
+): Promise<Response | null> {
+	const aborted = signal2promise(request.signal);
 	const {context, setParams, destroy, sendHeaders} = createContext(
-		req,
+		request,
 		opt => main(createRequest(opt), getHandler, environment, runner, context),
 		environment,
 		parent,
@@ -78,31 +76,39 @@ export default function main(
 		return Promise.race([
 			aborted,
 			Promise.resolve().then(() => getHandler(context, setParams)),
-		]).then(handler => new Promise<K99Response | null>(resolve => {
+		]).then(handler => new Promise<Response | null>(resolve => {
 			if (!handler) {
 				destroy();
 				return resolve(null);
 			}
 
-			const [writable, readable, abortResponse] = createWrite();
-			aborted.catch(e => abortResponse(e));
+			const writableStrategy = new ByteLengthQueuingStrategy({
+				highWaterMark: 1024 * 1024,
+			});
+			const { writable, readable } = new TransformStream(undefined, writableStrategy);
+			const writeData = createWrite(writable);
+			let ended = false;
+			function abort(e?: any) {
+				writable.abort(e || new DOMException('The user aborted a request.'));
+			}
+			aborted.catch(e => abort(e));
 
 			function send() {
 				if (!sendHeaders()) { return; }
 				const {status} = context;
-				resolve({
-					...readable,
-					get status() { return status; },
-					get finished() { return writable.ended; },
-					headers: Object.freeze(context.getHeaders()),
-					[Symbol.asyncIterator]() { return readable; },
-				});
+				const headers = new Headers();
+				for (const [k, v] of Object.entries(context.getHeaders())) {
+					for (const it of [v].flat()) {
+						headers.append(k.toLowerCase(), String(it));
+					}
+				}
+				resolve(new Response(readable, { status, headers }));
 			}
 			const contextS: Omit<ActionContext, keyof Context> = {
-				get finished() { return writable.ended; },
+				get finished() { return ended; },
 				write(chunk: WriteType): Promise<boolean> {
 					send();
-					return writable.write(chunk);
+					return writeData.write(chunk);
 				},
 			};
 
@@ -116,13 +122,15 @@ export default function main(
 			]).then(() => {
 				send();
 				destroy();
-				writable.end();
+				ended = true;
+				writeData.end();
 			}, e => {
 				context.status = 500;
 				send();
-				abortResponse(e);
+				abort(e);
 				destroy(e || true);
-				writable.end();
+				ended = true;
+				writeData.end();
 			});
 		}), e => {
 			destroy(e || true);
