@@ -1,49 +1,9 @@
 import type { ServerResponse, IncomingMessage } from 'node:http';
 import type { Http2ServerRequest } from 'node:http2';
 import { Http2ServerResponse } from 'node:http2';
-import type { Readable } from 'node:stream';
+import type { Writable } from 'node:stream';
+import { Readable } from 'node:stream';
 
-function createReadableStream(req: Readable) {
-	let cb: null | ((v: Uint8Array | null) => void) = null;
-	let ended = false;
-	function end() {
-		if (ended) { return; }
-		ended = true;
-		if (!cb) { return; }
-		const resolve = cb;
-		cb = null;
-		resolve(null);
-
-	}
-	req.addListener('end', end);
-	req.addListener('readable', () => {
-		if (!cb) { return; }
-		const value = req.read();
-		const data = typeof value === 'string' ? Buffer.from(value) : value;
-		const resolve = cb;
-		cb = null;
-		resolve(data || null);
-	});
-	return new ReadableStream<Uint8Array>({
-		async pull(controller) {
-			if (ended) { return controller.close(); }
-			const value = req.read();
-			const data = typeof value === 'string' ? Buffer.from(value) : value;
-			if (data) { return controller.enqueue(data); }
-			cb = value => {
-				if (!value) {
-					controller.close();
-				} else {
-					controller.enqueue(value);
-				}
-			};
-		},
-		async cancel(r) {
-			end();
-			req.destroy(r);
-		},
-	});
-}
 function createAbortSignal(req: IncomingMessage | Http2ServerRequest) {
 	const ac = new AbortController();
 	const end = (err?: Error) => {
@@ -63,9 +23,8 @@ function createRequest(
 	req: IncomingMessage | Http2ServerRequest,
 ): Request {
 	const signal = createAbortSignal(req);
-
-	// TODO: url
-	const url = req.url || '/';
+	const host = req.headers['host'] || '127.0.0.1';
+	const url = new URL(req.url || '/', `http://${ host }`);
 	const method = (req.method || 'GET').toUpperCase();
 	const headers = new Headers();
 	for (const [k, v] of Object.entries(req.headers)) {
@@ -73,49 +32,38 @@ function createRequest(
 			headers.append(k.toLowerCase(), String(it));
 		}
 	}
-	const body = ['GET', 'OPTIONS'].includes(method) ? null : createReadableStream(req);
+	const body = ['GET', 'OPTIONS'].includes(method) ? null : Readable.toWeb(req) as any;
 	return new Request(url, { method, headers, signal, body });
 }
 
 
 async function sendResponse(
 	res: ServerResponse | Http2ServerResponse,
-	target: Response,
+	response: Response,
 	onError: (e: any) => void,
-	errorInResponse?: boolean,
 ) {
-	res.statusCode = target.status;
-	for (const [k, v] of Object.entries(target.headers)) {
-		if (v !== undefined) {
-			res.setHeader(k, v);
-		}
+	res.statusCode = response.status;
+	const {headers} = response;
+	for (const [k, v] of headers) {
+		res.setHeader(k, v);
 	}
-	const stream = res instanceof Http2ServerResponse ? res.stream : res;
-	let sent = false;
-	try {
-		const {body} = target;
-		if (body) {
-			sent = true;
-			// TODO:
-			stream.write(body);
-		}
-	} catch (e) {
-		if (errorInResponse && !sent) {
-			if (e instanceof Error) {
-				stream.write(`${ e.stack || '' }`);
-			} else {
-				stream.write(String(e));
-			}
-		}
-		onError(e);
-	} finally {
+	const cookies = headers.getSetCookie();
+	if (cookies.length) {
+		res.setHeader('set-cookie', cookies);
+	}
+	const {body} = response;
+	if (!body) {
 		res.end();
+		return;
 	}
+	const readable = Readable.fromWeb(body as any);
+	readable.on('error', onError);
+	readable.pipe(res instanceof Http2ServerResponse ? res.stream : res);
 }
 function echoError(e: any) {
 	console.error(e);
 }
-interface HttpCallbackOptions<
+export interface HttpCallbackOptions<
 	TReq extends IncomingMessage | Http2ServerRequest,
 	TRes extends ServerResponse | Http2ServerResponse,
 > {
@@ -134,15 +82,27 @@ export default function createHttpCallback<
 		errorInResponse,
 	}: HttpCallbackOptions<TReq, TRes> = {}
 ): (req: TReq, res: TRes, next?: () => void) => any {
-	return async function httpCallback(req, res, next) {
-		const r = await run(createRequest(req)).then(r => {
-			if (r) { return sendResponse(res, r, onError, errorInResponse); }
+	return function httpCallback(req, res, next) {
+		return run(createRequest(req)).then(r => {
+			if (r) { return sendResponse(res, r, onError); }
 			if (notFound) { return notFound(req, res, next); }
 			if (next) { return next(); }
 			res.statusCode = 404;
 			res.end();
-		}, () => {
+		}, e => {
 			res.statusCode = 500;
+			onError(e);
+			if (!errorInResponse) {
+				res.end();
+				return;
+			}
+			const stream: Writable =
+					res instanceof Http2ServerResponse ? res.stream : res;
+			if (e instanceof Error) {
+				stream.write(`${ e.stack || '' }`);
+			} else {
+				stream.write(String(e));
+			}
 			res.end();
 		});
 	};
