@@ -23,25 +23,9 @@ export function replacer(k: any, v: any) {
 	}
 	return v;
 }
-async function runHandle(
-	context: ActionContext,
-	handle: Handler,
-) {
-	if (context.headersSent) { return; }
-	const result = await handle(context);
-	if (context.finished) { return; }
-	if (isJSON(result)) {
-		if (context.headersSent) { return; }
-		context.responseType = 'application/json';
-		await context.write(JSON.stringify(result, replacer));
-		return;
-	}
-	return context.write(result as WriteType);
-
-}
 
 function signal2promise(signal: AbortSignal) {
-	return new Promise<void>((_, reject) => {
+	return new Promise<never>((_, reject) => {
 		if (signal.aborted) {
 			return reject(signal.reason);
 		}
@@ -87,9 +71,13 @@ export default function main(
 			}
 			aborted.catch(e => abort(e));
 
-			function send() {
-				const headers = sendHeaders();
-				if (!headers) { return; }
+			function send(response?: Response) {
+				if (!sendHeaders()) { return; }
+				if (response) {
+					resolve(response);
+					return;
+				}
+				const headers = new Headers(context.responseHeaders);
 				const {status} = context;
 				resolve(new Response(readable, { status, headers }));
 			}
@@ -101,14 +89,28 @@ export default function main(
 				},
 			};
 
-			const actionContext: ActionContext = Object.create(
-				context,
-				Object.getOwnPropertyDescriptors(contextS),
-			);
-			Promise.race([
-				aborted,
-				runHandle(actionContext, handler),
-			]).then(() => {
+			const runHandle = async function (
+			) {
+				const actionContext: ActionContext = Object.create(
+					context,
+					Object.getOwnPropertyDescriptors(contextS),
+				);
+				if (actionContext.headersSent) { return; }
+				const result = await handler(actionContext);
+				if (ended) { return; }
+				if (result instanceof Response) { return send(result); }
+				if (!isJSON(result)) {
+					send();
+					await writeData.write(result as WriteType);
+					return;
+				}
+				if (actionContext.headersSent) { return; }
+				actionContext.responseType = 'application/json';
+				send();
+				await writeData.write(JSON.stringify(result, replacer));
+
+			};
+			Promise.race([aborted, runHandle()]).then(() => {
 				send();
 				destroy();
 				ended = true;
