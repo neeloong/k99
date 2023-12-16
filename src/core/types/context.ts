@@ -1,5 +1,4 @@
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
-import type { K99Headers } from './K99Headers';
 import type { Method } from './method';
 import type { WriteType } from './WriteType';
 import type { Encoding } from './Encoding';
@@ -33,15 +32,13 @@ export interface Context {
 	readonly error: any;
 	readonly signal: AbortSignal;
 	/** 虚拟请求 */
-	request(
-		opt: {
-			method: Method;
-			path: string;
-			body?: WriteType;
-			headers?: K99Headers;
-			signal?: AbortSignal;
-		}
-	): Promise<Response | null>
+	fetch(opt: {
+		method: Method;
+		path: string;
+		body?: WriteType;
+		headers?: Record<string, string> | Headers;
+		signal?: AbortSignal;
+	}): Promise<Response | null>
 	/** 调用服务 */
 	service<T, P extends any[] = []>(Service: Service<T, any, P>, ...p: P): T;
 
@@ -59,7 +56,7 @@ export interface Context {
 	/** 查询参数 */
 	readonly query: Record<string, string | string[] | undefined>;
 	/** 请求头 */
-	readonly headers: Readonly<K99Headers>;
+	readonly requestHeaders: Headers;
 	/** 请求主机 */
 	readonly host: string;
 	/** 请求主机名 */
@@ -79,10 +76,7 @@ export interface Context {
 
 	/** 请求 cookie */
 	readonly cookies: Readonly<{ [key: string]: string; }>;
-	/** 读取请求体 */
-	read(size?: number, encoding?: null): Promise<Uint8Array | null>;
-	read(size: number, encoding: Encoding | HexEncoding): Promise<string | null>;
-	read(size?: number, encoding?: Encoding | HexEncoding | null): Promise<string | Uint8Array | null>;
+	readonly request: Request;
 
 	/** 会话是否已经结束 */
 	readonly destroyed: boolean;
@@ -90,6 +84,7 @@ export interface Context {
 	readonly headersSent: boolean;
 	/** 状态码 */
 	status: number;
+	readonly responseHeaders: Headers;
 	/** location 相应头 */
 	location: string | number | string[];
 	/** content-type 相应头 */
@@ -115,26 +110,4 @@ export interface Context {
 	 * @param includeRequest 是否包括请求 cookie 在内的 cookie 都要清除
 	 */
 	clearCookie(option?: CookieClearOption, includeRequest?: boolean): void;
-	hasHeader(name: string): boolean;
-	/** 获取全部相应头名称 */
-	getHeaderNames(): string[];
-	/** 获取全部相应头 */
-	getHeaders(): K99Headers;
-	/**
-	 * 获取设置相应头
-	 * @param name  被相应头名称
-	 */
-	getHeader<T extends keyof K99Headers>(
-		name: T
-	): K99Headers[T] | undefined;
-	/**
-	 * 设置或删除相应头
-	 * @description 如果未传第二个参数，或第二个参数值为 undefined, 则表示删除该相应头
-	 * @param name  被设置或删除的相应头名称
-	 * @param value 相应头的值，未传或为 undefined, 则表示删除
-	 */
-	setHeader<T extends keyof K99Headers>(
-		name: T,
-		value?: K99Headers[T]
-	): void;
 }

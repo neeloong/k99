@@ -4,8 +4,6 @@ import type { WriteType } from '../types/WriteType';
 import type { Context } from '../types/context';
 import type { Environment } from '../types/Environment';
 
-import createRequest from './createRequest';
-
 import createWrite, { isBaseWriteType } from './createWrite';
 import createContext from './context';
 import type { Runner } from '../types/Runner';
@@ -68,7 +66,7 @@ export default function main(
 	const aborted = signal2promise(request.signal);
 	const {context, setParams, destroy, sendHeaders} = createContext(
 		request,
-		opt => main(createRequest(opt), getHandler, environment, runner, context),
+		req => main(req, getHandler, environment, runner, context),
 		environment,
 		parent,
 	);
@@ -81,11 +79,7 @@ export default function main(
 				destroy();
 				return resolve(null);
 			}
-
-			const writableStrategy = new ByteLengthQueuingStrategy({
-				highWaterMark: 1024 * 1024,
-			});
-			const { writable, readable } = new TransformStream(undefined, writableStrategy);
+			const { writable, readable } = new TransformStream();
 			const writeData = createWrite(writable);
 			let ended = false;
 			function abort(e?: any) {
@@ -94,14 +88,9 @@ export default function main(
 			aborted.catch(e => abort(e));
 
 			function send() {
-				if (!sendHeaders()) { return; }
+				const headers = sendHeaders();
+				if (!headers) { return; }
 				const {status} = context;
-				const headers = new Headers();
-				for (const [k, v] of Object.entries(context.getHeaders())) {
-					for (const it of [v].flat()) {
-						headers.append(k.toLowerCase(), String(it));
-					}
-				}
 				resolve(new Response(readable, { status, headers }));
 			}
 			const contextS: Omit<ActionContext, keyof Context> = {

@@ -1,14 +1,12 @@
 import type { Context, Service, ServiceContext } from '../types/context';
 import type { CookieClearOption } from '../types/cookie';
 import type { Environment } from '../types/Environment';
-import type { K99Headers } from '../types/K99Headers';
 import type { Method } from '../types/method';
-import type { WriteType } from '../types/WriteType';
 import type { CookieInfo } from './cookie';
+import createBody from './createBody';
 import {
 	clearCookie, getCookie, getRequestCookies, getCookieHeader,
 } from './cookie';
-import createRead from './createRead';
 
 function getNameValue(s: string): [string, string] {
 	const index = s.indexOf('=');
@@ -35,14 +33,6 @@ function parseQuery(s: string): Record<string, string | string[]> {
 }
 
 
-function getHeaders(h: Headers) {
-	const headers: K99Headers = {};
-	for (const [k, v] of h.entries()) {
-		headers[k.toLowerCase()] = v;
-	}
-	return headers;
-}
-
 function destroyServices(
 	services: Map<Service<any, any, any>, object>,
 	environment?: Environment,
@@ -59,42 +49,37 @@ function destroyServices(
 	}
 	return promise;
 }
+const noBodyMethods = new Set(['GET', 'OPTIONS']);
+
 
 const hostRegex = /^(\[[^\]]+\]|^:):(\d+)$/;
 
 export default function createContext(
-	req: Request,
-	request: (opt: {
-		method: Method;
-		path: string;
-		body?: WriteType | undefined;
-		headers?: K99Headers | undefined;
-		signal?: AbortSignal | undefined;
-	}) => Promise<Response | null>,
+	request: Request,
+	fetch: (request: Request) => Promise<Response | null>,
 	environment?: Environment,
 	parent?: Context,
 ) {
-	const method = (req.method || 'GET').toUpperCase()  as Method;
-	const urlObj = new URL(req.url);
+	const method = (request.method || 'GET').toUpperCase() as Method;
+	const urlObj = new URL(request.url);
 	const url = `${ urlObj.pathname }${ urlObj.search }` || '/';
-	const {body, signal} = req;
-	const headers = getHeaders(req.headers);
-	const pathname =  urlObj.pathname || '/';
+	const { signal, headers } = request;
+	const pathname = urlObj.pathname || '/';
 	const search = urlObj.search || '';
 	const query = parseQuery(search.substring(1));
 
 	const services = new Map<Service<any, any, any>, ServiceContext<any, false>>();
 
-	const host = headers.host || '';
+	const host = headers.get('host') || '';
 	const hostInfo = hostRegex.exec(host);
-	const [hostname, port] = hostInfo ? [hostInfo[1], hostInfo[2]] : [host, ''];
+	const [hostname = urlObj.hostname, port = urlObj.port] = hostInfo ? [hostInfo[1], hostInfo[2]] : [host, ''];
 
-	const cookies = getRequestCookies(headers['cookie'] || '');
+	const cookies = getRequestCookies(headers.get('cookie') || '');
 	const sentCookies: CookieInfo[] = [];
 
 
 	let status = 200;
-	let resHeaders: K99Headers = {};
+	const responseHeaders = new Headers();
 	let headersSent = false;
 	let destroyed = false;
 	const root = parent?.root;
@@ -106,7 +91,17 @@ export default function createContext(
 		parent,
 		get error() { return hasError; },
 		get root() { return root || this; },
-		signal, request,
+		signal,
+		fetch: ({ method: m, path, signal, body, headers }) => {
+			const url = new URL(path, urlObj);
+			const method = (m || 'GET').toUpperCase();
+			return fetch(new Request(url, {
+				method,
+				headers: new Headers(headers || {}),
+				signal,
+				body: !body || noBodyMethods.has(method) ? null : createBody(body),
+			}));
+		},
 		service(service, ...p) {
 			if (service.rootOnly && root) {
 				return root.service(service, ...p);
@@ -139,28 +134,26 @@ export default function createContext(
 
 		method, url, pathname, search, query,
 		get params() { return params; },
-		headers: Object.freeze({ ...headers }),
+		requestHeaders: headers,
 		host, hostname, port,
-		requestType: headers['content-type'] || '',
-		referer: headers.referer || '',
-		userAgent: headers['user-agent'] || '',
-		accept: (headers.accept || '').split(/,\s*/).filter(Boolean),
-		acceptLanguage: (headers['accept-language'] || '')
+		requestType: headers.get('content-type') || '',
+		referer: headers.get('referer') || '',
+		userAgent: headers.get('user-agent') || '',
+		accept: (headers.get('accept') || '').split(/,\s*/).filter(Boolean),
+		acceptLanguage: (headers.get('accept-language') || '')
 			.split(/,\s*/)
 			.filter(Boolean),
 		cookies,
-		read: createRead(body),
+		request,
 
 		get destroyed() { return destroyed; },
 		get headersSent() { return headersSent; },
 		get status() { return status; },
 		set status(v) { if (headersSent) { return; } status = v; },
-		get location() { return resHeaders['location'] || ''; },
-		set location(url) { if (!headersSent) { resHeaders['location'] = url; } },
-		get responseType() { return resHeaders['content-type'] || ''; },
-		set responseType(v) {
-			if (!headersSent) { resHeaders['content-type'] = v; }
-		},
+		get location() { return responseHeaders.get('location') || ''; },
+		set location(url) { if (!headersSent) { responseHeaders.set('location', url); } },
+		get responseType() { return responseHeaders.get('content-type') || ''; },
+		set responseType(v) { if (!headersSent) { responseHeaders.set('content-type', v); } },
 		getCookie(name?: string) { return getCookie(sentCookies, name); },
 		setCookie(
 			name,
@@ -171,7 +164,10 @@ export default function createContext(
 			sentCookies.push({
 				name, value, expire, domain, path, secure, httpOnly,
 			});
-			resHeaders['set-cookie'] = getCookieHeader(sentCookies);
+			responseHeaders.delete('set-cookie');
+			for (const v of getCookieHeader(sentCookies)) {
+				responseHeaders.set('set-cookie', v);
+			}
 		},
 		clearCookie(
 			name?: string | CookieClearOption,
@@ -179,21 +175,11 @@ export default function createContext(
 		): void {
 			if (headersSent) { return; }
 			clearCookie(sentCookies, cookies, name, opt);
-			resHeaders['set-cookie'] = getCookieHeader(sentCookies);
-		},
-
-		hasHeader(n) { return n in resHeaders; },
-		getHeaderNames() { return Object.keys(resHeaders); },
-		getHeaders() { return { ...resHeaders }; },
-		getHeader(n) { return resHeaders[n]; },
-		setHeader(n, v) {
-			if (headersSent) { return; }
-			if (v === undefined) {
-				delete resHeaders[n];
-			} else {
-				resHeaders[n] = v;
+			for (const v of getCookieHeader(sentCookies)) {
+				responseHeaders.set('set-cookie', v);
 			}
 		},
+		responseHeaders,
 	};
 	return {
 		context,
@@ -206,10 +192,10 @@ export default function createContext(
 			destroyServices(services, environment);
 		}, sendHeaders() {
 			if (headersSent) {
-				return false;
+				return null;
 			}
 			headersSent = true;
-			return true;
+			return new Headers(responseHeaders);
 		},
 	};
 }

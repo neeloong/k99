@@ -1,6 +1,4 @@
 import type { Context, ServiceContext } from 'k99';
-import readText from './readText.util';
-
 
 function getNameValue(s: string): [string, string] {
 	const index = s.indexOf('=');
@@ -26,9 +24,9 @@ function parseQuery(s: string): Record<string, string | string[]> {
 	return query;
 }
 
-async function parse(ctx: Context) {
+async function parse(request: Request) {
 	try {
-		let data = await readText(ctx.read);
+		const data = await request.text();
 		if (!data.length) { return null; }
 		return parseQuery(data);
 	} catch { }
@@ -38,7 +36,9 @@ function exec(ctx: Context) {
 	const [mime, charset] = ctx.requestType.replace(/\s/g, '').split(';');
 	if (mime !== 'application/x-www-form-urlencoded') { return null; }
 	if (charset && charset !== 'charset=UTF-8') { return null; }
-	return parse(ctx);
+	const {request} = ctx;
+	if (request.bodyUsed) { return null; }
+	return parse(request);
 }
 
 function formBodyService(
