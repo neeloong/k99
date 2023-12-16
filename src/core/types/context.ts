@@ -80,8 +80,6 @@ export interface Context {
 
 	/** 会话是否已经结束 */
 	readonly destroyed: boolean;
-	/** 响应头是否已经被发送 */
-	readonly headersSent: boolean;
 	/** 状态码 */
 	status: number;
 	readonly responseHeaders: Headers;

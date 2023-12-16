@@ -1,4 +1,3 @@
-import type { ActionContext } from '../types/ActionContext';
 import type { Handler } from '../types/handle';
 import type { WriteType } from '../types/WriteType';
 import type { Context } from '../types/context';
@@ -48,7 +47,7 @@ export default function main(
 	parent?: Context,
 ): Promise<Response | null> {
 	const aborted = signal2promise(request.signal);
-	const {context, setParams, destroy, sendHeaders} = createContext(
+	const {context, setParams, destroy} = createContext(
 		request,
 		req => main(req, getHandler, environment, runner, context),
 		environment,
@@ -65,62 +64,35 @@ export default function main(
 			}
 			const { writable, readable } = new TransformStream();
 			const writeData = createWrite(writable);
-			let ended = false;
 			function abort(e?: any) {
 				writable.abort(e || new DOMException('The user aborted a request.'));
 			}
 			aborted.catch(e => abort(e));
 
-			function send(response?: Response) {
-				if (!sendHeaders()) { return; }
-				if (response) {
-					resolve(response);
-					return;
+			Promise.race([aborted, handler(context)]).then(result => {
+				if (result instanceof Response) {
+					resolve(result);
+				} else  {
+					const json = isJSON(result);
+					let value = result as WriteType;
+					if (json) {
+						context.responseType = 'application/json';
+						value = JSON.stringify(result, replacer);
+					}
+					const headers = new Headers(context.responseHeaders);
+					const {status} = context;
+					resolve(new Response(readable, { status, headers }));
+					writeData.write(value);
+					writeData.end();
 				}
+				destroy();
+			}, e => {
+				context.status = 500;
 				const headers = new Headers(context.responseHeaders);
 				const {status} = context;
 				resolve(new Response(readable, { status, headers }));
-			}
-			const contextS: Omit<ActionContext, keyof Context> = {
-				get finished() { return ended; },
-				write(chunk: WriteType): Promise<boolean> {
-					send();
-					return writeData.write(chunk);
-				},
-			};
-
-			const runHandle = async function (
-			) {
-				const actionContext: ActionContext = Object.create(
-					context,
-					Object.getOwnPropertyDescriptors(contextS),
-				);
-				if (actionContext.headersSent) { return; }
-				const result = await handler(actionContext);
-				if (ended) { return; }
-				if (result instanceof Response) { return send(result); }
-				if (!isJSON(result)) {
-					send();
-					await writeData.write(result as WriteType);
-					return;
-				}
-				if (actionContext.headersSent) { return; }
-				actionContext.responseType = 'application/json';
-				send();
-				await writeData.write(JSON.stringify(result, replacer));
-
-			};
-			Promise.race([aborted, runHandle()]).then(() => {
-				send();
-				destroy();
-				ended = true;
-				writeData.end();
-			}, e => {
-				context.status = 500;
-				send();
 				abort(e);
 				destroy(e || true);
-				ended = true;
 				writeData.end();
 			});
 		}), e => {

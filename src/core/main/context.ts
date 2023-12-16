@@ -80,7 +80,6 @@ export default function createContext(
 
 	let status = 200;
 	const responseHeaders = new Headers();
-	let headersSent = false;
 	let destroyed = false;
 	const root = parent?.root;
 	let hasError: any = null;
@@ -147,20 +146,18 @@ export default function createContext(
 		request,
 
 		get destroyed() { return destroyed; },
-		get headersSent() { return headersSent; },
 		get status() { return status; },
-		set status(v) { if (headersSent) { return; } status = v; },
+		set status(v) { status = v; },
 		get location() { return responseHeaders.get('location') || ''; },
-		set location(url) { if (!headersSent) { responseHeaders.set('location', url); } },
+		set location(url) { responseHeaders.set('location', url); },
 		get responseType() { return responseHeaders.get('content-type') || ''; },
-		set responseType(v) { if (!headersSent) { responseHeaders.set('content-type', v); } },
+		set responseType(v) { responseHeaders.set('content-type', v); },
 		getCookie(name?: string) { return getCookie(sentCookies, name); },
 		setCookie(
 			name,
 			value,
 			{ expire, domain, path, secure, httpOnly } = {},
 		) {
-			if (headersSent) { return; }
 			sentCookies.push({
 				name, value, expire, domain, path, secure, httpOnly,
 			});
@@ -173,7 +170,6 @@ export default function createContext(
 			name?: string | CookieClearOption,
 			opt?: CookieClearOption | boolean,
 		): void {
-			if (headersSent) { return; }
 			clearCookie(sentCookies, cookies, name, opt);
 			for (const v of getCookieHeader(sentCookies)) {
 				responseHeaders.set('set-cookie', v);
@@ -187,15 +183,8 @@ export default function createContext(
 		destroy: (error?: boolean) => {
 			if (destroyed) { return; }
 			destroyed = true;
-			headersSent = true;
 			if (error) { hasError = error; }
 			destroyServices(services, environment);
-		}, sendHeaders() {
-			if (headersSent) {
-				return null;
-			}
-			headersSent = true;
-			return new Headers(responseHeaders);
 		},
 	};
 }

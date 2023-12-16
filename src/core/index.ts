@@ -9,7 +9,6 @@ export type { Method } from './types/method';
 export type { Encoding } from './types/Encoding';
 export type { HexEncoding } from './types/HexEncoding';
 export type { CookieClearOption, CookieOption, CookieOptionInfo } from './types/cookie';
-export type { ActionContext } from './types/ActionContext';
 export type { Runner } from './types/Runner';
 
 export type { Guard, FindItem, Finder } from './Router';
