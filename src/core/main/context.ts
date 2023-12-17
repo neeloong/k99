@@ -139,7 +139,7 @@ export default function createContext(
 			});
 			responseHeaders.delete('set-cookie');
 			for (const v of getCookieHeader(sentCookies)) {
-				responseHeaders.set('set-cookie', v);
+				responseHeaders.append('set-cookie', v);
 			}
 		},
 		clearCookie(
@@ -147,8 +147,9 @@ export default function createContext(
 			opt?: CookieClearOption | boolean,
 		): void {
 			clearCookie(sentCookies, cookies, name, opt);
+			responseHeaders.delete('set-cookie');
 			for (const v of getCookieHeader(sentCookies)) {
-				responseHeaders.set('set-cookie', v);
+				responseHeaders.append('set-cookie', v);
 			}
 		},
 		responseHeaders,
