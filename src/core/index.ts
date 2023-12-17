@@ -1,5 +1,5 @@
 export type { Setting } from './types/Setting';
-export type { Handler } from './types/handle';
+export type { Handler, HandlerResult } from './types/handle';
 export type { Environment } from './types/Environment';
 export type { Context, Service, ServiceContext } from './types/context';
 export type { Asset } from './types/Asset';

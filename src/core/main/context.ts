@@ -3,10 +3,10 @@ import type { CookieClearOption } from '../types/cookie';
 import type { Environment } from '../types/Environment';
 import type { Method } from '../types/method';
 import type { CookieInfo } from './cookie';
-import createBody from './createBody';
 import {
 	clearCookie, getCookie, getRequestCookies, getCookieHeader,
 } from './cookie';
+import toBodyData from './toBodyData';
 
 
 function destroyServices(
@@ -59,14 +59,22 @@ export default function createContext(
 		get root() { return root || this; },
 		signal,
 		url,
-		fetch: ({ method: m, path, signal, body, headers }) => {
+		fetch: ({ method: m, path, signal, body: data, headers: h }) => {
 			const method = (m || 'GET').toUpperCase();
-			return fetch(new Request(new URL(path, url), {
-				method,
-				headers: new Headers(headers || {}),
-				signal,
-				body: !body || noBodyMethods.has(method) ? null : createBody(body),
-			}));
+			const bodyData = !data || noBodyMethods.has(method) ? null : toBodyData(data);
+			const headers =  new Headers(h || {});
+			const fetchUrl = new URL(path, url);
+			if (!bodyData) {
+				return fetch(new Request(fetchUrl, { method, headers, signal }));
+			}
+			const [body, size, type] = bodyData;
+			if (type && !headers.get('Content-Type')) {
+				headers.set('Content-Type', type);
+			}
+			if (size > 0 && !headers.get('Content-Length')) {
+				headers.set('Content-Length', String(size));
+			}
+			return fetch(new Request(fetchUrl, { method, headers, signal, body }));
 		},
 		service(service, ...p) {
 			if (service.rootOnly && root) {

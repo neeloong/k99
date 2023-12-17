@@ -1,34 +1,6 @@
 import type { Encoding } from '../types/Encoding';
 import type { HexEncoding } from '../types/HexEncoding';
-
-function str2utf8bin(str: string): Uint8Array {
-	let out: number[] = [];
-	let i = 0;
-	for (; i < str.length; i++) {
-		const c = str.codePointAt(i);
-		if (typeof c !== 'number') { break; }
-		if (c >= 0x10000) { i++; }
-		if (c < 0x80) {
-			out.push(c);
-		} else if (c < 0x800) {
-			// 11 = 5 + 6
-			out.push(0xC0 | 0x1F & c >> 6);
-			out.push(0x80 | 0x3F & c);
-		} else if (c < 0x10000) {
-			// 16 = 4 + 6 * 2
-			out.push(0xE0 | 0x0F & c >> 12);
-			out.push(0x80 | 0x3F & c >> 6);
-			out.push(0x80 | 0x3F & c);
-		} else {
-			// 21 = 3 + 6 * 3
-			out.push(0xF0 | 0x07 & c >> 18);
-			out.push(0x80 | 0x3F & c >> 12);
-			out.push(0x80 | 0x3F & c >> 6);
-			out.push(0x80 | 0x3F & c);
-		}
-	}
-	return new Uint8Array(out);
-}
+import str2utf8bin from './str2utf8bin';
 
 let base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 function base2bin(
