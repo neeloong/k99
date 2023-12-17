@@ -1,7 +1,7 @@
 {
   "name": "k99",
   "private": true,
-  "version": "0.6.0-alpha.10",
+  "version": "0.6.0-alpha.11",
   "description": "前后端均可用的 web 服务器",
   "keywords": [
     "k99",
