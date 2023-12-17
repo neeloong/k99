@@ -33,7 +33,8 @@ function createRequest(
 		}
 	}
 	const body = ['GET', 'OPTIONS'].includes(method) ? null : Readable.toWeb(req) as any;
-	return new Request(url, { method, headers, signal, body });
+	// @ts-ignore
+	return new Request(url, { method, headers, signal, body, duplex: 'half'});
 }
 
 
