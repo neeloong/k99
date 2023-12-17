@@ -1,6 +1,5 @@
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
 import type { Method } from './method';
-import type { WriteType } from './WriteType';
 import type { Environment } from './Environment';
 
 export interface ServiceContext<T, D extends boolean = boolean> extends Context {

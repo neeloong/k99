@@ -1,11 +1,7 @@
-import type { WriteType } from '../types/WriteType';
 import str2utf8bin from '../utils/str2utf8bin';
 
-function isBufferType(
-	chunk: unknown
-): chunk is ArrayBuffer | ArrayBufferView  | SharedArrayBuffer {
+function isBufferSource(chunk: unknown): chunk is ArrayBuffer | SharedArrayBuffer {
 	if (chunk instanceof ArrayBuffer) { return true; }
-	if (ArrayBuffer.isView(chunk)) { return true; }
 	try {
 		if (chunk instanceof SharedArrayBuffer) { return true; }
 	} catch {
@@ -13,7 +9,6 @@ function isBufferType(
 	}
 	return false;
 }
-
 
 function isIterable<T>(result: any):result is Iterable<T> | AsyncIterable<T>  {
 	return Symbol.asyncIterator in result || Symbol.iterator in result;
@@ -25,7 +20,7 @@ function isIterable<T>(result: any):result is Iterable<T> | AsyncIterable<T>  {
  */
 async function write(
 	writer: WritableStreamDefaultWriter<Uint8Array>,
-	chunk: WriteType
+	chunk: unknown
 ): Promise<void> {
 	if (typeof chunk === 'string') {
 		return writer.write(str2utf8bin(chunk));
@@ -34,7 +29,7 @@ async function write(
 	if (ArrayBuffer.isView(chunk)) {
 		return writer.write(new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength));
 	}
-	if (isBufferType(chunk)) {
+	if (isBufferSource(chunk)) {
 		return writer.write(new Uint8Array(chunk));
 	}
 	if (!isIterable(chunk)) {
@@ -70,7 +65,7 @@ export default function toBodyData(
 	if (result instanceof FormData) {
 		return [result, 0, ''];
 	}
-	if (isBufferType(result)) {
+	if (ArrayBuffer.isView(result) || isBufferSource(result)) {
 		return [result, result.byteLength, ''];
 	}
 	if (typeof result === 'string') {
@@ -80,7 +75,7 @@ export default function toBodyData(
 	if (typeof result !== 'object') {
 		return null;
 	}
-	if (Array.isArray(result) || !isIterable<WriteType>(result)) {
+	if (Array.isArray(result) || !isIterable<unknown>(result)) {
 		const body = str2utf8bin(JSON.stringify(result, replacer));
 		return [body, body.byteLength, 'application/json'];
 	}

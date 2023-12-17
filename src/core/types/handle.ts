@@ -1,10 +1,13 @@
 import type { Context } from './context';
-import type { WriteType } from './WriteType';
 
 export type HandlerResult =
 	| void
 	| undefined
-	| WriteType
+	| string
+	| BufferSource
+	| ArrayBufferView
+	| AsyncIterable<string | BufferSource | ArrayBufferView>
+	| Iterable<string | BufferSource | ArrayBufferView>
 	| object
 	| Response
 	| ReadableStream

@@ -4,7 +4,6 @@ export type { Environment } from './types/Environment';
 export type { Context, Service, ServiceContext } from './types/context';
 export type { Asset } from './types/Asset';
 export type { Log } from './types/Log';
-export type { WriteType } from './types/WriteType';
 export type { Method } from './types/method';
 export type { Encoding } from './types/Encoding';
 export type { HexEncoding } from './types/HexEncoding';
