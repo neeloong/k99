@@ -1,8 +1,6 @@
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
 import type { Method } from './method';
 import type { WriteType } from './WriteType';
-import type { Encoding } from './Encoding';
-import type { HexEncoding } from './HexEncoding';
 import type { Environment } from './Environment';
 
 export interface ServiceContext<T, D extends boolean = boolean> extends Context {
@@ -44,25 +42,13 @@ export interface Context {
 
 
 	/** 请求 url (不含协议及主机名等) */
-	readonly url: string;
+	readonly url: URL;
 	/** 路径参数 */
 	readonly params: Readonly<{ [p: string]: string }>;
 	/** 请求方法 */
 	readonly method: Method;
-	/** 请求路径 */
-	readonly pathname: string;
-	/** 查询字符串 */
-	readonly search: string;
-	/** 查询参数 */
-	readonly query: Record<string, string | string[] | undefined>;
 	/** 请求头 */
 	readonly requestHeaders: Headers;
-	/** 请求主机 */
-	readonly host: string;
-	/** 请求主机名 */
-	readonly hostname: string;
-	/** 请求端口 */
-	readonly port: string;
 	/** content-type 请求头 */
 	readonly requestType: string;
 	/** 来源路径 */

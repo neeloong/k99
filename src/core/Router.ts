@@ -77,7 +77,7 @@ abstract class Router {
 	static make(routers: Router[]) {
 		return async (ctx: Context, setParams: (v: any) => void) => {
 			const list = routers.flat();
-			const path = ctx.pathname.split('/').filter(Boolean).map(uriDecode);
+			const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
 			for (const route of list) {
 				const res = await find(route, path, ctx, setParams, {});
 				if (res) { return res; }

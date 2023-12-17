@@ -8,30 +8,6 @@ import {
 	clearCookie, getCookie, getRequestCookies, getCookieHeader,
 } from './cookie';
 
-function getNameValue(s: string): [string, string] {
-	const index = s.indexOf('=');
-	if (index < 0) {
-		return [decodeURIComponent(s), ''];
-	}
-	return [
-		decodeURIComponent(s.substring(0, index)),
-		decodeURIComponent(s.substring(index + 1)),
-	];
-
-}
-function parseQuery(s: string): Record<string, string | string[]> {
-	const query: Record<string, string | string[]> = {};
-	for (const k of s.split('&').filter(Boolean)) {
-		const [index, value] = getNameValue(k);
-		if (index in query) {
-			query[index] = [query[index], value].flat();
-		} else {
-			query[index] = value;
-		}
-	}
-	return query;
-}
-
 
 function destroyServices(
 	services: Map<Service<any, any, any>, object>,
@@ -52,8 +28,6 @@ function destroyServices(
 const noBodyMethods = new Set(['GET', 'OPTIONS']);
 
 
-const hostRegex = /^(\[[^\]]+\]|^:):(\d+)$/;
-
 export default function createContext(
 	request: Request,
 	fetch: (request: Request) => Promise<Response | null>,
@@ -61,18 +35,11 @@ export default function createContext(
 	parent?: Context,
 ) {
 	const method = (request.method || 'GET').toUpperCase() as Method;
-	const urlObj = new URL(request.url);
-	const url = `${ urlObj.pathname }${ urlObj.search }` || '/';
+	const url = new URL(request.url);
 	const { signal, headers } = request;
-	const pathname = urlObj.pathname || '/';
-	const search = urlObj.search || '';
-	const query = parseQuery(search.substring(1));
 
 	const services = new Map<Service<any, any, any>, ServiceContext<any, false>>();
 
-	const host = headers.get('host') || '';
-	const hostInfo = hostRegex.exec(host);
-	const [hostname = urlObj.hostname, port = urlObj.port] = hostInfo ? [hostInfo[1], hostInfo[2]] : [host, ''];
 
 	const cookies = getRequestCookies(headers.get('cookie') || '');
 	const sentCookies: CookieInfo[] = [];
@@ -91,10 +58,10 @@ export default function createContext(
 		get error() { return hasError; },
 		get root() { return root || this; },
 		signal,
+		url,
 		fetch: ({ method: m, path, signal, body, headers }) => {
-			const url = new URL(path, urlObj);
 			const method = (m || 'GET').toUpperCase();
-			return fetch(new Request(url, {
+			return fetch(new Request(new URL(path, url), {
 				method,
 				headers: new Headers(headers || {}),
 				signal,
@@ -131,10 +98,9 @@ export default function createContext(
 			return service(serviceContext, ...p);
 		},
 
-		method, url, pathname, search, query,
+		method,
 		get params() { return params; },
 		requestHeaders: headers,
-		host, hostname, port,
 		requestType: headers.get('content-type') || '',
 		referer: headers.get('referer') || '',
 		userAgent: headers.get('user-agent') || '',
