@@ -31,7 +31,7 @@ export interface Context {
 	/** 虚拟请求 */
 	fetch(input: string | URL, init?: {
 		method?: Method;
-		body?: BodyInit | null;
+		body?: BodyInit | Iterable<Uint8Array> | AsyncIterable<Uint8Array> | object | null;
 		headers?: HeadersInit;
 		signal?: AbortSignal | null;
 	}): Promise<Response | null>
