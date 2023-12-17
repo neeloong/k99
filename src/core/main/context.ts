@@ -9,6 +9,7 @@ import {
 import toBodyData from './toBodyData';
 
 
+const noBodyMethods = new Set(['GET', 'OPTIONS']);
 function destroyServices(
 	services: Map<Service<any, any, any>, object>,
 	environment?: Environment,
@@ -25,7 +26,6 @@ function destroyServices(
 	}
 	return promise;
 }
-const noBodyMethods = new Set(['GET', 'OPTIONS']);
 
 
 export default function createContext(
@@ -59,11 +59,13 @@ export default function createContext(
 		get root() { return root || this; },
 		signal,
 		url,
-		fetch: ({ method: m, path, signal, body: data, headers: h }) => {
-			const method = (m || 'GET').toUpperCase();
-			const bodyData = !data || noBodyMethods.has(method) ? null : toBodyData(data);
+		fetch: (input, { method = 'get', signal, body: data, headers: h } = {}) => {
+			const fetchUrl = new URL(input, url);
 			const headers =  new Headers(h || {});
-			const fetchUrl = new URL(path, url);
+			if (!data || noBodyMethods.has(method.toUpperCase())) {
+				return fetch(new Request(fetchUrl, { method, headers, signal }));
+			}
+			const bodyData = toBodyData(data);
 			if (!bodyData) {
 				return fetch(new Request(fetchUrl, { method, headers, signal }));
 			}

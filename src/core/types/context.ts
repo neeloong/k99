@@ -30,12 +30,11 @@ export interface Context {
 	readonly error: any;
 	readonly signal: AbortSignal;
 	/** 虚拟请求 */
-	fetch(opt: {
-		method: Method;
-		path: string;
-		body?: WriteType;
-		headers?: Record<string, string> | Headers;
-		signal?: AbortSignal;
+	fetch(input: string | URL, init?: {
+		method?: Method;
+		body?: BodyInit | null;
+		headers?: HeadersInit;
+		signal?: AbortSignal | null;
 	}): Promise<Response | null>
 	/** 调用服务 */
 	service<T, P extends any[] = []>(Service: Service<T, any, P>, ...p: P): T;
