@@ -21,19 +21,16 @@ function signal2promise(signal: AbortSignal) {
 
 export default function main(
 	request: Request,
-	getHandler:(
+	getHandler: (
 		ctx: Context,
 		setParams: (v: any) => void,
 	) => PromiseLike<Handler | null> | Handler | null,
-	options?: Options | Runner,
+	options: Options = {},
 	parent?: Context,
 ): Promise<Response | null> {
-	const runner = typeof options === 'function' ? options : options?.runner;
-	const error = typeof options === 'object' ? options?.error : null;
-	const method = typeof options === 'object' ? options?.method : null;
-	const environment = typeof options === 'object' ? options?.environment : null;
+	const { runner, error, method, environment } = options;
 	const aborted = signal2promise(request.signal);
-	const {context, setParams, destroy} = createContext(
+	const { context, setParams, destroy } = createContext(
 		request,
 		req => main(req, getHandler, options, context),
 		method,
@@ -50,10 +47,10 @@ export default function main(
 				return result;
 			}
 			const headers = new Headers(context.responseHeaders);
-			const {status} = context;
+			const { status } = context;
 			if (!result) { return new Response(null, { status, headers }); }
 			const data = toBodyData(result, aborted);
-			if (!data){
+			if (!data) {
 				return new Response(null, { status, headers });
 			}
 			const [body, size, type] = data;
