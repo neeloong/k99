@@ -84,7 +84,7 @@ export default function toBodyData(
 	const { writable, readable } = new TransformStream<Uint8Array, Uint8Array>();
 	const writer = writable.getWriter();
 	aborted?.catch((e?: any) => {
-		writable.abort(e || new DOMException('The user aborted a request.'));
+		writable.abort(e || new DOMException('The user aborted a request.')).catch(() => {});
 	});
 	(async () => {
 		for await (const data of result) {
@@ -92,6 +92,6 @@ export default function toBodyData(
 			await write(writer, data);
 		}
 		await writable.close();
-	})();
+	})().catch(() => {});
 	return [readable, 0, ''];
 }
