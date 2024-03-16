@@ -19,8 +19,9 @@ export default function run(
 		asset?: Asset.Api,
 		log?: Log.Api,
 		runner?: Runner,
+		method?: string | ((request: Request) => string);
 	},
 ): Promise<Response | null> {
 	const environment = createEnvironment(options);
-	return main(req, getHandler, environment, options?.runner);
+	return main(req, getHandler, environment, options);
 }

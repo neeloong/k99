@@ -9,6 +9,7 @@ export type { Encoding } from './types/Encoding';
 export type { HexEncoding } from './types/HexEncoding';
 export type { CookieClearOption, CookieOption, CookieOptionInfo } from './types/cookie';
 export type { Runner } from './types/Runner';
+export type { Options } from './types/Options';
 
 export type { Guard, FindItem, Finder } from './Router';
 export type { Match, Route, RouterRoute, RouteBinder, Binder } from './ApiRouter';

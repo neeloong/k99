@@ -18,8 +18,9 @@ export default function make(
 		asset?: Asset.Api;
 		log?: Log.Api;
 		runner?: Runner;
+		method?: string | ((request: Request) => string);
 	}
 ) {
 	const environment = createEnvironment(options);
-	return (r: Request) => main(r, getHandler, environment, options?.runner);
+	return (r: Request) => main(r, getHandler, environment, options);
 }

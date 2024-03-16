@@ -1,9 +1,10 @@
 import type { Handler } from '../types/handle';
 import type { Context } from '../types/context';
 import type { Environment } from '../types/Environment';
+import type { Runner } from '../types/Runner';
+import type { Options } from '../types/Options';
 
 import createContext from './context';
-import type { Runner } from '../types/Runner';
 import toBodyData from './toBodyData';
 
 function signal2promise(signal: AbortSignal) {
@@ -26,13 +27,15 @@ export default function main(
 		setParams: (v: any) => void,
 	) => PromiseLike<Handler | null> | Handler | null,
 	environment?: Environment,
-	runner?: Runner,
+	options?: Options | Runner,
 	parent?: Context,
 ): Promise<Response | null> {
+	const runner = typeof options === 'function' ? options : options?.runner;
 	const aborted = signal2promise(request.signal);
 	const {context, setParams, destroy} = createContext(
 		request,
-		req => main(req, getHandler, environment, runner, context),
+		req => main(req, getHandler, environment, options, context),
+		typeof options === 'object' ? options?.method : null,
 		environment,
 		parent,
 	);

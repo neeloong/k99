@@ -31,10 +31,20 @@ function destroyServices(
 export default function createContext(
 	request: Request,
 	fetch: (request: Request) => Promise<Response | null>,
+	getMethod?: string | ((request: Request) => string) | null,
 	environment?: Environment,
 	parent?: Context,
 ) {
-	const method = (request.method || 'GET').toUpperCase() as Method;
+	let methodStr = '';
+	if (typeof getMethod === 'string') {
+		methodStr = getMethod as Method;
+	} else if (typeof getMethod === 'function') {
+		methodStr = getMethod(request) as Method;
+	}
+	if (!methodStr || typeof methodStr !== 'string') {
+		methodStr = request.method || 'GET';
+	}
+	const method = methodStr.toUpperCase() as Method;
 	const url = new URL(request.url);
 	const { signal, headers } = request;
 
