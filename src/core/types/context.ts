@@ -67,9 +67,9 @@ export interface Context {
 	status: number;
 	readonly responseHeaders: Headers;
 	/** location 相应头 */
-	location: string | number | string[];
+	location: string;
 	/** content-type 相应头 */
-	responseType: string | number | string[];
+	responseType: string;
 	/** 获取已设置的 cookie 信息 */
 	getCookie(name?: string): Iterable<CookieOptionInfo>;
 	/**

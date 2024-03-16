@@ -135,9 +135,21 @@ export default function createContext(
 		get status() { return status; },
 		set status(v) { status = v; },
 		get location() { return responseHeaders.get('location') || ''; },
-		set location(url) { responseHeaders.set('location', url); },
+		set location(url) {
+			if (url) {
+				responseHeaders.set('location', url);
+			} else {
+				responseHeaders.delete('location');
+			}
+		},
 		get responseType() { return responseHeaders.get('content-type') || ''; },
-		set responseType(v) { responseHeaders.set('content-type', v); },
+		set responseType(type) {
+			if (type) {
+				responseHeaders.set('content-type', type);
+			} else {
+				responseHeaders.delete('content-type');
+			}
+		},
 		getCookie(name?: string) { return getCookie(sentCookies, name); },
 		setCookie(
 			name,
