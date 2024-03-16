@@ -31,11 +31,14 @@ export default function main(
 	parent?: Context,
 ): Promise<Response | null> {
 	const runner = typeof options === 'function' ? options : options?.runner;
+	const error = typeof options === 'object' ? options?.error : null;
+	const method = typeof options === 'object' ? options?.method : null;
 	const aborted = signal2promise(request.signal);
 	const {context, setParams, destroy} = createContext(
 		request,
 		req => main(req, getHandler, environment, options, context),
-		typeof options === 'object' ? options?.method : null,
+		method,
+		error,
 		environment,
 		parent,
 	);

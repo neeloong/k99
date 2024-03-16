@@ -19,6 +19,7 @@ export default function make(
 		log?: Log.Api;
 		runner?: Runner;
 		method?: string | ((request: Request) => string);
+		error?(error: unknown): void;
 	}
 ) {
 	const environment = createEnvironment(options);

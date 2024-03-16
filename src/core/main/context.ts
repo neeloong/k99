@@ -12,7 +12,7 @@ import toBodyData from './toBodyData';
 const noBodyMethods = new Set(['GET', 'OPTIONS']);
 function destroyServices(
 	services: Map<Service<any, any, any>, object>,
-	environment?: Environment,
+	echoError?: ((error?: unknown) => void) | null,
 ) {
 	let promise: Promise<void> = Promise.resolve();
 	for (const [service, context] of [...services.entries()]) {
@@ -22,7 +22,7 @@ function destroyServices(
 				configurable: true,
 				enumerable: true,
 			},
-		}))).catch(e => environment?.error?.(e));
+		}))).catch(e => echoError?.(e));
 	}
 	return promise;
 }
@@ -32,6 +32,7 @@ export default function createContext(
 	request: Request,
 	fetch: (request: Request) => Promise<Response | null>,
 	getMethod?: string | ((request: Request) => string) | null,
+	echoError?: ((error?: unknown) => void) | null,
 	environment?: Environment,
 	parent?: Context,
 ) {
@@ -171,7 +172,7 @@ export default function createContext(
 			if (destroyed) { return; }
 			destroyed = true;
 			if (error) { hasError = error; }
-			destroyServices(services, environment);
+			destroyServices(services, echoError);
 		},
 	};
 }

@@ -20,6 +20,7 @@ export default function run(
 		log?: Log.Api,
 		runner?: Runner,
 		method?: string | ((request: Request) => string);
+		error?(error: unknown): void;
 	},
 ): Promise<Response | null> {
 	const environment = createEnvironment(options);
