@@ -1,10 +1,10 @@
-import type { Setting } from './types/Setting';
-import type { Asset } from './types/Asset';
-import type { Log } from './types/Log';
-import type { Environment } from './types/Environment';
-import initSettings from './utils/initSettings';
-import initAssets from './utils/initAssets';
-import initLog from './utils/initLog';
+import type { Setting } from '../types/Setting';
+import type { Asset } from '../types/Asset';
+import type { Log } from '../types/Log';
+import type { Environment } from '../types/Environment';
+import initSettings from './initSettings';
+import initAssets from './initAssets';
+import initLog from './initLog';
 export default function createEnvironment(options?: {
 	setting?: Setting.Api;
 	asset?: Asset.Api;
