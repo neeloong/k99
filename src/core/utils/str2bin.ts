@@ -1,6 +1,5 @@
 import type { Encoding } from '../types/Encoding';
 import type { HexEncoding } from '../types/HexEncoding';
-import str2utf8bin from './str2utf8bin';
 
 let base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 function base2bin(
@@ -46,7 +45,7 @@ function str2bin(value: string | ArrayBuffer | ArrayBufferView | null, encoding?
 	if (typeof value !== 'string') { return null; }
 	switch (encoding) {
 		default:
-		case 'utf8': return str2utf8bin(value);
+		case 'utf8': return new TextEncoder().encode(value);
 		case 'base64': return base2bin(value);
 		case 'hex': return hex2bin(value);
 	}

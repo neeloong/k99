@@ -1,4 +1,6 @@
-import str2utf8bin from '../utils/str2utf8bin';
+function str2utf8bin(str: string): Uint8Array {
+	return new TextEncoder().encode(str);
+}
 
 function isBufferSource(chunk: unknown): chunk is ArrayBuffer | SharedArrayBuffer {
 	if (chunk instanceof ArrayBuffer) { return true; }
