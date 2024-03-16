@@ -1,10 +1,10 @@
 import * as fsPromises from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import type { Asset } from 'k99';
+import type { Environment } from 'k99';
 
 export default function createFsAssetsApi(
 	...assetsPath: string[]
-): Asset.Api {
+): Environment.Asset.Api {
 	const basePath = pathFn.resolve(...assetsPath, '.');
 	return {
 		async read(path: string): Promise<Uint8Array | null> {
@@ -25,7 +25,7 @@ export default function createFsAssetsApi(
 			const p = `${ basePath }/${ path }`;
 			return fsPromises.unlink(p).then(() => true, () => false);
 		},
-		async stat(path: string): Promise<Asset.Stats | null> {
+		async stat(path: string): Promise<Environment.Asset.Stats | null> {
 			const p = `${ basePath }/${ path }`;
 			try {
 				const s = await fsPromises.stat(p);

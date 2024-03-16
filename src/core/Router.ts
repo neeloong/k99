@@ -1,9 +1,6 @@
-import type { Asset } from './types/Asset';
 import type { Context } from './types/context';
 import type { Handler } from './types/handle';
-import type { Log } from './types/Log';
 import type { Method } from './types/method';
-import type {Setting } from './types/Setting';
 
 export interface Guard {
 	(ctx: Context): PromiseLike<boolean | Handler | void> | boolean | Handler | void;
@@ -92,12 +89,5 @@ abstract class Router {
 		});
 	}
 	readonly guards = new Set<Guard>();
-}
-declare namespace Router {
-	export interface MakeOptions {
-		asset?: Asset.Api;
-		setting?: Setting.Api;
-		log?: Log.Api;
-	}
 }
 export default Router;

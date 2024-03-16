@@ -1,6 +1,6 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import type { Asset, Log, Runner, Setting } from 'k99';
+import type { Environment, Options } from 'k99';
 import { ApiRouter, Plugin, Router } from 'k99';
 import Scanner from './Scanner';
 import createFsAssetsApi from './createFsAssetsApi';
@@ -37,7 +37,7 @@ class FsPlugin extends Plugin<ApiRouter> {
 	static make(plugins: Record<string, Plugin>, {
 		path = process.cwd(),
 		settingPath, assetPath, logPath,
-		router, setting, asset, log, runner,
+		router, setting, asset, log, runner,  ...options
 	}: {
 		/** 工作路径 */
 		path?: string;
@@ -48,17 +48,16 @@ class FsPlugin extends Plugin<ApiRouter> {
 		/** 日志路径 */
 		logPath?: string;
 		router?: Router;
-		asset?: Asset.Api;
-		setting?: Setting.Api;
-		log?: Log.Api;
-		runner?: Runner;
-	} = {}) {
+		asset?: Environment.Asset.Api;
+		setting?: Environment.Setting.Api;
+		log?: Environment.Log.Api;
+	} & Options = {}) {
 		return Plugin.make(plugins, {
 			setting: setting || createFsSettingsApi(path, settingPath || 'settings'),
 			asset: asset || createFsAssetsApi(path, assetPath || 'assets'),
 			log: log || createFsLogApi(path, logPath || 'logs'),
 			router,
-			runner,
+			...options,
 		});
 
 	}

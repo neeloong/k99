@@ -1,12 +1,12 @@
 
-import type { Log } from '../types/Log';
+import type { Environment } from './Environment';
 
 /**
  * 包装日志文本
  * @param log 原始的日志
  * @param opt 包装选项
  */
-function pack(log: string, { tags, indent, date }: Log.Options = {}) {
+function pack(log: string, { tags, indent, date }: Environment.Log.Options = {}) {
 	let extendInfo = '';
 	if (tags) {
 		if (!Array.isArray(tags)) { tags = [tags]; }
@@ -63,22 +63,22 @@ export default function initLog({
 	read = defaultRead,
 	write = defaultWrite,
 	clear = defaultClear,
-}: Log.Api = {}): Log {
-	function writeLog(path: string, log: string, opt?: Log.Options) {
+}: Environment.Log.Api = {}): Environment.Log {
+	function writeLog(path: string, log: string, opt?: Environment.Log.Options) {
 		return write(path, pack(log, opt));
 	}
 	return {
 		read, write: writeLog, clear,
-		async debug(log: string, opt?: Log.Options) {
+		async debug(log: string, opt?: Environment.Log.Options) {
 			return writeLog('debug', log, opt);
 		},
-		async info(log: string, opt?: Log.Options) {
+		async info(log: string, opt?: Environment.Log.Options) {
 			return writeLog('info', log, opt);
 		},
-		async warn(log: any, opt?: Log.Options) {
+		async warn(log: any, opt?: Environment.Log.Options) {
 			return writeLog('warn', getErrorLog(log), opt);
 		},
-		async error(log: string, opt?: Log.Options) {
+		async error(log: string, opt?: Environment.Log.Options) {
 			return writeLog('error', getErrorLog(log), opt);
 		},
 	};

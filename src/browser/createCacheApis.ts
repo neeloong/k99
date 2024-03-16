@@ -1,6 +1,6 @@
-import type { Asset, Log, Setting } from 'k99';
+import type { Environment } from 'k99';
 
-function createSettingsApi(cache: Cache, root: string): Setting.Api {
+function createSettingsApi(cache: Cache, root: string): Environment.Setting.Api {
 	return {
 		async read(path) {
 			path = `${ root }${ path }`;
@@ -17,7 +17,7 @@ function createSettingsApi(cache: Cache, root: string): Setting.Api {
 	};
 }
 
-function createAssetsApi(cache: Cache, root: string): Asset.Api {
+function createAssetsApi(cache: Cache, root: string): Environment.Asset.Api {
 	return {
 		async read(path) {
 			path = `${ root }${ path }`;
@@ -39,7 +39,7 @@ function createAssetsApi(cache: Cache, root: string): Asset.Api {
 		},
 	};
 }
-function createLogApi(cache: Cache, root: string): Log.Api {
+function createLogApi(cache: Cache, root: string): Environment.Log.Api {
 	return {
 		async read(path) {
 			path = `${ root }${ path }`;

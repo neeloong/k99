@@ -1,6 +1,5 @@
 import type { Context, Service, ServiceContext } from '../types/context';
 import type { CookieClearOption } from '../types/cookie';
-import type { Environment } from '../types/Environment';
 import type { Method } from '../types/method';
 import type { CookieInfo } from './cookie';
 import {
@@ -33,7 +32,7 @@ export default function createContext(
 	fetch: (request: Request) => Promise<Response | null>,
 	getMethod?: string | ((request: Request) => string) | null,
 	echoError?: ((error?: unknown) => void) | null,
-	environment?: Environment,
+	environment?: object | null,
 	parent?: Context,
 ) {
 	let methodStr = '';

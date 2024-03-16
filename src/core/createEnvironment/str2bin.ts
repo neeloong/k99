@@ -1,5 +1,4 @@
-import type { Encoding } from '../types/Encoding';
-import type { HexEncoding } from '../types/HexEncoding';
+import type { Environment } from './Environment';
 
 let base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 function base2bin(
@@ -34,10 +33,10 @@ function hex2bin(str: string): Uint8Array {
 	return new Uint8Array(list);
 }
 
-function str2bin(value: null, encoding?: Encoding | HexEncoding | null): null;
-function str2bin(value: string | ArrayBuffer | ArrayBufferView, encoding?: Encoding | HexEncoding | null): Uint8Array;
-function str2bin(value: string | ArrayBuffer | ArrayBufferView | null, encoding?: Encoding | HexEncoding | null): Uint8Array | null;
-function str2bin(value: string | ArrayBuffer | ArrayBufferView | null, encoding?: Encoding | HexEncoding | null): Uint8Array | null {
+function str2bin(value: null, encoding?: Environment.Encoding | Environment.HexEncoding | null): null;
+function str2bin(value: string | ArrayBuffer | ArrayBufferView, encoding?: Environment.Encoding | Environment.HexEncoding | null): Uint8Array;
+function str2bin(value: string | ArrayBuffer | ArrayBufferView | null, encoding?: Environment.Encoding | Environment.HexEncoding | null): Uint8Array | null;
+function str2bin(value: string | ArrayBuffer | ArrayBufferView | null, encoding?: Environment.Encoding | Environment.HexEncoding | null): Uint8Array | null {
 	if (ArrayBuffer.isView(value)) {
 		return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
 	}

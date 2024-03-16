@@ -1,5 +1,4 @@
-import type { Encoding } from '../types/Encoding';
-import type { HexEncoding } from '../types/HexEncoding';
+import type { Environment } from './Environment';
 
 function utf8bin2str(code: Uint8Array): string {
 	let ret: number[] = [];
@@ -56,14 +55,14 @@ function bin2hex(buff: Uint8Array): string {
 }
 
 
-function bin2str(value: null, encoding?: Encoding | HexEncoding | null): null;
+function bin2str(value: null, encoding?: Environment.Encoding | Environment.HexEncoding | null): null;
 function bin2str(value: Uint8Array, encoding?: null): Uint8Array;
-function bin2str(value: Uint8Array, encoding: Encoding | HexEncoding): string;
-function bin2str(value: Uint8Array, encoding?: Encoding | HexEncoding | null): string | Uint8Array;
+function bin2str(value: Uint8Array, encoding: Environment.Encoding | Environment.HexEncoding): string;
+function bin2str(value: Uint8Array, encoding?: Environment.Encoding | Environment.HexEncoding | null): string | Uint8Array;
 function bin2str(value: Uint8Array | null, encoding?: null): Uint8Array | null;
-function bin2str(value: Uint8Array | null, encoding: Encoding | HexEncoding): string | null;
-function bin2str(value: Uint8Array | null, encoding?: Encoding | HexEncoding | null): string | Uint8Array | null;
-function bin2str(value: Uint8Array | null, encoding?: Encoding | HexEncoding | null): Uint8Array | string | null {
+function bin2str(value: Uint8Array | null, encoding: Environment.Encoding | Environment.HexEncoding): string | null;
+function bin2str(value: Uint8Array | null, encoding?: Environment.Encoding | Environment.HexEncoding | null): string | Uint8Array | null;
+function bin2str(value: Uint8Array | null, encoding?: Environment.Encoding | Environment.HexEncoding | null): Uint8Array | string | null {
 	if (!value) { return null; }
 	switch (encoding) {
 		case 'utf8': return utf8bin2str(value);

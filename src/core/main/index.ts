@@ -1,6 +1,5 @@
 import type { Handler } from '../types/handle';
 import type { Context } from '../types/context';
-import type { Environment } from '../types/Environment';
 import type { Runner } from '../types/Runner';
 import type { Options } from '../types/Options';
 
@@ -26,17 +25,17 @@ export default function main(
 		ctx: Context,
 		setParams: (v: any) => void,
 	) => PromiseLike<Handler | null> | Handler | null,
-	environment?: Environment,
 	options?: Options | Runner,
 	parent?: Context,
 ): Promise<Response | null> {
 	const runner = typeof options === 'function' ? options : options?.runner;
 	const error = typeof options === 'object' ? options?.error : null;
 	const method = typeof options === 'object' ? options?.method : null;
+	const environment = typeof options === 'object' ? options?.environment : null;
 	const aborted = signal2promise(request.signal);
 	const {context, setParams, destroy} = createContext(
 		request,
-		req => main(req, getHandler, environment, options, context),
+		req => main(req, getHandler, options, context),
 		method,
 		error,
 		environment,

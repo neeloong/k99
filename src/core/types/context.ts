@@ -1,6 +1,5 @@
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
 import type { Method } from './method';
-import type { Environment } from './Environment';
 
 export interface ServiceContext<T, D extends boolean = boolean> extends Context {
 	readonly destroying: D;
@@ -21,7 +20,7 @@ export declare namespace Service {
 export type StoreService<T> = Service<T | undefined, T, [s?: T]>;
 export type StateService<T> = Service<T, T, []>;
 export interface Context {
-	readonly environment?: Environment;
+	readonly environment?: object | null;
 	/** 当前的路由 */
 	readonly parent?: Context;
 	/** 当前的路由 */

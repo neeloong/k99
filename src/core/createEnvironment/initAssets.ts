@@ -1,6 +1,4 @@
-import type { Asset } from '../types/Asset';
-import type { Encoding } from '../types/Encoding';
-import type { HexEncoding } from '../types/HexEncoding';
+import type { Environment } from './Environment';
 import bin2str from './bin2str';
 import str2bin from './str2bin';
 
@@ -14,23 +12,23 @@ export default function initAssets(
 		write = defaultWrite,
 		delete: unlink = defaultWrite,
 		stat = defaultRead,
-	}: Asset.Api = {},
-): Asset {
+	}: Environment.Asset.Api = {},
+): Environment.Asset {
 	async function readAsset(
 		path: string,
 		encoding?: null,
 	): Promise<Uint8Array | null>;
 	async function readAsset(
 		path: string,
-		encoding: Encoding | HexEncoding,
+		encoding: Environment.Encoding | Environment.HexEncoding,
 	): Promise<string | null>;
 	async function readAsset(
 		path: string,
-		encoding?: Encoding | HexEncoding | null,
+		encoding?: Environment.Encoding | Environment.HexEncoding | null,
 	): Promise<string | Uint8Array | null>;
 	async function readAsset(
 		path: string,
-		encoding?: Encoding | HexEncoding | null,
+		encoding?: Environment.Encoding | Environment.HexEncoding | null,
 	): Promise<Uint8Array | string | null> {
 		const ret = await read(path);
 		return ret && bin2str(ret, encoding);
@@ -38,7 +36,7 @@ export default function initAssets(
 	async function writeAsset(
 		path: string,
 		data?: string | ArrayBuffer | ArrayBuffer | ArrayBufferView | null,
-		encoding?: Encoding | HexEncoding
+		encoding?: Environment.Encoding | Environment.HexEncoding
 	) {
 		if (data === undefined) { return unlink(path); }
 		const value = str2bin(data, encoding);
@@ -49,7 +47,7 @@ export default function initAssets(
 		return unlink(path);
 	}
 
-	async function statAsset(path: string): Promise<Asset.Stats | null> {
+	async function statAsset(path: string): Promise<Environment.Asset.Stats | null> {
 		return stat(path);
 	}
 	return {

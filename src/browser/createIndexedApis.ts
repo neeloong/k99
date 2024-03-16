@@ -1,7 +1,7 @@
-import type { Asset, Log, Setting } from 'k99';
+import type { Environment } from 'k99';
 
 
-function createAssetsApi(db: IDBDatabase, store: string): Asset.Api {
+function createAssetsApi(db: IDBDatabase, store: string): Environment.Asset.Api {
 	return {
 		async read(path) {
 			return new Promise(r => {
@@ -29,7 +29,7 @@ function createAssetsApi(db: IDBDatabase, store: string): Asset.Api {
 }
 
 
-function createSettingsApi(db: IDBDatabase, store: string): Setting.Api {
+function createSettingsApi(db: IDBDatabase, store: string): Environment.Setting.Api {
 	return {
 		async read(path) {
 			return new Promise(r => {
@@ -55,7 +55,7 @@ function createSettingsApi(db: IDBDatabase, store: string): Setting.Api {
 		},
 	};
 }
-function createLogApi(db: IDBDatabase, store: string): Log.Api {
+function createLogApi(db: IDBDatabase, store: string): Environment.Log.Api {
 	return {
 		async read(path) {
 			return new Promise(r => {

@@ -1,14 +1,11 @@
-import type { Setting } from '../types/Setting';
-import type { Asset } from '../types/Asset';
-import type { Log } from '../types/Log';
-import type { Environment } from '../types/Environment';
+import type { Environment } from './Environment';
 import initSettings from './initSettings';
 import initAssets from './initAssets';
 import initLog from './initLog';
 export default function createEnvironment(options?: {
-	setting?: Setting.Api;
-	asset?: Asset.Api;
-	log?: Log.Api;
+	setting?: Environment.Setting.Api;
+	asset?: Environment.Asset.Api;
+	log?: Environment.Log.Api;
 	error?: (e: unknown) => void
 }): Environment {
 	const asset = initAssets(options?.asset);
@@ -21,3 +18,4 @@ export default function createEnvironment(options?: {
 		error: options?.error || (e => { log.error(e); }),
 	};
 }
+export type { Environment } from './Environment';

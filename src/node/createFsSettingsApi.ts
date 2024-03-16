@@ -1,10 +1,10 @@
 import * as fsPromises from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import type { Setting } from 'k99';
+import type { Environment } from 'k99';
 
 export default function createFsSettingsApi(
 	...settingsPath: string[]
-): Setting.Api {
+): Environment.Setting.Api {
 	const basePath = pathFn.resolve(...settingsPath, '.');
 	return {
 		async read(path: string) {

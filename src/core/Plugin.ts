@@ -1,9 +1,8 @@
 import make from './make';
 import Router from './Router';
-import type { Asset } from './types/Asset';
-import type { Log } from './types/Log';
-import type { Runner } from './types/Runner';
-import type { Setting } from './types/Setting';
+import type { Environment } from './createEnvironment';
+import createEnvironment from './createEnvironment';
+import type { Options } from './types/Options';
 
 const idRegexText = '[a-zA-Z][a-zA-Z0-9_-]*';
 const kRegexText = `${ idRegexText }(?:.${ idRegexText })*`;
@@ -13,13 +12,12 @@ const regex = new RegExp(regexText);
 export default abstract class Plugin<T extends Router = Router> {
 	static make(
 		plugins: Record<string, Plugin>,
-		{ router, setting, asset, log, runner}: {
+		{ router, setting, asset, log, environment, ...options}: {
 			router?: Router;
-			asset?: Asset.Api;
-			setting?: Setting.Api;
-			log?: Log.Api;
-			runner?: Runner;
-		} = {},
+			asset?: Environment.Asset.Api;
+			setting?: Environment.Setting.Api;
+			log?: Environment.Log.Api;
+		} & Options = {},
 	) {
 		const routers = [];
 		for (const plugin of Object.values(plugins)) {
@@ -29,22 +27,23 @@ export default abstract class Plugin<T extends Router = Router> {
 			routers.push(router);
 		}
 		return make(Router.make(routers), {
-			setting,
-			asset: Plugin.bindAsset(asset, plugins),
-			log,
-			runner,
+			...options,
+			environment: {
+				...environment,
+				...createEnvironment({setting, asset: Plugin.bindAsset(asset, plugins), log}),
+			},
 		});
 
 	}
 	static bindAsset(
-		api: Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
-	): Asset.Api;
+		api: Environment.Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
+	): Environment.Asset.Api;
 	static bindAsset(
-		api?: Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
-	): Asset.Api | undefined;
+		api?: Environment.Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
+	): Environment.Asset.Api | undefined;
 	static bindAsset(
-		api?: Asset.Api, plugins?: Record<string, Plugin>, pluginPath = 'plugins'
-	): Asset.Api | undefined {
+		api?: Environment.Asset.Api, plugins?: Record<string, Plugin>, pluginPath = 'plugins'
+	): Environment.Asset.Api | undefined {
 		if (!plugins) { return api; }
 		const read = api?.read;
 		if (typeof read !== 'function') { return api; }
