@@ -1,4 +1,4 @@
-import type { Context, ServiceContext } from 'k99';
+import type { Service } from 'k99';
 
 function getNameValue(s: string): [string, string] {
 	const index = s.indexOf('=');
@@ -32,29 +32,13 @@ async function parse(request: Request) {
 	} catch { }
 	return null;
 }
-function exec(ctx: Context) {
+const formBodyService: Service<Promise<any> | null> = function (ctx) {
 	const [mime, charset] = ctx.requestType.replace(/\s/g, '').split(';');
-	if (mime !== 'application/x-www-form-urlencoded') { return null; }
-	if (charset && charset !== 'charset=UTF-8') { return null; }
-	const {request} = ctx;
-	if (request.bodyUsed) { return null; }
-	return parse(request);
-}
-
-function formBodyService(
-	ctx: ServiceContext<Promise<any> | null, false>,
-): Promise<any> | null;
-function formBodyService(
-	ctx: ServiceContext<Promise<any> | null, true>,
-): void;
-function formBodyService(
-	ctx: ServiceContext<Promise<any> | null>,
-): Promise<any> | null | void {
-	if (ctx.destroying) { return; }
-	const res = ctx.state;
-	if (res !== undefined) { return res; }
-	const result = exec(ctx);
-	ctx.state = result;
-	return result;
-}
+	if (mime !== 'application/x-www-form-urlencoded') { return () => null; }
+	if (charset && charset !== 'charset=UTF-8') { return () => null; }
+	const { request } = ctx;
+	if (request.bodyUsed) { return () => null; }
+	const result = parse(request);
+	return () => result;
+};
 export default formBodyService;

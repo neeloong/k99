@@ -1,24 +1,17 @@
 import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
 import type { Method } from './method';
 
-export interface ServiceContext<T, D extends boolean = boolean> extends Context {
-	readonly destroying: D;
-	readonly currentService?: Service<any, any, any>;
-	state?: T;
-	[key: string]: any;
-}
-
-export interface Service<T, D, P extends any[] = []> extends Service.Options {
-	(ctx: ServiceContext<D, false>, ...p: P): T;
-	(ctx: ServiceContext<D, true>): PromiseLike<void> | void;
+export interface Service<T, P extends unknown[] = []> {
+	(ctx: Context): (...p: P) => T;
+	readonly rootOnly?: boolean;
 }
 export declare namespace Service {
 	export interface Options {
 		readonly rootOnly?: boolean;
 	}
 }
-export type StoreService<T> = Service<T | undefined, T, [s?: T]>;
-export type StateService<T> = Service<T, T, []>;
+export type StoreService<T> = Service<T | undefined, [s?: T]>;
+export type StateService<T> = Service<T, []>;
 export interface Context {
 	readonly environment?: object | null;
 	/** 当前的路由 */
@@ -34,10 +27,9 @@ export interface Context {
 		headers?: HeadersInit;
 		signal?: AbortSignal | null;
 	}): Promise<Response | null>
+	done<TR1 = void, TR2 = never>(onfulfilled?: (() => TR1 | PromiseLike<TR1>) | null, onrejected?: ((error: unknown) => TR2 | PromiseLike<TR2>) | null): Promise<TR1 | TR2> | null;
 	/** 调用服务 */
-	service<T, P extends any[] = []>(Service: Service<T, any, P>, ...p: P): T;
-
-
+	service<T, P extends unknown[] = []>(Service: Service<T, P>, ...p: P): T;
 	/** 请求 url (不含协议及主机名等) */
 	readonly url: URL;
 	/** 路径参数 */

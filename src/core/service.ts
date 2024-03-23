@@ -1,40 +1,32 @@
-import type { Service, ServiceContext } from './types/context';
+import type { Service, Context } from './types/context';
 
 
-function service<T, D, P extends any[]>(
-	exec: (ctx: ServiceContext<D, false>, ...p: P) => T,
-	destroy?: ((ctx: ServiceContext<D, true>) => PromiseLike<void> | void) | null,
+function service<T, P extends any[]>(
+	exec: (ctx: Context, ...p: P) => T,
+	destroy?: ((ctx: Context, error?: unknown) => PromiseLike<void> | void) | null,
 	options?: Service.Options,
-): Service<T, D, P>;
-function service<T, D, P extends any[]>(
-	exec: (ctx: ServiceContext<D, false>, ...p: P) => T,
+): Service<T, P>;
+function service<T, P extends any[]>(
+	exec: (ctx: Context, ...p: P) => T,
 	options?: Service.Options,
-): Service<T, D, P>;
-function service<T, D, P extends any[]>(
-	exec: (ctx: ServiceContext<D, false>, ...p: P) => T,
-	destroy?: ((ctx: ServiceContext<D, true>) => PromiseLike<void> | void) | Service.Options | null,
+): Service<T, P>;
+function service<T, P extends any[]>(
+	exec: (ctx: Context, ...p: P) => T,
+	destroy?: ((ctx: Context, error?: unknown) => PromiseLike<void> | void) | Service.Options | null,
 	options?: Service.Options,
-): Service<T, D, P> {
-	const service: Service<T, D, P> = function(
-		ctx: ServiceContext<D>,
-		...any: any[]
-	): any {
-		if (ctx.currentService !== service) {
-			return ctx.service(service, ...any as P);
-		}
-		if (!ctx.destroying) {
-			return exec(ctx as ServiceContext<D, false>, ...any as P);
-		}
+): Service<T, P> {
+	const service: Service<T, P> = function (ctx): any {
 		if (typeof destroy === 'function') {
-			return destroy(ctx as ServiceContext<D, true>);
+			ctx.done(() => destroy(ctx), error => destroy(ctx, error));
 		}
+		return (...any: any[]) => exec(ctx, ...any as P);
 	};
 	const {
 		rootOnly,
 	} = typeof destroy === 'object' && destroy
-		|| typeof options === 'object' && options
+	|| typeof options === 'object' && options
 		|| {};
-	Object.assign(service, {rootOnly: Boolean(rootOnly)});
+	Object.assign(service, { rootOnly: Boolean(rootOnly) });
 	return service;
 }
 export default service;

@@ -1,52 +1,49 @@
-import type { Service, ServiceContext, StoreService } from './types/context';
+import type { Service, Context, StoreService } from './types/context';
 
 
 function storeService<T>(
 	options?: Service.Options,
 ): StoreService<T>;
 function storeService<T>(
-	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | null,
+	destroy?: ((state: T | undefined, ctx: Context, error?: unknown) => PromiseLike<void> | void) | null,
 	options?: Service.Options,
 ): StoreService<T>;
 function storeService<T>(
-	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | null,
-	exec?: ((state: T | undefined, ctx: ServiceContext<T, false>) => any) | null,
+	destroy?: ((state: T | undefined, ctx: Context, error?: unknown) => PromiseLike<void> | void) | null,
+	exec?: ((state: T | undefined, ctx: Context) => any) | null,
 	options?: Service.Options,
 ): StoreService<T>;
 function storeService<T>(
-	destroy?: ((state: T | undefined, ctx: ServiceContext<T, true>) => PromiseLike<void> | void) | Service.Options | null,
-	exec?: ((state: T | undefined, ctx: ServiceContext<T, false>) => any) | Service.Options | null,
+	destroy?: ((state: T | undefined, ctx: Context, error?: unknown) => PromiseLike<void> | void) | Service.Options | null,
+	exec?: ((state: T | undefined, ctx: Context) => any) | Service.Options | null,
 	options?: Service.Options,
 ): StoreService<T> {
-	const service: StoreService<T> = function(
-		ctx: ServiceContext<T>,
-		...s: [s?: T]
-	): any {
-		if (ctx.currentService !== service) {
-			return ctx.service(service, ...s);
+	const service: StoreService<T> = function (ctx) {
+		let state: T | undefined;
+		if (typeof destroy === 'function') {
+			ctx.done(() => destroy(state, ctx), error => destroy(state, ctx, error));
 		}
-		if (!ctx.destroying) {
-			if (!s.length) {
-				return ctx.state;
-			}
-			const [state] = s;
-			ctx.state = state;
-			if (typeof exec === 'function') {
-				exec(state, ctx as ServiceContext<T, false>);
+		if (typeof exec !== 'function') {
+			return (...s: [s?: T]) => {
+				if (s.length) { [state] = s; }
+				return state;
+			};
+		}
+		return (...s: [s?: T]) => {
+			if (s.length) {
+				[state] = s;
+				exec(state, ctx);
 			}
 			return state;
-		}
-		if (typeof destroy === 'function') {
-			return destroy(ctx.state, ctx as ServiceContext<T, true>);
-		}
+		};
 	};
 	const {
 		rootOnly,
 	} = typeof destroy === 'object' && destroy
-		|| typeof exec === 'object' && exec
-		|| typeof options === 'object' && options
+	|| typeof exec === 'object' && exec
+	|| typeof options === 'object' && options
 		|| {};
-	Object.assign(service, {rootOnly: Boolean(rootOnly)});
+	Object.assign(service, { rootOnly: Boolean(rootOnly) });
 	return service;
 }
 export default storeService;

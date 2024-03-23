@@ -1,6 +1,5 @@
 import type { Handler } from '../types/handle';
 import type { Context } from '../types/context';
-import type { Runner } from '../types/Runner';
 import type { Options } from '../types/Options';
 
 import createContext from './context';

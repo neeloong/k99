@@ -1,4 +1,4 @@
-import type { Context, Service, ServiceContext } from '../types/context';
+import type { Context, Service } from '../types/context';
 import type { CookieClearOption } from '../types/cookie';
 import type { Method } from '../types/method';
 import type { CookieInfo } from './cookie';
@@ -9,22 +9,6 @@ import toBodyData from './toBodyData';
 
 
 const noBodyMethods = new Set(['GET', 'OPTIONS']);
-function destroyServices(
-	services: Map<Service<any, any, any>, object>,
-	echoError?: ((error?: unknown) => void) | null,
-) {
-	let promise: Promise<void> = Promise.resolve();
-	for (const [service, context] of [...services.entries()]) {
-		promise = promise.then(() => service(Object.create(context, {
-			destroying: {
-				value: true,
-				configurable: true,
-				enumerable: true,
-			},
-		}))).catch(e => echoError?.(e));
-	}
-	return promise;
-}
 
 
 export default function createContext(
@@ -48,7 +32,7 @@ export default function createContext(
 	const url = new URL(request.url);
 	const { signal, headers } = request;
 
-	const services = new Map<Service<any, any, any>, ServiceContext<any, false>>();
+	const services = new Map<Service<any, any>, Function>();
 
 
 	const cookies = getRequestCookies(headers.get('cookie') || '');
@@ -61,6 +45,12 @@ export default function createContext(
 	const root = parent?.root;
 	let hasError: any = null;
 
+	let resolve = () => {};
+	let reject = (error: unknown) => {};
+
+	const donePromise = new Promise<void>((a, b) => { resolve = a; reject = b; });
+	donePromise.catch(() => {});
+
 	let params: any = {};
 	const context: Context = {
 		environment,
@@ -71,7 +61,7 @@ export default function createContext(
 		url,
 		fetch: (input, { method = 'get', signal, body: data, headers: h } = {}) => {
 			const fetchUrl = new URL(input, url);
-			const headers =  new Headers(h || {});
+			const headers = new Headers(h || {});
 			if (!data || noBodyMethods.has(method.toUpperCase())) {
 				return fetch(new Request(fetchUrl, { method, headers, signal }));
 			}
@@ -88,34 +78,23 @@ export default function createContext(
 			}
 			return fetch(new Request(fetchUrl, { method, headers, signal, body }));
 		},
+		done(a, b) {
+			if (destroyed) { return null; }
+			const result = donePromise.then(a, b);
+			result.catch(echoError);
+			return result;
+		},
 		service(service, ...p) {
 			if (service.rootOnly && root) {
 				return root.service(service, ...p);
 			}
-			let serviceContext = services.get(service);
-			if (!serviceContext) {
-				let state: any;
-				serviceContext = Object.create(context, {
-					destroying: {
-						value: false,
-						configurable: true,
-						enumerable: true,
-					},
-					currentService: {
-						value: service,
-						configurable: true,
-						enumerable: true,
-					},
-					state: {
-						configurable: true,
-						enumerable: true,
-						get() { return state; },
-						set(s) { state = s; },
-					},
-				}) as ServiceContext<any, false>;
-				services.set(service, serviceContext);
+			let fn = services.get(service);
+			if (!fn) {
+				fn = service(context);
+				if (typeof fn !== 'function') { return; }
+				services.set(service, fn);
 			}
-			return service(serviceContext, ...p);
+			return fn(...p);
 		},
 
 		method,
@@ -183,7 +162,7 @@ export default function createContext(
 			if (destroyed) { return; }
 			destroyed = true;
 			if (error) { hasError = error; }
-			destroyServices(services, echoError);
+			if (error) { reject(error); } else { resolve(); }
 		},
 	};
 }
