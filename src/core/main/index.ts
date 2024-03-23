@@ -1,10 +1,17 @@
 import type { Handler } from '../types/handle';
-import type { Context } from '../types/context';
 import type { Options } from '../types/Options';
+import type { Context, Service } from '../types/context';
+import type { CookieClearOption } from '../types/cookie';
+import type { Method } from '../types/method';
+import type { CookieInfo } from './cookie';
 
-import createContext from './context';
-import toBodyData from './toBodyData';
+import toBody from './toBody';
+import {
+	clearCookie, getCookie, getRequestCookies, setCookiesHeader,
+} from './cookie';
 
+
+const noBodyMethods = new Set(['GET', 'OPTIONS']);
 function signal2promise(signal: AbortSignal) {
 	return new Promise<never>((_, reject) => {
 		if (signal.aborted) {
@@ -18,55 +25,148 @@ function signal2promise(signal: AbortSignal) {
 	});
 }
 
+
+function setHeader(headers: Headers, name: string, value?: string) {
+	if (value) {
+		headers.set(name, value);
+	} else {
+		headers.delete(name);
+	}
+}
+function getMethod(request: Request, toMethod?: string | ((request: Request) => string)) {
+	let methodStr = '';
+	if (typeof toMethod === 'string') {
+		methodStr = toMethod;
+	} else if (typeof toMethod === 'function') {
+		methodStr = toMethod(request);
+	}
+	if (!methodStr || typeof methodStr !== 'string') {
+		methodStr = request.method || 'GET';
+	}
+	return methodStr.toUpperCase() as Method;
+}
 export default function main(
 	request: Request,
 	getHandler: (
 		ctx: Context,
 		setParams: (v: any) => void,
 	) => PromiseLike<Handler | null> | Handler | null,
-	options: Options = {},
-	parent?: Context,
+	{ runner, error: echoError, method: toMethod, environment }: Options = {},
 ): Promise<Response | null> {
-	const { runner, error, method, environment } = options;
-	const aborted = signal2promise(request.signal);
-	const { context, setParams, destroy } = createContext(
-		request,
-		req => main(req, getHandler, options, context),
-		method,
-		error,
-		environment,
-		parent,
-	);
-	function run() {
-		return Promise.race([
-			aborted,
-			Promise.resolve().then(() => getHandler(context, setParams)),
-		]).then(handler => handler ? Promise.race([aborted, handler(context)]).then(result => {
-			if (result instanceof Response) {
+	function exec(request: Request, parent?: Context) {
+		const method = getMethod(request, toMethod);
+		const url = new URL(request.url);
+		const { signal, headers } = request;
+		const aborted = signal2promise(signal);
+		const services = new Map<Service<any, any>, Function>();
+		const cookies = getRequestCookies(headers.get('cookie') || '');
+		const sentCookies: CookieInfo[] = [];
+		const responseHeaders = new Headers();
+		const root = parent?.root;
+		let status = 200;
+		let destroyed = false;
+		let error: any = null;
+
+		let resolve = () => {};
+		let reject = (error: unknown) => {};
+		const donePromise = new Promise<void>((a, b) => { resolve = a; reject = b; });
+		donePromise.catch(() => {});
+
+		let params: any = {};
+		const context: Context = {
+			environment,
+			parent,
+			get error() { return error; },
+			get root() { return root || this; },
+			signal,
+			url,
+			fetch(input, { method = 'get', signal, body: data, headers: h } = {}) {
+				const fetchUrl = new URL(input, url);
+				const headers = new Headers(h || {});
+				if (!data || noBodyMethods.has(method.toUpperCase())) {
+					return exec(new Request(fetchUrl, { method, headers, signal }), context);
+				}
+				const body = toBody(data, headers);
+				return exec(new Request(fetchUrl, { method, headers, signal, body }), context);
+			},
+			done(onfulfilled, onrejected) {
+				if (destroyed) { return null; }
+				const result = donePromise.then(onfulfilled, onrejected);
+				result.catch(echoError);
 				return result;
-			}
-			const headers = new Headers(context.responseHeaders);
-			const { status } = context;
-			if (!result) { return new Response(null, { status, headers }); }
-			const data = toBodyData(result, aborted);
-			if (!data) {
-				return new Response(null, { status, headers });
-			}
-			const [body, size, type] = data;
-			if (type && !headers.get('Content-Type')) {
-				headers.set('Content-Type', type);
-			}
-			if (size > 0 && !headers.get('Content-Length')) {
-				headers.set('Content-Length', String(size));
-			}
-			return new Response(body, { status, headers });
-		}) : null).then(response => {
-			destroy();
-			return response;
-		}, e => {
-			destroy(e || true);
-			return Promise.reject(e);
-		});
+			},
+			service(service, ...p) {
+				if (service.rootOnly && root) {
+					return root.service(service, ...p);
+				}
+				let fn = services.get(service);
+				if (!fn) {
+					fn = service(context);
+					if (typeof fn !== 'function') { return; }
+					services.set(service, fn);
+				}
+				return fn(...p);
+			},
+
+			method,
+			get params() { return params; },
+			requestHeaders: headers,
+			requestType: headers.get('content-type') || '',
+			referer: headers.get('referer') || '',
+			userAgent: headers.get('user-agent') || '',
+			accept: (headers.get('accept') || '').split(/,\s*/).filter(Boolean),
+			acceptLanguage: (headers.get('accept-language') || '')
+				.split(/,\s*/)
+				.filter(Boolean),
+			cookies,
+			request,
+
+			get destroyed() { return destroyed; },
+			get status() { return status; },
+			set status(v) { status = v; },
+			responseHeaders,
+			get location() { return responseHeaders.get('location') || ''; },
+			set location(url) { setHeader(responseHeaders, 'location', url); },
+			get responseType() { return responseHeaders.get('content-type') || ''; },
+			set responseType(type) { setHeader(responseHeaders, 'content-type', type); },
+			getCookie(name) { return getCookie(sentCookies, name); },
+			setCookie(name, value, { expire, domain, path, secure, httpOnly } = {}) {
+				sentCookies.push({name, value, expire, domain, path, secure, httpOnly});
+				setCookiesHeader(responseHeaders, sentCookies);
+			},
+			clearCookie(
+				name?: string | CookieClearOption,
+				opt?: CookieClearOption | boolean,
+			): void {
+				clearCookie(sentCookies, cookies, name, opt);
+				setCookiesHeader(responseHeaders, sentCookies);
+			},
+		};
+		function run() {
+			return Promise.race([
+				aborted,
+				Promise.resolve().then(() => getHandler(context, v => { params = v; })),
+			]).then(handler => handler ? Promise.race([aborted, handler(context)]).then(result => {
+				if (result instanceof Response) {
+					return result;
+				}
+				const headers = new Headers(context.responseHeaders);
+				const { status } = context;
+				if (!result) { return new Response(null, { status, headers }); }
+				const body = toBody(result, headers, aborted);
+				return new Response(body, { status, headers });
+			}) : null).then(response => {
+				destroyed = true;
+				resolve();
+				return response;
+			}, e => {
+				destroyed = true;
+				error = e || true;
+				reject(error);
+				return Promise.reject(e);
+			});
+		}
+		return runner ? runner(context, run) : run();
 	}
-	return runner ? runner(context, run) : run();
+	return exec(request);
 }

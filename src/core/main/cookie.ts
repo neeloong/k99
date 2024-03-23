@@ -16,27 +16,20 @@ export function *getCookie(
 	}
 }
 
-export function getCookieHeader(
-	list: CookieInfo[],
-): string[] {
-	return list.map(({
-		name,
-		value,
-		expire,
-		domain,
-		path,
-		secure,
-		httpOnly,
-	}) => name && [
-		`${ encodeURI(name) }=${ encodeURI(value || '') }`,
-		expire && `Expires=${ expire }`,
-		domain && `Domain=${ encodeURI(domain) }`,
-		path && `Path=${ encodeURI(path) }`,
-		secure && 'Secure',
-		httpOnly && 'HttpOnly',
-	].filter(Boolean).join('; ')).filter(Boolean);
+export function setCookiesHeader(headers: Headers, cookies: CookieInfo[]) {
+	headers.delete('set-cookie');
+	for (const { name, value, expire, domain, path, secure, httpOnly } of cookies) {
+		if (!name) { continue; }
+		headers.append('set-cookie', [
+			`${ encodeURI(name) }=${ encodeURI(value || '') }`,
+			expire && `Expires=${ expire }`,
+			domain && `Domain=${ encodeURI(domain) }`,
+			path && `Path=${ encodeURI(path) }`,
+			secure && 'Secure',
+			httpOnly && 'HttpOnly',
+		].filter(Boolean).join('; '));
+	}
 }
-
 export function getRequestCookies(
 	cookie: string,
 ): Record<string, string> {

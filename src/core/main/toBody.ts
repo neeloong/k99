@@ -51,7 +51,7 @@ function replacer(k: any, v: any) {
 	return v;
 }
 
-export default function toBodyData(
+function toBodyData(
 	result: any,
 	aborted?: Promise<never>,
 ): [BodyInit, number, string] | null {
@@ -94,4 +94,21 @@ export default function toBodyData(
 		await writable.close();
 	})().catch(() => {});
 	return [readable, 0, ''];
+}
+
+export default function toBody(
+	result: any,
+	headers: Headers,
+	aborted?: Promise<never>,
+) {
+	const bodyData = toBodyData(result, aborted);
+	if (!bodyData) { return null; }
+	const [body, size, type] = bodyData;
+	if (type && !headers.get('Content-Type')) {
+		headers.set('Content-Type', type);
+	}
+	if (size > 0 && !headers.get('Content-Length')) {
+		headers.set('Content-Length', String(size));
+	}
+	return body;
 }
