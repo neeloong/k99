@@ -1,7 +1,7 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
 import type { Environment, Options } from 'k99';
-import { ApiRouter, Plugin, Router } from 'k99';
+import { ApiRouter, Plugin, Router, createEnvironment } from 'k99';
 import Scanner from './Scanner';
 import createFsAssetsApi from './createFsAssetsApi';
 import createFsLogApi from './createFsLogApi';
@@ -37,7 +37,8 @@ class FsPlugin extends Plugin<ApiRouter> {
 	static make(plugins: Record<string, Plugin>, {
 		path = process.cwd(),
 		settingPath, assetPath, logPath,
-		router, setting, asset, log, runner,  ...options
+		setting, asset, log, environment,
+		...options
 	}: {
 		/** 工作路径 */
 		path?: string;
@@ -52,12 +53,17 @@ class FsPlugin extends Plugin<ApiRouter> {
 		setting?: Environment.Setting.Api;
 		log?: Environment.Log.Api;
 	} & Options = {}) {
-		return Plugin.make(plugins, {
-			setting: setting || createFsSettingsApi(path, settingPath || 'settings'),
-			asset: asset || createFsAssetsApi(path, assetPath || 'assets'),
-			log: log || createFsLogApi(path, logPath || 'logs'),
-			router,
+		const assetApi = asset || createFsAssetsApi(path, assetPath || 'assets');
+		return super.make(plugins, {
 			...options,
+			environment: {
+				...environment,
+				...createEnvironment({
+					asset: { ...assetApi, read: Plugin.bindAssetReader(plugins, assetApi.read) },
+					setting: setting || createFsSettingsApi(path, settingPath || 'settings'),
+					log: log || createFsLogApi(path, logPath || 'logs'),
+				}),
+			},
 		});
 
 	}

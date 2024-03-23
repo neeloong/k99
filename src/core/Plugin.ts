@@ -1,7 +1,5 @@
 import make from './make';
 import Router from './Router';
-import type { Environment } from './createEnvironment';
-import createEnvironment from './createEnvironment';
 import type { Options } from './types/Options';
 
 const idRegexText = '[a-zA-Z][a-zA-Z0-9_-]*';
@@ -12,12 +10,7 @@ const regex = new RegExp(regexText);
 export default abstract class Plugin<T extends Router = Router> {
 	static make(
 		plugins: Record<string, Plugin>,
-		{ router, setting, asset, log, environment, ...options}: {
-			router?: Router;
-			asset?: Environment.Asset.Api;
-			setting?: Environment.Setting.Api;
-			log?: Environment.Log.Api;
-		} & Options = {},
+		{ router, ...options }: { router?: Router; } & Options = {},
 	) {
 		const routers = [];
 		for (const plugin of Object.values(plugins)) {
@@ -26,41 +19,28 @@ export default abstract class Plugin<T extends Router = Router> {
 		if (router instanceof Router) {
 			routers.push(router);
 		}
-		return make(Router.make(routers), {
-			...options,
-			environment: {
-				...environment,
-				...createEnvironment({setting, asset: Plugin.bindAsset(asset, plugins), log}),
-			},
-		});
+		return make(Router.make(routers), options);
 
 	}
-	static bindAsset(
-		api: Environment.Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
-	): Environment.Asset.Api;
-	static bindAsset(
-		api?: Environment.Asset.Api, plugins?: Record<string, Plugin>, pluginPath?: string
-	): Environment.Asset.Api | undefined;
-	static bindAsset(
-		api?: Environment.Asset.Api, plugins?: Record<string, Plugin>, pluginPath = 'plugins'
-	): Environment.Asset.Api | undefined {
-		if (!plugins) { return api; }
-		const read = api?.read;
-		if (typeof read !== 'function') { return api; }
-		return {
-			...api, read: async path => {
-				const ret = await read(path);
-				if (ret !== null) { return ret; }
-				if (!plugins) { return null; }
-				const r = regex.exec(path);
-				if (!r) { return null; }
-				const [, base, name, subpath] = r;
-				if (base !== pluginPath) { return null; }
-				if (!(name in plugins)) { return null; }
-				const plugin = plugins[name];
-				if (!plugin) { return null; }
-				return plugin.readAsset(subpath);
-			},
+	static bindAssetReader(
+		plugins: Record<string, Plugin>,
+		read?: ((path: string) => Promise<Uint8Array | null>) | null,
+		pluginPath = 'plugins'
+	): (path: string) => Promise<Uint8Array | null> {
+		const readAsset: (path: string) => Promise<Uint8Array | null>
+			= typeof read === 'function' ? read : async () => null;
+		return async path => {
+			const ret = await readAsset(path);
+			if (ret !== null) { return ret; }
+			if (!plugins) { return null; }
+			const r = regex.exec(path);
+			if (!r) { return null; }
+			const [, base, name, subpath] = r;
+			if (base !== pluginPath) { return null; }
+			if (!(name in plugins)) { return null; }
+			const plugin = plugins[name];
+			if (!plugin) { return null; }
+			return plugin.readAsset(subpath);
 		};
 	}
 
