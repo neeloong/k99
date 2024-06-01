@@ -1,4 +1,4 @@
-import type { CookieOption, Cookie } from '../types/cookie';
+import type { CookieOption, Cookie } from './types';
 
 export function *getCookie(
 	sentCookies: Cookie[],

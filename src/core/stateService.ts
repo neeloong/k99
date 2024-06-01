@@ -1,4 +1,4 @@
-import type { Service, Context, StateService } from './types/context';
+import type { Service, Context, StateService } from './main';
 
 
 function stateService<T>(

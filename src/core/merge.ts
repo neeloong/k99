@@ -1,5 +1,4 @@
-import type { Context } from './types/context';
-import type { Handler } from './types/handle';
+import type { Context, Handler } from './main';
 
 async function runHandles(
 	context: Context,

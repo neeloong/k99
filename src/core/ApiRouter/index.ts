@@ -1,5 +1,4 @@
-import type { Handler } from '../types/handle';
-import type { Method } from '../types/method';
+import type { Handler, Method } from '../main';
 import type { Finder, FindItem } from '../Router';
 import type { Binder } from './verb';
 

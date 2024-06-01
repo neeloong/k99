@@ -1,4 +1,4 @@
-import type { Service, Context } from './types/context';
+import type { Service, Context } from './main';
 
 
 function service<T, P extends any[]>(

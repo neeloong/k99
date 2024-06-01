@@ -1,4 +1,4 @@
-import type { Service, Context, StoreService } from './types/context';
+import type { Service, Context, StoreService } from './main';
 
 
 function storeService<T>(

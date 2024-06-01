@@ -1,6 +1,4 @@
-import type { Context } from './types/context';
-import type { Handler } from './types/handle';
-import type { Method } from './types/method';
+import type { Context, FindHandler, Handler, Method } from './main';
 
 export interface Guard {
 	(ctx: Context): PromiseLike<boolean | Handler | void> | boolean | Handler | void;
@@ -71,7 +69,7 @@ abstract class Router {
 	abstract find(method: Method, path: string[]):
 	| AsyncIterable<FindItem>
 	| Iterable<FindItem>;
-	static make(routers: Router[]) {
+	static make(routers: Router[]): FindHandler {
 		return async (ctx: Context, setParams: (v: any) => void) => {
 			const list = routers.flat();
 			const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);

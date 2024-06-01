@@ -1,5 +1,4 @@
-import type { Handler } from '../types/handle';
-import type { Method } from '../types/method';
+import type { Handler, Method } from '../main';
 import type { Route, RouterRoute } from './index';
 import toMatch from './toMatch';
 

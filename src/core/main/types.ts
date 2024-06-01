@@ -1,5 +1,14 @@
-import type { CookieOption, Cookie } from './cookie';
-import type { Method } from './method';
+export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
+
+export interface CookieOption {
+	domain?: string;
+	path?: string;
+	secure?: boolean;
+	httpOnly?: boolean;
+	expire?: string;
+}
+
+export type Cookie = CookieOption & { name: string; value: string; };
 
 export interface Service<T, P extends unknown[] = []> {
 	(ctx: Context): (...p: P) => T;
@@ -83,4 +92,44 @@ export interface Context {
 	 * @param includeRequest 是否包括请求 cookie 在内的 cookie 都要清除
 	 */
 	clearCookie(option?: CookieOption, includeRequest?: boolean): void;
+}
+
+export interface Runner {
+	(context: Context, run: () => Promise<Response | null>): Promise<Response | null>
+}
+
+export interface Options {
+	runner?: Runner;
+	method?: string | ((request: Request) => string);
+	error?(error: unknown): void;
+	environment?: object;
+}
+
+export type HandlerResult =
+	| void
+	| undefined
+	| string
+	| BufferSource
+	| ArrayBufferView
+	| AsyncIterable<string | BufferSource | ArrayBufferView>
+	| Iterable<string | BufferSource | ArrayBufferView>
+	| object
+	| Response
+	| ReadableStream
+	| Blob
+	| FormData
+	| boolean;
+
+/** 处理函数定义 */
+export interface Handler {
+	(ctx: Context): PromiseLike<HandlerResult> | HandlerResult;
+	/** 所属组 */
+	plugin?: string;
+}
+
+export interface FindHandler {
+	(
+		ctx: Context,
+		setParams: (v: any) => void,
+	): PromiseLike<Handler | null> | Handler | null
 }

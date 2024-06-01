@@ -1,6 +1,6 @@
+import type { Options } from './main';
 import make from './make';
 import Router from './Router';
-import type { Options } from './types/Options';
 
 const idRegexText = '[a-zA-Z][a-zA-Z0-9_-]*';
 const kRegexText = `${ idRegexText }(?:.${ idRegexText })*`;
