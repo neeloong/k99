@@ -1,14 +1,9 @@
-import type { CookieClearOption, CookieOptionInfo } from '../types/cookie';
-
-
-export interface CookieInfo extends CookieOptionInfo {
-	name: string;
-}
+import type { CookieOption, Cookie } from '../types/cookie';
 
 export function *getCookie(
-	sentCookies: CookieInfo[],
+	sentCookies: Cookie[],
 	name?: string
-): Iterable<CookieOptionInfo> {
+): Iterable<Cookie> {
 	const list = sentCookies;
 	for (const item of list) {
 		if (name && item.name !== name) { continue; }
@@ -16,7 +11,7 @@ export function *getCookie(
 	}
 }
 
-export function setCookiesHeader(headers: Headers, cookies: CookieInfo[]) {
+export function setCookiesHeader(headers: Headers, cookies: Cookie[]) {
 	headers.delete('set-cookie');
 	for (const { name, value, expire, domain, path, secure, httpOnly } of cookies) {
 		if (!name) { continue; }
@@ -30,9 +25,7 @@ export function setCookiesHeader(headers: Headers, cookies: CookieInfo[]) {
 		].filter(Boolean).join('; '));
 	}
 }
-export function getRequestCookies(
-	cookie: string,
-): Record<string, string> {
+export function getRequestCookies(cookie: string): Record<string, string> {
 	let cookies: { [key: string]: string; } = {};
 	for (const item of cookie.replace(/\s/g, '').split(';')) {
 		const v = item.split('=');
@@ -43,20 +36,20 @@ export function getRequestCookies(
 }
 
 export function clearCookie(
-	sentCookies: CookieInfo[],
+	sentCookies: Cookie[],
 	cookies: Record<string, string>,
-	name?: string | CookieClearOption,
-	opt?: CookieClearOption | boolean,
+	name?: string | CookieOption,
+	opt?: CookieOption | boolean,
 ): void {
 	let expire = 'Fri, 31 Dec 1999 16:00:00 GMT';
 	if (typeof name === 'string') {
 		if (!name) { return; }
 		const {
 			domain, path, secure, httpOnly,
-		}: CookieClearOption = opt !== true && opt || {};
+		}: CookieOption = opt !== true && opt || {};
 		sentCookies.push({ name, value: 'delete', expire, domain, path, secure, httpOnly });
 	} else {
-		const { domain, path, secure, httpOnly }: CookieClearOption = name || {};
+		const { domain, path, secure, httpOnly }: CookieOption = name || {};
 		sentCookies.length = 0;
 		if (opt) {
 			for (let name in cookies) {

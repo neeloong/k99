@@ -1,4 +1,4 @@
-import type { CookieClearOption, CookieOption, CookieOptionInfo } from './cookie';
+import type { CookieOption, Cookie } from './cookie';
 import type { Method } from './method';
 
 export interface Service<T, P extends unknown[] = []> {
@@ -63,7 +63,7 @@ export interface Context {
 	/** content-type 相应头 */
 	responseType: string;
 	/** 获取已设置的 cookie 信息 */
-	getCookie(name?: string): Iterable<CookieOptionInfo>;
+	getCookie(name?: string): Iterable<Cookie>;
 	/**
 	 * 设置 cookie
 	 * @param name cookie 名称
@@ -76,11 +76,11 @@ export interface Context {
 	 * @param name  cookie 名称
 	 * @param option 选项
 	 */
-	clearCookie(name: string, option?: CookieClearOption): void;
+	clearCookie(name: string, option?: CookieOption): void;
 	/**
 	 * 清除所有的 cookie
 	 * @param option 选项
 	 * @param includeRequest 是否包括请求 cookie 在内的 cookie 都要清除
 	 */
-	clearCookie(option?: CookieClearOption, includeRequest?: boolean): void;
+	clearCookie(option?: CookieOption, includeRequest?: boolean): void;
 }

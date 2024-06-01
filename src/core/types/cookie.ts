@@ -1,13 +1,9 @@
-export interface CookieClearOption {
+export interface CookieOption {
 	domain?: string;
 	path?: string;
 	secure?: boolean;
 	httpOnly?: boolean;
-}
-export interface CookieOption extends CookieClearOption {
 	expire?: string;
 }
 
-export interface CookieOptionInfo extends CookieOption {
-	value: string;
-}
+export type Cookie = CookieOption & { name: string; value: string; };

@@ -1,9 +1,8 @@
 import type { Handler } from '../types/handle';
 import type { Options } from '../types/Options';
 import type { Context, Service } from '../types/context';
-import type { CookieClearOption } from '../types/cookie';
+import type { Cookie, CookieOption } from '../types/cookie';
 import type { Method } from '../types/method';
-import type { CookieInfo } from './cookie';
 
 import toBody from './toBody';
 import {
@@ -60,7 +59,7 @@ export default function main(
 		const aborted = signal2promise(signal);
 		const services = new Map<Service<any, any>, Function>();
 		const cookies = getRequestCookies(headers.get('cookie') || '');
-		const sentCookies: CookieInfo[] = [];
+		const sentCookies: Cookie[] = [];
 		const responseHeaders = new Headers();
 		const root = parent?.root;
 		let status = 200;
@@ -135,8 +134,8 @@ export default function main(
 				setCookiesHeader(responseHeaders, sentCookies);
 			},
 			clearCookie(
-				name?: string | CookieClearOption,
-				opt?: CookieClearOption | boolean,
+				name?: string | CookieOption,
+				opt?: CookieOption | boolean,
 			): void {
 				clearCookie(sentCookies, cookies, name, opt);
 				setCookiesHeader(responseHeaders, sentCookies);

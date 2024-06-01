@@ -2,7 +2,7 @@ export type { Environment } from './createEnvironment';
 export type { Handler, HandlerResult } from './types/handle';
 export type { Context, Service, StateService, StoreService } from './types/context';
 export type { Method } from './types/method';
-export type { CookieClearOption, CookieOption, CookieOptionInfo } from './types/cookie';
+export type { CookieOption, Cookie } from './types/cookie';
 export type { Runner } from './types/Runner';
 export type { Options } from './types/Options';
 
