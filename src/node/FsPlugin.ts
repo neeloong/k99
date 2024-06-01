@@ -1,7 +1,9 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import type { Environment, Options } from 'k99';
-import { ApiRouter, Plugin, Router, createEnvironment } from 'k99';
+import type { Options } from 'k99';
+import type { Environment } from 'k99/environment';
+import { ApiRouter, Plugin, Router } from 'k99';
+import createEnvironment from 'k99/environment';
 import Scanner from './Scanner';
 import createFsAssetsApi from './createFsAssetsApi';
 import createFsLogApi from './createFsLogApi';

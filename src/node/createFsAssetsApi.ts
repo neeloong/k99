@@ -1,6 +1,6 @@
 import * as fsPromises from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import type { Environment } from 'k99';
+import type { Environment } from 'k99/environment';
 
 export default function createFsAssetsApi(
 	...assetsPath: string[]

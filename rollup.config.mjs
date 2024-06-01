@@ -25,6 +25,13 @@ await fsPromises.writeFile('build/package.json', JSON.stringify({
 			unpkg: './index.min.js',
 			jsdelivr: './index.min.js',
 		},
+		"./environment": {
+			types:"./environment.d.ts",
+			node:"./environment.cjs",
+			module: './environment.mjs',
+			unpkg: './environment.min.js',
+			jsdelivr: './environment.min.js',
+		},
 		"./browser": {
 			types:"./browser.d.ts",
 			node:"./browser.cjs",
@@ -48,6 +55,7 @@ await fsPromises.writeFile('build/package.json', JSON.stringify({
 const external = [
 	...Object.keys(dependencies),
 	'k99',
+	'k99/environment',
 	'k99/node',
 	'k99/cli',
 	'node:http',
@@ -104,6 +112,7 @@ async function createBrowserItem(id, name = 'k99') {
 }
 export default [
 	...await createBrowserItem(),
+	...await createBrowserItem('environment', 'k99Environment'),
 	...await createBrowserItem('browser', 'k99Browser'),
 	...await createBrowserItem('services', 'k99Services'),
 	...await createBaseItem('node'),

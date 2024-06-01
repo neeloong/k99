@@ -1,4 +1,4 @@
-import type { Environment } from 'k99';
+import type { Environment } from 'k99/environment';
 
 function createSettingsApi(cache: Cache, root: string): Environment.Setting.Api {
 	return {

@@ -1,4 +1,4 @@
-import type { Environment } from 'k99';
+import type { Environment } from 'k99/environment';
 
 
 function createAssetsApi(db: IDBDatabase, store: string): Environment.Asset.Api {

@@ -1,4 +1,3 @@
-export type { Environment } from './createEnvironment';
 export type { Handler, HandlerResult } from './types/handle';
 export type { Context, Service, StateService, StoreService } from './types/context';
 export type { Method } from './types/method';
@@ -18,5 +17,4 @@ export { default as storeService } from './storeService';
 export { default as ApiRouter } from './ApiRouter';
 export { default as Router } from './Router';
 export { default as Plugin } from './Plugin';
-export { default as createEnvironment } from './createEnvironment';
 export { default as createFetch } from './createFetch';
