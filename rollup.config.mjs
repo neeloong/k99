@@ -90,7 +90,8 @@ function plugins() {
 }
 
 async function createBaseItem(id) {
-	const input = `src/${ id }/index.ts`;
+	const inputName = `src/${ id }/index`
+	const input = await fsPromises.stat(`${inputName}.mjs`).catch(() => null) ? `${inputName}.mjs` : `${inputName}.ts`;
 	return [{ input, external, plugins: plugins(), output: [
 		{ banner, file: `build/${ id }/index.cjs`, format: 'cjs' },
 	]}, { input, external, plugins: [ dts() ], output: [
@@ -98,7 +99,8 @@ async function createBaseItem(id) {
 	] }];
 }
 async function createBrowserItem(id, name = 'k99') {
-	const input = `src/${ id || 'core' }/index.ts`;
+	const inputName = `src/${ id || 'core' }/index`
+	const input = await fsPromises.stat(`${inputName}.mjs`).catch(() => null) ? `${inputName}.mjs` : `${inputName}.ts`;
 	const output = `build/${ id ? `${ id.toLowerCase() }` : 'index' }`;
 	return [ { input, external, plugins: plugins(), output: [
 		{ format: 'cjs', banner, file: `${ output }.cjs` },

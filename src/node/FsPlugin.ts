@@ -4,7 +4,7 @@ import type { Options } from 'k99';
 import type { Environment } from 'k99/environment';
 import { ApiRouter, Plugin, Router } from 'k99';
 import createEnvironment from 'k99/environment';
-import Scanner from './Scanner';
+import { Scanner } from './Scanner/index.mjs';
 import createFsAssetsApi from './createFsAssetsApi';
 import createFsLogApi from './createFsLogApi';
 import createFsSettingsApi from './createFsSettingsApi';

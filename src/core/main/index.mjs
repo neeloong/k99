@@ -1,21 +1,17 @@
-import type {
-	Cookie, CookieOption, Method, Context, Service, Options, FindHandler,
-} from './types';
 
-import toBody from './toBody';
+import toBody from './toBody.mjs';
 import {
 	clearCookie, getCookie, getRequestCookies, setCookiesHeader,
-} from './cookie';
-
-export type {
-	CookieOption, Cookie,
-	Method, Context, Service, StateService, StoreService,
-	Runner, Options, Handler, HandlerResult, FindHandler,
-} from './types';
+} from './cookie.mjs';
 
 const noBodyMethods = new Set(['GET', 'OPTIONS']);
-function signal2promise(signal: AbortSignal) {
-	return new Promise<never>((_, reject) => {
+/**
+ * 
+ * @param {AbortSignal} signal 
+ * @returns {Promise<never>}
+ */
+function signal2promise(signal) {
+	return new Promise((_, reject) => {
 		if (signal.aborted) {
 			return reject(signal.reason);
 		}
@@ -27,15 +23,26 @@ function signal2promise(signal: AbortSignal) {
 	});
 }
 
-
-function setHeader(headers: Headers, name: string, value?: string) {
+/**
+ * 
+ * @param {Headers} headers 
+ * @param {string} name 
+ * @param {string} [value] 
+ */
+function setHeader(headers, name, value) {
 	if (value) {
 		headers.set(name, value);
 	} else {
 		headers.delete(name);
 	}
 }
-function getMethod(request: Request, toMethod?: string | ((request: Request) => string)) {
+/**
+ * 
+ * @param {Request} request 
+ * @param {string | ((request: Request) => string)} [toMethod] 
+ * @returns {import('./types').Method}
+ */
+function getMethod(request, toMethod) {
 	let methodStr = '';
 	if (typeof toMethod === 'string') {
 		methodStr = toMethod;
@@ -45,34 +52,53 @@ function getMethod(request: Request, toMethod?: string | ((request: Request) => 
 	if (!methodStr || typeof methodStr !== 'string') {
 		methodStr = request.method || 'GET';
 	}
-	return methodStr.toUpperCase() as Method;
+	return /** @type {import('./types').Method} */(methodStr.toUpperCase());
 }
+/**
+ * 
+ * @param {Request} request 
+ * @param {import('./types').FindHandler} getHandler 
+ * @param {import('./types').Options} [options]
+ * @returns {Promise<Response | null>}
+ */
 export default function main(
-	request: Request,
-	getHandler: FindHandler,
-	{ runner, error: echoError, method: toMethod, environment }: Options = {},
-): Promise<Response | null> {
-	function exec(request: Request, parent?: Context) {
+	request, getHandler,
+	{ runner, error: echoError, method: toMethod, environment } = {},
+) {
+	/**
+	 * 
+	 * @param {Request} request 
+	 * @param {import('./types').Context} [parent] 
+	 * @returns {Promise<Response | null>}
+	 */
+	function exec(request, parent) {
 		const method = getMethod(request, toMethod);
 		const url = new URL(request.url);
 		const { signal, headers } = request;
 		const aborted = signal2promise(signal);
-		const services = new Map<Service<any, any>, Function>();
+		/** @type {Map<import('./types').Service<any, any>, Function>} */
+		const services = new Map();
 		const cookies = getRequestCookies(headers.get('cookie') || '');
-		const sentCookies: Cookie[] = [];
+		/** @type {import('./types').Cookie[]} */
+		const sentCookies = [];
 		const responseHeaders = new Headers();
 		const root = parent?.root;
 		let status = 200;
 		let destroyed = false;
-		let error: any = null;
+		/** @type {any} */
+		let error = null;
 
 		let resolve = () => {};
-		let reject = (error: unknown) => {};
-		const donePromise = new Promise<void>((a, b) => { resolve = a; reject = b; });
+		/** @type {(error: unknown) => void} */
+		let reject = (error) => {};
+		/** @type {Promise<void>} */
+		const donePromise = new Promise((a, b) => { resolve = a; reject = b; });
 		donePromise.catch(() => {});
 
-		let params: any = {};
-		const context: Context = {
+		/** @type {any} */
+		let params = {};
+		/** @type {import('./types').Context} */
+		const context = {
 			environment,
 			parent,
 			get error() { return error; },
@@ -133,10 +159,13 @@ export default function main(
 				sentCookies.push({name, value, expire, domain, path, secure, httpOnly});
 				setCookiesHeader(responseHeaders, sentCookies);
 			},
-			clearCookie(
-				name?: string | CookieOption,
-				opt?: CookieOption | boolean,
-			): void {
+			/**
+			 * 
+			 * @param {string | import('./types').CookieOption} [name] 
+			 * @param {import('./types').CookieOption | boolean} [opt] 
+			 * @returns {void}
+			 */
+			clearCookie(name, opt) {
 				clearCookie(sentCookies, cookies, name, opt);
 				setCookiesHeader(responseHeaders, sentCookies);
 			},

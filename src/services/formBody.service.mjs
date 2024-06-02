@@ -1,6 +1,9 @@
-import type { Service } from 'k99';
-
-function getNameValue(s: string): [string, string] {
+/**
+ * 
+ * @param {string} s 
+ * @returns {[string, string]}
+ */
+function getNameValue(s) {
 	const index = s.indexOf('=');
 	if (index < 0) {
 		return [decodeURIComponent(s), ''];
@@ -11,8 +14,14 @@ function getNameValue(s: string): [string, string] {
 	];
 
 }
-function parseQuery(s: string): Record<string, string | string[]> {
-	const query: Record<string, string | string[]> = {};
+/**
+ * 
+ * @param {string} s 
+ * @returns {Record<string, string | string[]>}
+ */
+function parseQuery(s) {
+	/** @type {Record<string, string | string[]>} */
+	const query = {};
 	for (const k of s.split('&').filter(Boolean)) {
 		const [index, value] = getNameValue(k);
 		if (index in query) {
@@ -23,8 +32,12 @@ function parseQuery(s: string): Record<string, string | string[]> {
 	}
 	return query;
 }
-
-async function parse(request: Request) {
+/**
+ * 
+ * @param {Request} request 
+ * @returns {Promise<Record<string, string | string[]> | null>}
+ */
+async function parse(request) {
 	try {
 		const data = await request.text();
 		if (!data.length) { return null; }
@@ -32,7 +45,8 @@ async function parse(request: Request) {
 	} catch { }
 	return null;
 }
-const formBodyService: Service<Promise<any> | null> = function (ctx) {
+/** @type {import('k99').Service<Promise<any> | null>} */
+const formBodyService = function (ctx) {
 	const [mime, charset] = ctx.requestType.replace(/\s/g, '').split(';');
 	if (mime !== 'application/x-www-form-urlencoded') { return () => null; }
 	if (charset && charset !== 'charset=UTF-8') { return () => null; }

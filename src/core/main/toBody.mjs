@@ -1,8 +1,17 @@
-function str2utf8bin(str: string): Uint8Array {
+/**
+ * 
+ * @param {string} str 
+ * @returns {Uint8Array}
+ */
+function str2utf8bin(str) {
 	return new TextEncoder().encode(str);
 }
-
-function isBufferSource(chunk: unknown): chunk is ArrayBuffer | SharedArrayBuffer {
+/**
+ * 
+ * @param {unknown} chunk 
+ * @returns {chunk is ArrayBuffer | SharedArrayBuffer}
+ */
+function isBufferSource(chunk) {
 	if (chunk instanceof ArrayBuffer) { return true; }
 	try {
 		if (chunk instanceof SharedArrayBuffer) { return true; }
@@ -11,19 +20,23 @@ function isBufferSource(chunk: unknown): chunk is ArrayBuffer | SharedArrayBuffe
 	}
 	return false;
 }
-
-function isIterable<T>(result: any):result is Iterable<T> | AsyncIterable<T>  {
+/**
+ * 
+ * @template T
+ * @param {any} result 
+ * @returns {result is Iterable<T> | AsyncIterable<T>}
+ */
+function isIterable(result) {
 	return Symbol.asyncIterator in result || Symbol.iterator in result;
 
 }
 /**
  * 向可写流中写入数据
- * @param chunk 要写入的数据
+ * @param {WritableStreamDefaultWriter<Uint8Array>} writer 
+ * @param {unknown} chunk 要写入的数据
+ * @returns {Promise<void>}
  */
-async function write(
-	writer: WritableStreamDefaultWriter<Uint8Array>,
-	chunk: unknown
-): Promise<void> {
+async function write(writer, chunk) {
 	if (typeof chunk === 'string') {
 		return writer.write(str2utf8bin(chunk));
 	}
@@ -43,18 +56,26 @@ async function write(
 	}
 }
 
-
-function replacer(k: any, v: any) {
+/**
+ * 
+ * @param {any} k 
+ * @param {any} v 
+ * @returns {any}
+ */
+function replacer(k, v) {
 	if (typeof v === 'bigint') {
 		return String(v);
 	}
 	return v;
 }
 
-function toBodyData(
-	result: any,
-	aborted?: Promise<never>,
-): [BodyInit, number, string] | null {
+/**
+ * 
+ * @param {any} result 
+ * @param {Promise<never>} [aborted] 
+ * @returns {[BodyInit, number, string] | null}
+ */
+function toBodyData(result, aborted) {
 	if (result instanceof ReadableStream) {
 		return [result, 0, ''];
 	}
@@ -77,13 +98,14 @@ function toBodyData(
 	if (typeof result !== 'object') {
 		return null;
 	}
-	if (Array.isArray(result) || !isIterable<unknown>(result)) {
+	if (Array.isArray(result) || !isIterable(result)) {
 		const body = str2utf8bin(JSON.stringify(result, replacer));
 		return [body, body.byteLength, 'application/json'];
 	}
-	const { writable, readable } = new TransformStream<Uint8Array, Uint8Array>();
+	/** @type {TransformStream<Uint8Array, Uint8Array>} */
+	const { writable, readable } = new TransformStream();
 	const writer = writable.getWriter();
-	aborted?.catch((e?: any) => {
+	aborted?.catch((e) => {
 		writable.abort(e || new DOMException('The user aborted a request.')).catch(() => {});
 	});
 	(async () => {
@@ -95,12 +117,14 @@ function toBodyData(
 	})().catch(() => {});
 	return [readable, 0, ''];
 }
-
-export default function toBody(
-	result: any,
-	headers: Headers,
-	aborted?: Promise<never>,
-) {
+/**
+ * 
+ * @param {any} result 
+ * @param {Headers} headers 
+ * @param {Promise<never>} [aborted] 
+ * @returns 
+ */
+export default function toBody(result, headers, aborted) {
 	const bodyData = toBodyData(result, aborted);
 	if (!bodyData) { return null; }
 	const [body, size, type] = bodyData;

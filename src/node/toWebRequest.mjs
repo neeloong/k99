@@ -1,10 +1,17 @@
-import type { IncomingMessage } from 'node:http';
-import type { Http2ServerRequest } from 'node:http2';
 import { Readable } from 'node:stream';
-
-function createAbortSignal(req: IncomingMessage | Http2ServerRequest) {
+/**
+ * 
+ * @param {import('node:http').IncomingMessage | import('node:http2').Http2ServerRequest} req 
+ * @returns {AbortSignal}
+ */
+function createAbortSignal(req) {
 	const ac = new AbortController();
-	const end = (err?: Error) => {
+	/**
+	 * 
+	 * @param {Error} [err] 
+	 * @returns 
+	 */
+	const end = (err) => {
 		req.off('end', end);
 		req.off('error', end);
 		if (!err) { return; }
@@ -16,10 +23,12 @@ function createAbortSignal(req: IncomingMessage | Http2ServerRequest) {
 	return ac.signal;
 }
 
-
-export default function toWebRequest(
-	req: IncomingMessage | Http2ServerRequest,
-): Request {
+/**
+ * 
+ * @param {import('node:http').IncomingMessage | import('node:http2').Http2ServerRequest} req 
+ * @returns {Request}
+ */
+export default function toWebRequest(req) {
 	const signal = createAbortSignal(req);
 	const host = req.headers['host'] || '127.0.0.1';
 	const url = new URL(req.url || '/', `http://${ host }`);
@@ -30,7 +39,7 @@ export default function toWebRequest(
 			headers.append(k.toLowerCase(), String(it));
 		}
 	}
-	const body = ['GET', 'OPTIONS'].includes(method) ? null : Readable.toWeb(req) as any;
+	const body = ['GET', 'OPTIONS'].includes(method) ? null : /** @type {any} */(Readable.toWeb(req));
 	// @ts-ignore
 	return new Request(url, { method, headers, signal, body, duplex: 'half'});
 }

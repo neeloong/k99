@@ -1,7 +1,7 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
 import type {ApiRouter} from 'k99';
-import type Scanner from '.';
+import type { Scanner } from './index.mjs';
 import { register } from './register';
 
 

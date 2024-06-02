@@ -1,7 +1,10 @@
-import type { Environment } from 'k99/environment';
-
-
-function createAssetsApi(db: IDBDatabase, store: string): Environment.Asset.Api {
+/**
+ * 
+ * @param {IDBDatabase} db 
+ * @param {string} store 
+ * @returns {import('k99/environment').Environment.Asset.Api}
+ */
+function createAssetsApi(db, store) {
 	return {
 		async read(path) {
 			return new Promise(r => {
@@ -24,12 +27,20 @@ function createAssetsApi(db: IDBDatabase, store: string): Environment.Asset.Api 
 				request.addEventListener('success', () =>  r(true));
 			});
 		},
-		stat(): any { return null; },
+		/** @returns {any} */
+		stat() { return null; },
 	};
 }
 
 
-function createSettingsApi(db: IDBDatabase, store: string): Environment.Setting.Api {
+
+/**
+ * 
+ * @param {IDBDatabase} db 
+ * @param {string} store 
+ * @returns {import('k99/environment').Environment.Setting.Api}
+ */
+function createSettingsApi(db, store) {
 	return {
 		async read(path) {
 			return new Promise(r => {
@@ -38,7 +49,7 @@ function createSettingsApi(db: IDBDatabase, store: string): Environment.Setting.
 				request.addEventListener('success', () =>  r(request.result || null));
 			});
 		},
-		async write(path: string, cfg?: object | null | undefined) {
+		async write(path, cfg) {
 			if (cfg === null || cfg === undefined) {
 				return new Promise(r => {
 					const request = db.transaction(store, 'readwrite').objectStore(store).delete(path);
@@ -55,7 +66,14 @@ function createSettingsApi(db: IDBDatabase, store: string): Environment.Setting.
 		},
 	};
 }
-function createLogApi(db: IDBDatabase, store: string): Environment.Log.Api {
+
+/**
+ * 
+ * @param {IDBDatabase} db 
+ * @param {string} store 
+ * @returns {import('k99/environment').Environment.Log.Api}
+ */
+function createLogApi(db, store) {
 	return {
 		async read(path) {
 			return new Promise(r => {
@@ -85,30 +103,39 @@ function createLogApi(db: IDBDatabase, store: string): Environment.Log.Api {
 		},
 	};
 }
+/**
+ * 
+ * @param {string} database 
+ * @param {object} [options] 
+ * @param {string} [options.assets] 
+ * @param {string} [options.log] 
+ * @param {string} [options.settings] 
+ * @param {number} version 
+ * @returns 
+ */
 export default function createIndexedApis(
-	database: string = 'k99',
+	database = 'k99',
 	{
 		assets = 'assets',
 		log = 'log',
 		settings = 'settings',
-	}: {
-		assets?: string,
-		log?: string,
-		settings?: string,
 	} = {},
-	version: number = 1
+	version = 1
 ) {
-	return new Promise<IDBDatabase>((resolve, reject) => {
+	/** @type {Promise<IDBDatabase>} */
+	const p = new Promise((resolve, reject) => {
 		const req = indexedDB.open(database, version);
 		req.addEventListener('upgradeneeded', e => {
-			const db = (e.target as IDBOpenDBRequest).result;
+			const db = /** @type {IDBOpenDBRequest} */(e.target).result;
 			db.createObjectStore(assets);
 			db.createObjectStore(log);
 			db.createObjectStore(settings);
 		});
 		req.addEventListener('error', () =>  reject(req.error));
 		req.addEventListener('success', () => resolve(req.result));
-	}).then(db =>({
+	})
+	
+	return p.then(db =>({
 		logApi: createLogApi(db, log),
 		assetsApi: createAssetsApi(db, assets),
 		settingsApi: createSettingsApi(db, settings),

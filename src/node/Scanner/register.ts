@@ -1,7 +1,7 @@
 import * as pathFn from 'node:path';
 import type { Handler, Method } from 'k99';
 import { ApiRouter, merge } from 'k99';
-import type Scanner from '.';
+import type {Scanner} from './index.mjs';
 
 const registers: { [key: string]: Scanner.Register; } = {};
 export function setRegister(

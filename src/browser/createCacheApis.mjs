@@ -1,6 +1,10 @@
-import type { Environment } from 'k99/environment';
-
-function createSettingsApi(cache: Cache, root: string): Environment.Setting.Api {
+/**
+ * 
+ * @param {Cache} cache 
+ * @param {string} root 
+ * @returns {import('k99/environment').Environment.Setting.Api}
+ */
+function createSettingsApi(cache, root) {
 	return {
 		async read(path) {
 			path = `${ root }${ path }`;
@@ -16,8 +20,13 @@ function createSettingsApi(cache: Cache, root: string): Environment.Setting.Api 
 		},
 	};
 }
-
-function createAssetsApi(cache: Cache, root: string): Environment.Asset.Api {
+/**
+ * 
+ * @param {Cache} cache 
+ * @param {string} root 
+ * @returns {import('k99/environment').Environment.Asset.Api}
+ */
+function createAssetsApi(cache, root) {
 	return {
 		async read(path) {
 			path = `${ root }${ path }`;
@@ -34,12 +43,19 @@ function createAssetsApi(cache: Cache, root: string): Environment.Asset.Api {
 			path = `${ root }${ path }`;
 			return cache.delete(path);
 		},
-		stat(): any {
+		/** @returns {any} */
+		stat() {
 			return null;
 		},
 	};
 }
-function createLogApi(cache: Cache, root: string): Environment.Log.Api {
+/**
+ * 
+ * @param {Cache} cache 
+ * @param {string} root 
+ * @returns {import('k99/environment').Environment.Log.Api}
+ */
+function createLogApi(cache, root) {
 	return {
 		async read(path) {
 			path = `${ root }${ path }`;
@@ -59,17 +75,21 @@ function createLogApi(cache: Cache, root: string): Environment.Log.Api {
 		},
 	};
 }
-
+/**
+ * 
+ * @param {string} name 
+ * @param {object} [options] 
+ * @param {string} [options.assets] 
+ * @param {string} [options.log] 
+ * @param {string} [options.settings] 
+ * @returns 
+ */
 export default async function createCacheApis(
-	name: string = 'k99',
+	name = 'k99',
 	{
 		assets = '/k99/assets',
 		log = '/k99/log',
 		settings = '/k99/settings',
-	}: {
-		assets?: string,
-		log?: string,
-		settings?: string,
 	} = {}
 ) {
 	const cache = await caches.open(name);

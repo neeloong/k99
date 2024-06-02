@@ -2,6 +2,8 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "esnext",
+    "allowJs": true,
+    "checkJs": true,
     "moduleResolution": "node",
     "skipLibCheck": true,
     "strictNullChecks": true,
@@ -12,7 +14,7 @@
       "k99": ["src/core"],
       "k99/cli": ["src/cli"],
       "k99/environment": ["src/environment"],
-      "k99/services": ["src/services"],
+      "k99/services": ["src/services/index.mjs"],
       "k99/node": ["src/node"]
     },
 		"verbatimModuleSyntax": true,
