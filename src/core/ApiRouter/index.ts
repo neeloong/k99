@@ -31,20 +31,11 @@ export interface RouterRoute {
 export interface RouteBinder {
 	/**
 	 * 添加子路由
-	 * @param router 要注册的子路由
+	 * @param router 要注册的子路由或子路由的 Finder
 	 */
-	<T extends Router>(router: T): T;
-	/**
-	 * 添加子路由
-	 */
-	(): ApiRouter;
-	/**
-	 * 添加子路由
-	 * @param find 要注册的子路由的 Finder
-	 */
-	route(find: Finder): Router;
+	<T extends Router | Finder = ApiRouter>(router?: T): T extends Finder ? Router : T;
 }
-function bindRouter<T extends Router>(
+function bindRouter(
 	routes: (Route | RouterRoute)[],
 	path: string,
 	r?: Router | Finder
@@ -62,29 +53,13 @@ export default class ApiRouter extends Router {
 	 * 添加子路由
 	 * @param router 要注册的子路由
 	 */
-	route<T extends Router>(router: T): T;
+	route<T extends Router | Finder = ApiRouter>(router?: T): T extends Finder ? Router : T;
 	/**
 	 * 添加子路由
 	 * @param path   要注册的路径
-	 * @param router 要注册的子路由
+	 * @param router 要注册的子路由或子路由的 Finder
 	 */
-	route<T extends Router>(path: string, router: T): T;
-	/**
-	 * 添加子路由
-	 * @param path   要注册的路径
-	 */
-	route(path: string): ApiRouter;
-	/**
-	 * 添加子路由
-	 * @param find 要注册的子路由的 Finder
-	 */
-	route(find: Finder): Router;
-	/**
-	 * 添加子路由
-	 * @param path 要注册的路径
-	 * @param find 要注册的子路由的 Finder
-	 */
-	route(path: string, find: Finder): Router;
+	route<T extends Router | Finder = ApiRouter>(path: string, router?: T): T extends Finder ? Router : T;
 	route(...path: Parameters<typeof String.raw>): RouteBinder;
 	route(...p: any[]): Router | RouteBinder {
 		const [a] = p;
