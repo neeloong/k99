@@ -32,7 +32,12 @@ import getMethods from './getMethods.mjs';
  */
 
 
-/** @typedef {{ <T extends Router>(router: T): T; (): Router; (find: import('../Router.mjs').Finder): Router;}} RouteBinder */
+/**
+ * @template {Router | import('../Router.mjs').Finder} [T=ApiRouter]
+ * @callback RouteBinder
+ * @param {T} [router] 要注册的子路由或子路由的 Finder
+ * @returns {T extends import('../Router.mjs').Finder ? Router : T}
+ */
 /**
  * 
  * @param {(Route | RouterRoute)[]} routes 
@@ -52,37 +57,18 @@ export default class ApiRouter extends Router {
 	#routes = [];
 	/**
 	 * 添加子路由
-	 * @template {Router} T
+	 * @template {Router | import('../Router.mjs').Finder} [T=ApiRouter]
 	 * @overload
-	 * @param {T} router 要注册的子路由
-	 * @returns {T}
+	 * @param {T} [router] 要注册的子路由或子路由的 Finder
+	 * @returns {T extends import('../Router.mjs').Finder ? Router : T}
 	 */
 	/**
 	 * 添加子路由
-	 * @template {Router} T
+	 * @template {Router | import('../Router.mjs').Finder} [T=ApiRouter]
 	 * @overload
 	 * @param {string} path   要注册的路径
-	 * @param {T} router 要注册的子路由
-	 * @returns {T}
-	 */
-	/**
-	 * 添加子路由
-	 * @overload
-	 * @param {string} path   要注册的路径
-	 * @returns {ApiRouter}
-	 */
-	/**
-	 * 添加子路由
-	 * @overload
-	 * @param {import('../Router.mjs').Finder} find 要注册的子路由的 Finder
-	 * @returns {Router}
-	 */
-	/**
-	 * 添加子路由
-	 * @overload
-	 * @param {string} path 要注册的路径
-	 * @param {import('../Router.mjs').Finder} find 要注册的子路由的 Finder
-	 * @returns {Router}
+	 * @param {T} [router] 要注册的子路由或子路由的 Finder
+	 * @returns {T extends import('../Router.mjs').Finder ? Router : T}
 	 */
 	/**
 	 * 添加子路由
