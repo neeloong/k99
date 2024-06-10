@@ -18,7 +18,8 @@
   "author": "猛火Fierflame",
   "license": "MIT",
   "scripts": {
-    "build": "npm run rollup && npm run ln && npm run cp",
+    "build": "npm run tsc && npm run rollup && npm run ln && npm run cp",
+    "tsc": "tsc -p tsconfig.json",
     "ln": "mkdir build/node_modules; ln -s .. build/node_modules/k99",
     "cp": "cp LICENSE README.* build",
     "rollup": "rollup -c",
@@ -27,22 +28,20 @@
   "dependencies": {
     "entry-cli": "^0.2.0",
     "json5": "^2.2.3",
-    "yaml": "^2.3.2"
+    "yaml": "^2.4.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.22.17",
-    "@babel/plugin-transform-typescript": "^7.22.15",
-    "@rollup/plugin-alias": "^5.0.0",
-    "@rollup/plugin-babel": "^6.0.3",
-    "@rollup/plugin-node-resolve": "^15.2.1",
-    "@rollup/plugin-replace": "^5.0.2",
-    "@rollup/plugin-terser": "^0.4.3",
-    "@types/node": "^20.6.0",
-    "@typescript-eslint/eslint-plugin": "^6.7.0",
-    "@typescript-eslint/parser": "^6.7.0",
-    "eslint": "^8.49.0",
-    "rollup": "^3.29.1",
-    "rollup-plugin-dts": "^6.0.2",
-    "typescript": "^5.2.2"
+    "@babel/core": "^7.24.7",
+    "@babel/plugin-transform-typescript": "^7.24.7",
+    "@rollup/plugin-alias": "^5.1.0",
+    "@rollup/plugin-replace": "^5.0.7",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@types/node": "^20.14.2",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "rollup": "^3.29.4",
+    "rollup-plugin-dts": "^6.1.1",
+    "typescript": "^5.4.5"
   }
 }

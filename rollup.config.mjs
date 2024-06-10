@@ -1,8 +1,6 @@
 import dts from 'rollup-plugin-dts';
 import terser from '@rollup/plugin-terser';
-import babel from '@rollup/plugin-babel';
 import replace from '@rollup/plugin-replace';
-import resolve from '@rollup/plugin-node-resolve';
 import fsPromises from 'node:fs/promises';
 const info = JSON.parse(await fsPromises.readFile('./package.json', 'utf-8'))
 const {
@@ -43,6 +41,9 @@ const external = [
 	'node:http',
 	'node:http2',
 	'node:stream',
+	'http',
+	'http2',
+	'stream',
 ];
 const globals = {
 	'k99': 'k99',
@@ -61,27 +62,25 @@ const banner = `\
 
 function plugins() {
 	const plugins = [
-		resolve({ extensions: [ '.ts' ]}),
-		babel({
-			extensions: ['.ts' ],
-			plugins: [['@babel/plugin-transform-typescript']],
-			babelHelpers: 'bundled',
-		}),
 		replace({preventAssignment: true, values: { __VERSION__: version }}),
 	];
 	return plugins;
 }
 
 async function createBaseItem(id) {
-	const input = `src/${ id }/index.ts`;
+	const inputName = `src/${ id }/index`
+	const input = `${inputName}.mjs`;
+	const dtsInput = `typings/${ id }/index.d.mts`;
 	return [{ input, external, plugins: plugins(), output: [
 		{ banner, file: `build/${ id }/index.cjs`, format: 'cjs' },
-	]}, { input, external, plugins: [ dts() ], output: [
+	]}, { input: dtsInput, external, plugins: [ dts() ], output: [
 		{ format: 'esm', banner, file: `build/${ id }/index.d.cts` },
 	] }];
 }
 async function createBrowserItem(id, name = 'k99') {
-	const input = `src/${ id || 'core' }/index.ts`;
+	const inputName = `src/${ id || 'core' }/index`
+	const input = `${inputName}.mjs`;
+	const dtsInput = `typings/${ id || 'core' }/index.d.mts`;
 	const output = `build/${ id ? `${ id.toLowerCase() }` : 'index' }`;
 	return [ { input, external, plugins: plugins(), output: [
 		{ format: 'cjs', banner, file: `${ output }.cjs` },
@@ -89,7 +88,7 @@ async function createBrowserItem(id, name = 'k99') {
 		{ format: 'umd', banner, file: `${ output }.js`, name, globals },
 		{ format: 'esm', banner, file: `${ output }.min.mjs`, plugins: [terser()] },
 		{ format: 'umd', banner, file: `${ output }.min.js`, plugins: [terser()], name, globals },
-	] }, { input, external, plugins: [ dts() ], output: [
+	] }, { input: dtsInput, external, plugins: [ dts() ], output: [
 		{ format: 'esm', banner, file: `${ output }.d.ts` },
 	] } ];
 }
