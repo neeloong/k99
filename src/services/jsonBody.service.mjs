@@ -1,6 +1,5 @@
-import type { Service } from 'k99';
-
-const jsonBodyService: Service<Promise<any> | null> = function (ctx) {
+/** @type {import('k99').Service<Promise<any> | null>} */
+const jsonBodyService = function (ctx) {
 	const [mime, charset] = ctx.requestType.replace(/\s/g, '').split(';');
 	if (mime !== 'application/json' && mime !== 'text/json') { return () => null; }
 	if (charset && charset !== 'charset=UTF-8') { return () => null; }

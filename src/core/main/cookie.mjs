@@ -1,9 +1,10 @@
-import type { CookieOption, Cookie } from './types';
-
-export function *getCookie(
-	sentCookies: Cookie[],
-	name?: string
-): Iterable<Cookie> {
+/**
+ * 
+ * @param {import('./types').Cookie[]} sentCookies 
+ * @param {string} [name] 
+ * @returns {Iterable<import('./types').Cookie>}
+ */
+export function *getCookie(sentCookies, name) {
 	const list = sentCookies;
 	for (const item of list) {
 		if (name && item.name !== name) { continue; }
@@ -11,7 +12,13 @@ export function *getCookie(
 	}
 }
 
-export function setCookiesHeader(headers: Headers, cookies: Cookie[]) {
+/**
+ * 
+ * @param {Headers} headers 
+ * @param {import('./types').Cookie[]} cookies 
+ * @returns {void}
+ */
+export function setCookiesHeader(headers, cookies) {
 	headers.delete('set-cookie');
 	for (const { name, value, expire, domain, path, secure, httpOnly } of cookies) {
 		if (!name) { continue; }
@@ -25,31 +32,44 @@ export function setCookiesHeader(headers: Headers, cookies: Cookie[]) {
 		].filter(Boolean).join('; '));
 	}
 }
-export function getRequestCookies(cookie: string): Record<string, string> {
-	let cookies: { [key: string]: string; } = {};
+/**
+ * 
+ * @param {string} cookie 
+ * @returns {Record<string, string>}
+ */
+export function getRequestCookies(cookie) {
+	/** @type {{ [key: string]: string; }} */
+	let cookies = {};
 	for (const item of cookie.replace(/\s/g, '').split(';')) {
 		const v = item.split('=');
-		const name = decodeURIComponent(v.shift() as string);
+		const name = decodeURIComponent(/** @type {string} */(v.shift()));
 		cookies[name] = decodeURIComponent(v.join('='));
 	}
 	return cookies;
 }
-
+/**
+ * 
+ * @param {import('./types').Cookie[]} sentCookies 
+ * @param {Record<string, string>} cookies 
+ * @param {string | import('./types').CookieOption} [name] 
+ * @param {import('./types').CookieOption | boolean} [opt] 
+ * @returns {void}
+ */
 export function clearCookie(
-	sentCookies: Cookie[],
-	cookies: Record<string, string>,
-	name?: string | CookieOption,
-	opt?: CookieOption | boolean,
-): void {
+	sentCookies,
+	cookies,
+	name,
+	opt,
+) {
 	let expire = 'Fri, 31 Dec 1999 16:00:00 GMT';
 	if (typeof name === 'string') {
 		if (!name) { return; }
-		const {
-			domain, path, secure, httpOnly,
-		}: CookieOption = opt !== true && opt || {};
+		/** @type {import('./types').CookieOption} */
+		const { domain, path, secure, httpOnly } = opt !== true && opt || {};
 		sentCookies.push({ name, value: 'delete', expire, domain, path, secure, httpOnly });
 	} else {
-		const { domain, path, secure, httpOnly }: CookieOption = name || {};
+		/** @type {import('./types').CookieOption} */
+		const { domain, path, secure, httpOnly } = name || {};
 		sentCookies.length = 0;
 		if (opt) {
 			for (let name in cookies) {

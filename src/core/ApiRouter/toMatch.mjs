@@ -1,16 +1,19 @@
-export interface Match {
-	(paths: string[]): [Record<string, string | string[]>, string[]] | undefined;
-}
 
-interface Pattern {
-	name: string;
-	optional: boolean;
-	many: boolean;
-	pattern: RegExp;
-}
+/**
+ * @typedef {object} Pattern
+ * @property {string} name
+ * @property {boolean} optional
+ * @property {boolean} many
+ * @property {RegExp} pattern
+ */
 
 const regex = /^:([a-zA-Z][a-zA-Z0-9]*)(?:\((.+)\))?([ius]+)?([?+*]?)$/;
-function parse(p: string): Pattern | string {
+/**
+ * 
+ * @param {string} p 
+ * @returns {Pattern | string}
+ */
+function parse(p) {
 	const res = regex.exec(p);
 	if (!res) { return p; }
 	const [, name, expression = '.*', flags, modifier] = res;
@@ -23,7 +26,8 @@ function parse(p: string): Pattern | string {
 	}
 	let i = 0;
 	let count = 0;
-	const pattern: string[] = ['^(?:'];
+	/** @type {string[]} */
+	const pattern = ['^(?:'];
 	while (i < expression.length) {
 		const c = expression[i++];
 		pattern.push(c);
@@ -62,12 +66,16 @@ function parse(p: string): Pattern | string {
 	};
 
 }
-function exec(
-	match: (Pattern | string)[],
-	path: string[],
-	end: boolean
-): [Record<string, string | string[]>, string[]] | undefined {
-	const params: Record<string, string | string[]> = {};
+/**
+ * 
+ * @param {(Pattern | string)[]} match 
+ * @param {string[]} path 
+ * @param {boolean} end 
+ * @returns {[Record<string, string | string[]>, string[]] | undefined}
+ */
+function exec(match, path, end) {
+	/** @type {Record<string, string | string[]>} */
+	const params = {};
 	for (let i = 0; i < match.length; i++) {
 		const m = match[i];
 		const p = path[i];
@@ -89,8 +97,15 @@ function exec(
 	return [params, []];
 
 }
-export default function toMatch(path: string, end: boolean): Match | undefined {
-	const list: (Pattern | string)[] = [];
+/**
+ * 
+ * @param {string} path 
+ * @param {boolean} end 
+ * @returns {import('./index.mjs').Match | undefined}
+ */
+export default function toMatch(path, end) {
+	/** @type {(Pattern | string)[]} */
+	const list = [];
 	for (const p of path.split('/')) {
 		if (!p || /^\.+$/.test(p)) { continue; }
 		list.push(parse(p));
