@@ -18,8 +18,7 @@
   "author": "猛火Fierflame",
   "license": "MIT",
   "scripts": {
-    "build": "npm run rollup && npm run chmod && npm run ln && npm run cp",
-    "chmod": "chmod +x build/cli.cjs build/starter.cjs",
+    "build": "npm run rollup && npm run ln && npm run cp",
     "ln": "mkdir build/node_modules; ln -s .. build/node_modules/k99",
     "cp": "cp LICENSE README.* build",
     "rollup": "rollup -c",
