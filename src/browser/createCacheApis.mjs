@@ -2,7 +2,7 @@
  * 
  * @param {Cache} cache 
  * @param {string} root 
- * @returns {import('k99/environment').Environment.Setting.Api}
+ * @returns {import('k99/environment').Setting.Api}
  */
 function createSettingsApi(cache, root) {
 	return {
@@ -24,7 +24,7 @@ function createSettingsApi(cache, root) {
  * 
  * @param {Cache} cache 
  * @param {string} root 
- * @returns {import('k99/environment').Environment.Asset.Api}
+ * @returns {import('k99/environment').Asset.Api}
  */
 function createAssetsApi(cache, root) {
 	return {
@@ -53,7 +53,7 @@ function createAssetsApi(cache, root) {
  * 
  * @param {Cache} cache 
  * @param {string} root 
- * @returns {import('k99/environment').Environment.Log.Api}
+ * @returns {import('k99/environment').Log.Api}
  */
 function createLogApi(cache, root) {
 	return {

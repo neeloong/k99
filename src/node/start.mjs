@@ -2,18 +2,28 @@ import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
 import JSON5 from 'json5';
 import yaml from 'yaml';
-import { FsPlugin } from 'k99/node';
+import { FsPlugin } from './FsPlugin.mjs';
 
 const idRegex = '[a-zA-Z][a-zA-Z0-9_-]*(?:.[a-zA-Z][a-zA-Z0-9_-]*)*';
 const nsPluginRegex = new RegExp(`^(?:@${ idRegex }/)?${ idRegex }$`);
 const pluginRegex = new RegExp(`^${ idRegex }$`);
 
-function isNsPluginName(id?: string): id is string {
+/**
+ * 
+ * @param {string} [id] 
+ * @returns {id is string}
+ */
+function isNsPluginName(id) {
 	if (!id) { return false; }
 	if (typeof id !== 'string') { return false; }
 	return pluginRegex.test(id) || nsPluginRegex.test(id);
 }
-function isPluginName(id?: string): id is string {
+/**
+ * 
+ * @param {string} [id] 
+ * @returns {id is string}
+ */
+function isPluginName(id) {
 	if (!id) { return false; }
 	if (typeof id !== 'string') { return false; }
 	return pluginRegex.test(id);
@@ -39,7 +49,12 @@ const configFileNames = [
 	'config/k99.json',
 	'config/k99.json5',
 ];
-async function readConfigFile(file: string) {
+/**
+ * 
+ * @param {string} file 
+ * @returns 
+ */
+async function readConfigFile(file) {
 	switch (pathFn.extname(file)) {
 		case '.json':
 		case '.json5':
@@ -50,25 +65,27 @@ async function readConfigFile(file: string) {
 		default:
 			return (await import(file)).default;
 	}
+	return null;
 
 }
 /**
  * 读取配置
+ * @param {string} path 
+ * @returns {Promise<import('./FsPlugin.mjs').FsPluginConfig | undefined>}
  */
-async function readConfig(
-	path: string,
-): Promise<FsPlugin.Config | undefined> {
+async function readConfig(path) {
 	for (let f of configFileNames) {
 		const file = pathFn.resolve(path, f);
 		if (!await fsPromise.stat(file).then(s => s.isFile()).catch(() => false)) { continue; }
-		const config: FsPlugin.Config | undefined = await readConfigFile(file);
+		/** @type {import('./FsPlugin.mjs').FsPluginConfig?} */
+		const config = await readConfigFile(file);
 		if (config && typeof config === 'object') {
 			return {...config, path};
 		}
 	}
 	const file = pathFn.resolve(path, 'package.json');
 	if (!await fsPromise.stat(file).then(s => s.isFile()).catch(() => false)) { return; }
-	const pkg: any = await fsPromise.readFile(file, 'utf-8').then(v => JSON.parse(v));
+	const pkg = await fsPromise.readFile(file, 'utf-8').then(v => JSON.parse(v));
 	if (!pkg || typeof pkg !== 'object') { return; }
 	const config = pkg.k99;
 	if (!config || typeof config !== 'object') { return; }
@@ -77,28 +94,29 @@ async function readConfig(
 
 /**
  * 从 npm 包目录中查找
- * @param path    开始查找的路径
- * @param id      插件 id
- * @param plugins 已经加载过的插件
+ * @param {string} path    开始查找的路径
+ * @param {string} id      插件 id
+ * @param {Record<string, any>} plugins 已经加载过的插件
+ * @returns {Promise<import('./FsPlugin.mjs').FsPluginConfig?>}
  */
-async function find(
-	path: string,
-	id: string,
-	plugins: Record<string, any>,
-): Promise<FsPlugin.Config | undefined> {
+async function find(path, id, plugins) {
 	for (;;) {
 		const modulePath = pathFn.resolve(path, 'node_modules');
 		const pluginPath = pathFn.resolve(modulePath, id);
 		const config = pluginPath in plugins && plugins[pluginPath] || await readConfig(pluginPath);
 		if (config) { return config; }
 		const p = pathFn.dirname(path);
-		if (p === path) { return; }
+		if (p === path) { return null; }
 		path = p;
 	}
 
 }
-
-function getName(config: FsPlugin.Config): string {
+/**
+ * 
+ * @param {import('./FsPlugin.mjs').FsPluginConfig} config 
+ * @returns {string}
+ */
+function getName(config) {
 	if (isPluginName(config.name)) {
 		return config.name;
 	}
@@ -108,12 +126,14 @@ function getName(config: FsPlugin.Config): string {
 	}
 	return '';
 }
-
-async function findSubPackages(
-	plugin: FsPlugin.Config,
-	configs: Record<string, FsPlugin.Config>,
-	plugins: Record<string, FsPlugin>,
-) {
+/**
+ * 
+ * @param {import('./FsPlugin.mjs').FsPluginConfig} plugin 
+ * @param {Record<string, import('./FsPlugin.mjs').FsPluginConfig>} configs 
+ * @param {Record<string, FsPlugin>} plugins 
+ * @returns 
+ */
+async function findSubPackages(plugin, configs, plugins) {
 	if (plugin.packages) {
 		for (let name of plugin.packages) {
 			if (!isNsPluginName(name)) {
@@ -157,16 +177,17 @@ async function findSubPackages(
 
 export default async function start() {
 	const cwd = process.cwd();
-	/** 入口模块 */
-	const main: FsPlugin.Config = await readConfig(process.cwd()) || {
+	/** @type {import('./FsPlugin.mjs').FsPluginConfig} 入口模块 */
+	const main = await readConfig(process.cwd()) || {
 		scan: 'plugins',
 		path: cwd,
 	};
 	const mainPlugin = new FsPlugin(main, '');
 
-	/** 插件映射 */
-	const configs: Record<string, FsPlugin.Config> = {};
-	const plugins: Record<string, FsPlugin> = {};
+	/** @type {Record<string, import('./FsPlugin.mjs').FsPluginConfig>} 插件映射 */
+	const configs = {};
+	/** @type {Record<string, FsPlugin>} */
+	const plugins = {};
 	configs[cwd] = main;
 
 	// 递归 npm 包插件

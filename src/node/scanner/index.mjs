@@ -1,8 +1,8 @@
-import { setRegister } from './register';
-import scan from './scan';
+import { setRegister } from './register.mjs';
+import scan from './scan.mjs';
 
 /**
- * @typedef {object} Scanner.FileItem
+ * @typedef {object} ScannerFileItem
  * @property {string} extname 扩展名
  * @property {string} type 类型
  * @property {string} root 扫描根路径
@@ -11,24 +11,23 @@ import scan from './scan';
  * @property {string} [plugin] 扩展名
  */
 /**
- * @callback Scanner.RegisterFn
+ * @callback ScannerRegisterFn
  * 注册函数
  * @param file 要注册的文件的信息
- * @param opt 注册选项
  * @param router 当前的路由
  * @returns {boolean | Promise<boolean>}
  */
 
 /**
- * @typedef {object} Scanner.Register
+ * @typedef {object} ScannerRegister
  * @property {string} extname 文件扩展名
  * @property {string} [type] 文件类型名
- * @property {Scanner.RegisterFn} register 注册函数
+ * @property {ScannerRegisterFn} register 注册函数
  */
 class Scanner {
 	/**
 	 * 设置公共的文件注册器
-	 * @param {Scanner.Register} register 注册配置
+	 * @param {ScannerRegister} register 注册配置
 	 * @returns {boolean}
 	 */
 	static setRegister(register) {
@@ -43,7 +42,7 @@ class Scanner {
 	static scan(root, router) {
 		return scan(root, router);
 	}
-	/** @readonly @type {Record<string, Scanner.Register>} 注册器列表 */
+	/** @readonly @type {Record<string, ScannerRegister>} 注册器列表 */
 	#registers = {};
 	/**
 	 * 扫描指定路径，并将扫描到的文件进行注册
@@ -56,7 +55,7 @@ class Scanner {
 	}
 	/**
 	 * 为当前路由设置注册器
-	 * @param {Scanner.Register} register 
+	 * @param {ScannerRegister} register 
 	 * @returns {boolean}
 	 */
 	setRegister(register) {

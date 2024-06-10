@@ -1,13 +1,15 @@
 import * as pathFn from 'node:path';
-import type { Handler, Method } from 'k99';
 import { ApiRouter, merge } from 'k99';
-import type {Scanner} from './index.mjs';
 
-const registers: { [key: string]: Scanner.Register; } = {};
-export function setRegister(
-	{ extname, type, register }: Scanner.Register,
-	list: Record<string, Scanner.Register> = registers
-): boolean {
+/** @type {{ [key: string]: import('./index.mjs').ScannerRegister; }} */
+const registers = {};
+/**
+ * 
+ * @param {import('./index.mjs').ScannerRegister} register 
+ * @param {Record<string, import('./index.mjs').ScannerRegister>} [list] 
+ * @returns {boolean}
+ */
+export function setRegister({ extname, type, register }, list = registers) {
 	const key = `${ type || '' }.${ extname }`;
 	if (!/^(?:[a-z]+)?\.[a-z]+$/.test(key)) { return false; }
 	if (key in list) { return false; }
@@ -15,30 +17,36 @@ export function setRegister(
 	list[key] = {extname, type, register};
 	return true;
 }
-/** 注册文件 */
-export async function register(
-	file: Scanner.FileItem,
-	router: ApiRouter,
-	list?: Record<string, Scanner.Register>,
-): Promise<boolean> {
+/**
+ * 注册文件
+ * @param {import('./index.mjs').ScannerFileItem} file 
+ * @param {ApiRouter} router 
+ * @param {Record<string, import('./index.mjs').ScannerRegister>} [list] 
+ * @returns {Promise<boolean>}
+ */
+export async function register(file, router, list) {
 	const { extname, type } = file;
 	const key = `${ type || '' }.${ extname }`;
 	const register = list && key in list && list[key] || key in registers && registers[key];
 	if (!register) { return false; }
 	return register.register({ ...file }, router);
 }
-
-function getHandle(v: any): Handler | undefined {
+/**
+ * 
+ * @param {any} v 
+ * @returns {import('k99').Handler | undefined}
+ */
+function getHandle(v) {
 	if (typeof v === 'function') { return v; }
 	if (!Array.isArray(v)) { return; }
-	const list = v.filter(v => typeof v === 'function') as Handler[];
+	const list = /** @type {import('k99').Handler[]} */(v.filter(v => typeof v === 'function'));
 	if (list.length) { return merge(list); }
 }
-/** 方法列表 */
-const methods = new Set<Method>(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']);
+/** @type {Set<import('k99').Method>} 方法列表 */
+const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']);
 
-/** 资源的处理函数配置 */
-const resourceHandleMap: Record<string, {methods: Method[], path: string}> = {
+/** @type {Record<string, {methods: import('k99').Method[], path: string}>} 资源的处理函数配置 */
+const resourceHandleMap = {
 	index:   { methods: ['GET'   ], path: '' },
 	create:  { methods: ['POST'  ], path: '' },
 	new:     { methods: ['GET'   ], path: 'new' },
@@ -46,8 +54,14 @@ const resourceHandleMap: Record<string, {methods: Method[], path: string}> = {
 	update:  { methods: ['PUT'   ], path: ':id' },
 	destroy: { methods: ['DELETE'], path: ':id' },
 };
-
-function setHandleWithMethod(router: ApiRouter, path: string, item: any) {
+/**
+ * 
+ * @param {ApiRouter} router 
+ * @param {string} path 
+ * @param {any} item 
+ * @returns {void}
+ */
+function setHandleWithMethod(router, path, item) {
 	if (typeof item !== 'object') { return; }
 	for (const method of methods) {
 		const fn = item[method];
@@ -56,8 +70,16 @@ function setHandleWithMethod(router: ApiRouter, path: string, item: any) {
 	}
 
 }
-const AllMethod: Method[] = ['GET', 'DELETE', 'HEAD', 'POST', 'PUT'];
-function setHandleItem(router: ApiRouter, path: string, item: any): void {
+/** @type {import('k99').Method[]} */
+const AllMethod = ['GET', 'DELETE', 'HEAD', 'POST', 'PUT'];
+/**
+ * 
+ * @param {ApiRouter} router 
+ * @param {string} path 
+ * @param {any} item 
+ * @returns {void}
+ */
+function setHandleItem(router, path, item) {
 	if (!item) { return; }
 	const handle = getHandle(item);
 	if (handle) {
@@ -67,12 +89,14 @@ function setHandleItem(router: ApiRouter, path: string, item: any): void {
 	}
 }
 
-
-function get(
-	exports: Record<string, any>,
-	test: (v: any) => boolean,
-	onlyDefault?: boolean
-) {
+/**
+ * 
+ * @param {Record<string, any>} exports 
+ * @param {(v: any) => boolean} test 
+ * @param {boolean} [onlyDefault] 
+ * @returns 
+ */
+function get(exports, test, onlyDefault) {
 	if (!onlyDefault) {
 		const keys = Object.keys(exports);
 		if (keys.length !== 1) { return exports; }
@@ -84,13 +108,20 @@ function get(
 	if (onlyDefault) { return null; }
 	return exports;
 }
-
-function createRegister(
-	run: (router: ApiRouter, value: any) => void,
-	test: (v: any) => boolean,
-	onlyDefault?: boolean
-) {
-	return async function(file: Scanner.FileItem, router: ApiRouter): Promise<boolean> {
+/**
+ * 
+ * @param {(router: ApiRouter, value: any) => void} run 
+ * @param {(v: any) => boolean} test 
+ * @param {boolean} [onlyDefault] 
+ * @returns 
+ */
+function createRegister(run, test, onlyDefault) {
+	/**
+	 * @param {import('./index.mjs').ScannerFileItem} file
+	 * @param {ApiRouter} router
+	 * @returns {Promise<boolean>}
+	 */
+	return async function(file, router) {
 		try {
 			const exports = await import(pathFn.join(file.root, file.path));
 			const item = get(exports, test, onlyDefault);
@@ -121,12 +152,12 @@ const members = createRegister((router, exports) => {
 
 const resource = createRegister((router, exports) => {
 	for (const k in exports) {
-		const item = exports[k] as undefined | Handler;
+		const item = /** @type {undefined | import('k99').Handler} */(exports[k]);
 		if (!item) { continue; }
 		if (!/^[a-z0-9][a-z0-9A-Z_-]*$/.test(k)) { continue; }
 		const handle = getHandle(item);
 		if (!handle) {
-			setHandleWithMethod(router, `:id/${ k }`, item as any);
+			setHandleWithMethod(router, `:id/${ k }`, item);
 			continue;
 		}
 		const info = k in resourceHandleMap && resourceHandleMap[k];

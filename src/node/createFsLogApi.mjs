@@ -1,7 +1,11 @@
 import * as fsPromises from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import type { Environment } from 'k99/environment';
-export default function createFsLogApi(...logsPath: string[]): Environment.Log.Api {
+/**
+ * 
+ * @param  {...string} logsPath 
+ * @returns {import('k99/environment').Log.Api}
+ */
+export default function createFsLogApi(...logsPath) {
 	const basePath = pathFn.resolve(...logsPath, '.');
 	return {
 		async read(path) {
@@ -13,7 +17,7 @@ export default function createFsLogApi(...logsPath: string[]): Environment.Log.A
 			await fsPromises.mkdir(pathFn.dirname(path), { recursive: true }).catch(() => {});
 			return fsPromises.appendFile(path, log).then(() => true, () => false);
 		},
-		async clear(path): Promise<void> {
+		async clear(path) {
 			path = `${ basePath }/${ path }.log`;
 			return fsPromises.writeFile(path, '').catch(() => {});
 		},

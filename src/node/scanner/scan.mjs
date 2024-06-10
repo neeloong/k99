@@ -1,23 +1,27 @@
 import * as fsPromise from 'node:fs/promises';
 import * as pathFn from 'node:path';
-import type {ApiRouter} from 'k99';
-import type { Scanner } from './index.mjs';
-import { register } from './register';
+import { register } from './register.mjs';
 
 
-interface ValidInfo {
-	filename: string;
-	name: string;
-	extname: string;
-	type: string;
+/**
+ * @typedef {object} ValidInfo
+ * @property {string} filename
+ * @property {string} name
+ * @property {string} extname
+ * @property {string} type
+ * 
+ * @property {number} no
+ * @property {boolean} tuple
+ * @property {string} extend
+ */
 
-	no: number;
-	tuple: boolean;
-	extend: string;
-}
-
-
-function sort(a: ValidInfo, b: ValidInfo) {
+/**
+ * 
+ * @param {ValidInfo} a 
+ * @param {ValidInfo} b 
+ * @returns 
+ */
+function sort(a, b) {
 	if (a.name && !b.name) { return 1; }
 	if (!a.name && b.name) { return -1; }
 	if (!a.name && !b.name) { return 0; }
@@ -50,7 +54,12 @@ function sort(a: ValidInfo, b: ValidInfo) {
 }
 
 const fileRegex = /^((?:-?\d+\.)?)([:$]?)([a-zA-Z0-9_-]+)(\${0,3}|[?*+])(?:(?:\.([a-z]+))?\.([a-z]+))?$/;
-function toInfo(filename: string): null | ValidInfo {
+/**
+ * 
+ * @param {string} filename 
+ * @returns {ValidInfo?}
+ */
+function toInfo(filename) {
 	const res = fileRegex.exec(filename);
 	if (!res) { return null; }
 	const no = Number.parseInt(res[1]) || 0;
@@ -66,33 +75,54 @@ function toInfo(filename: string): null | ValidInfo {
 	return { filename, name, type, extname, extend, no, tuple};
 }
 
-function isValid(t: null | ValidInfo): t is ValidInfo {
+/**
+ * 
+ * @param {ValidInfo?} t 
+ * @returns {t is ValidInfo}
+ */
+function isValid(t) {
 	return Boolean(t);
 }
 
-async function isFile(path: string) {
+/**
+ * 
+ * @param {string} path 
+ * @returns 
+ */
+async function isFile(path) {
 	return fsPromise.stat(path).then(s => s.isFile()).catch(() => false);
 }
-async function isDir(path: string) {
+/**
+ * 
+ * @param {string} path 
+ * @returns 
+ */
+async function isDir(path) {
 	return fsPromise.stat(path).then(s => s.isDirectory()).catch(() => false);
 }
 
-export default async function scan(
-	root: string,
-	router: ApiRouter,
-	registers?:  Record<string, Scanner.Register>,
-	path: string = '',
-	scope: string[] = [],
-): Promise<void> {
-	const routers: Record<string, ApiRouter> = {};
-	function getRouter(name: string) {
+/**
+ * 
+ * @param {string} root 
+ * @param {import('k99').ApiRouter} router 
+ * @param {Record<string, import('./index.mjs').ScannerRegister>} [registers] 
+ * @param {string} [path] 
+ * @param {string[]} [scope] 
+ * @returns {Promise<void>}
+ */
+export default async function scan(root, router, registers, path = '', scope = []) {
+	/** @type {Record<string, import('k99').ApiRouter>} */
+	const routers = {};
+	/**
+	 * 
+	 * @param {string} name 
+	 * @returns 
+	 */
+	function getRouter(name) {
 		if (!name) { return router; }
-		let child = name in routers && routers[name];
-		if (!child) {
-			child = router.route(name);
-			routers[name] = child;
-		}
-		return child;
+		const child = name in routers && routers[name];
+		if (child) { return child; }
+		return routers[name] = router.route(name);
 	}
 	const list = await fsPromise.readdir(pathFn.resolve(root, path), 'utf-8')
 		.catch(() => []);

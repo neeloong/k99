@@ -1,12 +1,9 @@
-
-import type { Environment } from './Environment';
-
 /**
  * 包装日志文本
- * @param log 原始的日志
- * @param opt 包装选项
+ * @param {string} log 原始的日志
+ * @param {import('./index.ts').Log.Options} [opt] 包装选项
  */
-function pack(log: string, { tags, indent, date }: Environment.Log.Options = {}) {
+function pack(log, { tags, indent, date } = {}) {
 	let extendInfo = '';
 	if (tags) {
 		if (!Array.isArray(tags)) { tags = [tags]; }
@@ -32,13 +29,24 @@ function pack(log: string, { tags, indent, date }: Environment.Log.Options = {})
 	return log;
 }
 
-function getErrorLog(log: any) {
+/**
+ * 
+ * @param {any} log 
+ * @returns 
+ */
+function getErrorLog(log) {
 	if (typeof log === 'string') { return log; }
 	if (log instanceof Error) { return log.stack || `${ log.name }:${ log.message }`; }
 	return String(log);
 }
 const regex = /(?:^|\/)(debug|error|warn|info)\/?$|^\/?(debug|error|warn|info)(?:\/|$)/;
-async function defaultWrite(path: string, log: string) {
+/**
+ * 
+ * @param {string} path 
+ * @param {string} log 
+ * @returns 
+ */
+async function defaultWrite(path, log) {
 	switch (path) {
 		case 'debug': console.debug(log); break;
 		case 'info': console.info(log); break;
@@ -59,26 +67,38 @@ async function defaultWrite(path: string, log: string) {
 }
 async function defaultRead() { return ''; }
 async function defaultClear() { }
+/**
+ * 
+ * @param {import('./index.ts').Log.Api} [api] 
+ * @returns {import('./index.ts').Log}
+ */
 export default function initLog({
 	read = defaultRead,
 	write = defaultWrite,
 	clear = defaultClear,
-}: Environment.Log.Api = {}): Environment.Log {
-	function writeLog(path: string, log: string, opt?: Environment.Log.Options) {
+} = {}) {
+	/**
+	 * 
+	 * @param {string} path 
+	 * @param {string} log 
+	 * @param {import('./index.ts').Log.Options} [opt] 
+	 * @returns 
+	 */
+	function writeLog(path, log, opt) {
 		return write(path, pack(log, opt));
 	}
 	return {
 		read, write: writeLog, clear,
-		async debug(log: string, opt?: Environment.Log.Options) {
+		async debug(log, opt) {
 			return writeLog('debug', log, opt);
 		},
-		async info(log: string, opt?: Environment.Log.Options) {
+		async info(log, opt) {
 			return writeLog('info', log, opt);
 		},
-		async warn(log: any, opt?: Environment.Log.Options) {
+		async warn(log, opt) {
 			return writeLog('warn', getErrorLog(log), opt);
 		},
-		async error(log: string, opt?: Environment.Log.Options) {
+		async error(log, opt) {
 			return writeLog('error', getErrorLog(log), opt);
 		},
 	};

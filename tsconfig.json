@@ -9,13 +9,15 @@
     "strictNullChecks": true,
     "strict": true,
     "resolveJsonModule": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
     "baseUrl": "./",
     "paths": {
-      "k99": ["src/core"],
+      "k99": ["src/core/index.mjs"],
       "k99/cli": ["src/cli"],
       "k99/environment": ["src/environment"],
       "k99/services": ["src/services/index.mjs"],
-      "k99/node": ["src/node"]
+      "k99/node": ["src/node/index.mjs"]
     },
 		"verbatimModuleSyntax": true,
     "esModuleInterop": true

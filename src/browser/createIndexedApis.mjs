@@ -2,7 +2,7 @@
  * 
  * @param {IDBDatabase} db 
  * @param {string} store 
- * @returns {import('k99/environment').Environment.Asset.Api}
+ * @returns {import('k99/environment').Asset.Api}
  */
 function createAssetsApi(db, store) {
 	return {
@@ -38,7 +38,7 @@ function createAssetsApi(db, store) {
  * 
  * @param {IDBDatabase} db 
  * @param {string} store 
- * @returns {import('k99/environment').Environment.Setting.Api}
+ * @returns {import('k99/environment').Setting.Api}
  */
 function createSettingsApi(db, store) {
 	return {
@@ -71,7 +71,7 @@ function createSettingsApi(db, store) {
  * 
  * @param {IDBDatabase} db 
  * @param {string} store 
- * @returns {import('k99/environment').Environment.Log.Api}
+ * @returns {import('k99/environment').Log.Api}
  */
 function createLogApi(db, store) {
 	return {

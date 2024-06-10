@@ -92,15 +92,19 @@ function plugins() {
 async function createBaseItem(id) {
 	const inputName = `src/${ id }/index`
 	const input = await fsPromises.stat(`${inputName}.mjs`).catch(() => null) ? `${inputName}.mjs` : `${inputName}.ts`;
+	const dtsInput = await fsPromises.stat(`${inputName}.d.mts`).catch(() => null) ? `${inputName}.d.mts`
+		: await fsPromises.stat(`${inputName}.mjs`).catch(() => null) ? `${inputName}.mjs` : `${inputName}.ts`;
 	return [{ input, external, plugins: plugins(), output: [
 		{ banner, file: `build/${ id }/index.cjs`, format: 'cjs' },
-	]}, { input, external, plugins: [ dts() ], output: [
+	]}, { input: dtsInput, external, plugins: [ dts() ], output: [
 		{ format: 'esm', banner, file: `build/${ id }/index.d.cts` },
 	] }];
 }
 async function createBrowserItem(id, name = 'k99') {
 	const inputName = `src/${ id || 'core' }/index`
 	const input = await fsPromises.stat(`${inputName}.mjs`).catch(() => null) ? `${inputName}.mjs` : `${inputName}.ts`;
+	const dtsInput = await fsPromises.stat(`${inputName}.d.mts`).catch(() => null) ? `${inputName}.d.mts`
+		: await fsPromises.stat(`${inputName}.mjs`).catch(() => null) ? `${inputName}.mjs` : `${inputName}.ts`;
 	const output = `build/${ id ? `${ id.toLowerCase() }` : 'index' }`;
 	return [ { input, external, plugins: plugins(), output: [
 		{ format: 'cjs', banner, file: `${ output }.cjs` },
@@ -108,7 +112,7 @@ async function createBrowserItem(id, name = 'k99') {
 		{ format: 'umd', banner, file: `${ output }.js`, name, globals },
 		{ format: 'esm', banner, file: `${ output }.min.mjs`, plugins: [terser()] },
 		{ format: 'umd', banner, file: `${ output }.min.js`, plugins: [terser()], name, globals },
-	] }, { input, external, plugins: [ dts() ], output: [
+	] }, { input: dtsInput, external, plugins: [ dts() ], output: [
 		{ format: 'esm', banner, file: `${ output }.d.ts` },
 	] } ];
 }
@@ -121,7 +125,7 @@ export default [
 	...await createBaseItem('cli'),
 	{ input: 'src/cli/cli.ts', external, plugins: plugins(), output: [
 		{ format: 'cjs', banner: `#!/usr/bin/env node\n${ banner }`,  file: 'build/cli.cjs'  },
-	] }, { input: 'src/starter.ts', external, plugins: plugins(), output: [
+	] }, { input: 'src/starter.mjs', external, plugins: plugins(), output: [
 		{ format: 'cjs', banner: `#!/usr/bin/env node\n${ banner }`,  file: 'build/starter.cjs' },
 	] },
 ];

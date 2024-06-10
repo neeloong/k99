@@ -1,10 +1,14 @@
-import type { Environment } from './Environment';
-
 let base64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+/**
+ * 
+ * @param {string} str 
+ * @param {string} [chars] 
+ * @returns {Uint8Array}
+ */
 function base2bin(
-	str: string,
-	chars: string = base64chars,
-): Uint8Array {
+	str,
+	chars = base64chars,
+) {
 	const n = Math.floor(Math.log2(chars.length));
 	str = str.replace(/[=\s]+/g, '');
 	let list = new Uint8Array(str.length * n >> 3);
@@ -24,19 +28,44 @@ function base2bin(
 
 let hexChars = '0123456789ABCDEF';
 
-
-function hex2bin(str: string): Uint8Array {
-	let list: number[] = [];
+/**
+ * 
+ * @param {string} str 
+ * @returns {Uint8Array}
+ */
+function hex2bin(str) {
+	/** @type {number[]} */
+	let list = [];
 	for (let i = 0; i < str.length; i += 2) {
 		list.push(hexChars.indexOf(str[i]) * 16 + hexChars.indexOf(str[i + 1] || '0'));
 	}
 	return new Uint8Array(list);
 }
-
-function str2bin(value: null, encoding?: Environment.Encoding | Environment.HexEncoding | null): null;
-function str2bin(value: string | ArrayBuffer | ArrayBufferView, encoding?: Environment.Encoding | Environment.HexEncoding | null): Uint8Array;
-function str2bin(value: string | ArrayBuffer | ArrayBufferView | null, encoding?: Environment.Encoding | Environment.HexEncoding | null): Uint8Array | null;
-function str2bin(value: string | ArrayBuffer | ArrayBufferView | null, encoding?: Environment.Encoding | Environment.HexEncoding | null): Uint8Array | null {
+/**
+ * @overload
+ * @param {null} value 
+ * @param {import('./index.ts').Encoding | import('./index.ts').HexEncoding | null} [encoding] 
+ * @returns {null}
+ */
+/**
+ * @overload
+ * @param {string | ArrayBuffer | ArrayBufferView} value 
+ * @param {import('./index.ts').Encoding | import('./index.ts').HexEncoding | null} [encoding] 
+ * @returns {Uint8Array}
+ */
+/**
+ * @overload
+ * @param {string | ArrayBuffer | ArrayBufferView | null} value 
+ * @param {import('./index.ts').Encoding | import('./index.ts').HexEncoding | null} [encoding] 
+ * @returns {Uint8Array?}
+ */
+/**
+ * 
+ * @param {string | ArrayBuffer | ArrayBufferView | null} value 
+ * @param {import('./index.ts').Encoding | import('./index.ts').HexEncoding | null} [encoding] 
+ * @returns {Uint8Array?}
+ */
+function str2bin(value, encoding) {
 	if (ArrayBuffer.isView(value)) {
 		return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
 	}
