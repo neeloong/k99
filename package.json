@@ -19,7 +19,7 @@
   "license": "MIT",
   "scripts": {
     "build": "npm run tsc && npm run rollup && npm run ln && npm run cp",
-    "tsc": "tsc -p tsconfig.json",
+    "tsc": "tsc -p tsconfig.json && cp src/core/index.d.mts typings/core/index.d.mts",
     "ln": "mkdir build/node_modules; ln -s .. build/node_modules/k99",
     "cp": "cp LICENSE README.* build",
     "rollup": "rollup -c",
