@@ -45,6 +45,14 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
+  src: {}
+
+  test:
+    dependencies:
+      k99:
+        specifier: workspace:../src
+        version: link:../src
+
 packages:
 
   '@ampproject/remapping@2.3.0':

@@ -1,18 +1,37 @@
+import pathFn from 'node:path';
+import childProcess from 'node:child_process';
+import fsPromises from 'node:fs/promises';
+import { rollup } from 'rollup';
 import dts from 'rollup-plugin-dts';
 import terser from '@rollup/plugin-terser';
 import replace from '@rollup/plugin-replace';
-import fsPromises from 'node:fs/promises';
-const info = JSON.parse(await fsPromises.readFile('./package.json', 'utf-8'))
+const info = JSON.parse(await fsPromises.readFile('./src/package.json', 'utf-8'))
 const {
 	name, description, version, engines, dependencies, keywords,
 	author, license, homepage, repository, bugs,
 } = info;
+
+console.log('移除 build 目录...');
 await fsPromises.rm('build', { recursive: true }).catch(() =>{})
+console.log('移除 build 目录...');
+await fsPromises.rm('typings', { recursive: true }).catch(() =>{})
+console.log('创建 build 目录...');
 await fsPromises.mkdir('build', {recursive: true });
+console.log('执行 tsc...');
+childProcess.execSync('tsc -p tsconfig.json')
+await fsPromises.writeFile(
+	pathFn.resolve('typings/src/core/index.d.mts'),
+	await fsPromises.readFile('src/core/index.d.mts'),
+);
+await fsPromises.writeFile(
+	pathFn.resolve('typings/src/core/ApiRouter/index.d.mts'),
+	(await fsPromises.readFile('typings/src/core/ApiRouter/index.d.mts', 'utf-8'))
+	.replaceAll('(...path: TemplateStringsArray[])', '(...path: TemplateStringsArray)'),
+);
+console.log('创建 build/package.json ...');
 await fsPromises.writeFile('build/package.json', JSON.stringify({
 	name, description, version, engines, dependencies, keywords,
 	type: 'module', main: 'index.mjs',
-	bin: {k99: 'cli.cjs', 'k99-start': 'starter.cjs'},
 	unpkg: './index.min.js', jsdelivr: './index.min.js',
 	author, license, homepage, repository, bugs,
 	exports: {
@@ -33,6 +52,9 @@ await fsPromises.writeFile('build/package.json', JSON.stringify({
 		"./node": "./node/index.cjs"
 	}
 }, null, 2));
+
+
+console.log('打包...');
 
 const external = [
 	...Object.keys(dependencies),
@@ -70,7 +92,7 @@ function plugins() {
 async function createBaseItem(id) {
 	const inputName = `src/${ id }/index`
 	const input = `${inputName}.mjs`;
-	const dtsInput = `typings/${ id }/index.d.mts`;
+	const dtsInput = `typings/src/${ id }/index.d.mts`;
 	return [{ input, external, plugins: plugins(), output: [
 		{ banner, file: `build/${ id }/index.cjs`, format: 'cjs' },
 	]}, { input: dtsInput, external, plugins: [ dts() ], output: [
@@ -80,7 +102,7 @@ async function createBaseItem(id) {
 async function createBrowserItem(id, name = 'k99') {
 	const inputName = `src/${ id || 'core' }/index`
 	const input = `${inputName}.mjs`;
-	const dtsInput = `typings/${ id || 'core' }/index.d.mts`;
+	const dtsInput = `typings/src/${ id || 'core' }/index.d.mts`;
 	const output = `build/${ id ? `${ id.toLowerCase() }` : 'index' }`;
 	return [ { input, external, plugins: plugins(), output: [
 		{ format: 'cjs', banner, file: `${ output }.cjs` },
@@ -92,8 +114,36 @@ async function createBrowserItem(id, name = 'k99') {
 		{ format: 'esm', banner, file: `${ output }.d.ts` },
 	] } ];
 }
-export default [
-	...await createBrowserItem(),
-	...await createBrowserItem('services', 'k99Services'),
-	...await createBaseItem('node'),
-];
+
+async function pack(cfg) {
+	const bundle = await rollup(cfg);
+	for (const output of cfg.output) {
+		const file = output.file;
+		console.log(`创建 ${output.file} ...`);
+		const { output: [chunk] } = await bundle.generate(output);
+		await fsPromises.mkdir(pathFn.dirname(file), {recursive: true})
+		await fsPromises.writeFile(file, chunk.source || chunk.code || '');
+	}
+}
+
+for (const k of await createBrowserItem()) {
+	await pack(k);
+}
+for (const k of await createBrowserItem('services', 'k99Services')) {
+	await pack(k);
+}
+for (const k of await createBaseItem('node')) {
+	await pack(k);
+}
+
+console.log('复制文件...');
+for (const file of await fsPromises.readdir('.', 'utf-8')) {
+	if (/^(README|LICENSE)(\..+)?$/.test(file)) {
+		console.log(`  ${file}...`);
+		await fsPromises.writeFile(
+			pathFn.resolve('build', file),
+			await fsPromises.readFile(file),
+		);
+	}
+}
+console.log('完成');

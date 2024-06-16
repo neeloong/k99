@@ -1,0 +1,9 @@
+{
+  "version": "0.0.0",
+  "private": true,
+	"dependencies": {
+		"k99": "workspace:../src"
+	},
+	"scripts": {
+	}
+}

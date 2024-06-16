@@ -1,7 +1,6 @@
 {
   "name": "k99",
   "private": true,
-  "version": "0.6.0-beta.0",
   "description": "前后端均可用的 web 服务器",
   "keywords": [
     "k99",
@@ -18,11 +17,7 @@
   "author": "猛火Fierflame",
   "license": "MIT",
   "scripts": {
-    "build": "npm run tsc && npm run rollup && npm run ln && npm run cp",
-    "tsc": "tsc -p tsconfig.json && cp src/core/index.d.mts typings/core/index.d.mts",
-    "ln": "mkdir build/node_modules; ln -s .. build/node_modules/k99",
-    "cp": "cp LICENSE README.* build",
-    "rollup": "rollup -c",
+    "build": "node build.mjs",
     "lint": "eslint --fix --ext .ts src"
   },
   "dependencies": {

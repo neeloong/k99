@@ -1,0 +1,28 @@
+{
+  "name": "k99",
+  "private": true,
+  "description": "前后端均可用的 web 服务器",
+  "version": "0.6.0-beta.0",
+  "dependencies": {},
+  "keywords": [
+    "k99",
+    "router"
+  ],
+  "type": "module",
+  "main": "core/index.mjs",
+  "author": "猛火Fierflame",
+  "license": "MIT",
+  "homepage": "https://gitee.com/fierflame/k99#git-readme",
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/fierflame/k99.git"
+  },
+  "bugs": {
+    "url": "https://gitee.com/fierflame/k99/issues"
+  },
+  "exports": {
+    ".": "./core/index.mjs",
+    "./services": "./services/index.mjs",
+    "./node": "./node/index.mjs"
+  }
+}
