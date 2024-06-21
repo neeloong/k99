@@ -23,11 +23,6 @@ await fsPromises.writeFile(
 	pathFn.resolve('typings/src/core/index.d.mts'),
 	await fsPromises.readFile('src/core/index.d.mts'),
 );
-await fsPromises.writeFile(
-	pathFn.resolve('typings/src/core/ApiRouter/index.d.mts'),
-	(await fsPromises.readFile('typings/src/core/ApiRouter/index.d.mts', 'utf-8'))
-	.replaceAll('(...path: TemplateStringsArray[])', '(...path: TemplateStringsArray)'),
-);
 console.log('创建 build/package.json ...');
 await fsPromises.writeFile('build/package.json', JSON.stringify({
 	name, description, version, engines, dependencies, keywords,

@@ -73,7 +73,8 @@ export default class ApiRouter extends Router {
 	/**
 	 * 添加子路由
 	 * @overload
-	 * @param {...TemplateStringsArray} path 要注册的路径
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
 	 * @returns {RouteBinder}
 	 */
 	/**
@@ -172,7 +173,8 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP GET/POST/PUT/DELETE 处理函数
 	 * @overload
-	 * @param {...TemplateStringsArray} path 要注册的路径
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
 	 * @returns {Binder}
 	 */
 	/**
@@ -204,7 +206,8 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP GET 处理函数
 	 * @overload
-	 * @param {...TemplateStringsArray} path 要注册的路径
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
 	 * @returns {Binder}
 	 */
 	/**
@@ -234,7 +237,8 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP POST 处理函数
 	 * @overload
-	 * @param {...TemplateStringsArray} path 要注册的路径
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
 	 * @returns {Binder}
 	 */
 	/**
@@ -264,7 +268,8 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP PUT 处理函数
 	 * @overload
-	 * @param {...TemplateStringsArray} path 要注册的路径
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
 	 * @returns {Binder}
 	 */
 	/**
@@ -294,7 +299,8 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP DELETE 处理函数
 	 * @overload
-	 * @param {...TemplateStringsArray} path 要注册的路径
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
 	 * @returns {Binder}
 	 */
 	/**
@@ -324,7 +330,8 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP HEAD 处理函数
 	 * @overload
-	 * @param {...TemplateStringsArray} path 要注册的路径
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
 	 * @returns {Binder}
 	 */
 	/**
@@ -354,7 +361,8 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP OPTIONS 处理函数
 	 * @overload
-	 * @param {...TemplateStringsArray} path 要注册的路径
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
 	 * @returns {Binder}
 	 */
 	/**
