@@ -13,6 +13,7 @@
  * @this {Router}
  * @property {import('./main/types').Method} method
  * @property {string[]} path
+ * @param {import('./main/types').Context} ctx 
  * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
  */
 
@@ -57,7 +58,7 @@ async function find(route, path, ctx, setParams, params) {
 	if (!guardResult) { return null; }
 	if (typeof guardResult === 'function') { return guardResult; }
 	if (ctx.destroyed) { return null; }
-	for await (const [r, result, p] of route.find(ctx.method, path)) {
+	for await (const [r, result, p] of route.find(ctx.method, path, ctx)) {
 		if (ctx.destroyed) { return null; }
 		const res = await find(r, p, ctx, setParams, { ...params, ...result });
 		if (res) { return res; }
@@ -85,9 +86,10 @@ class Router {
 	 * @abstract
 	 * @param {import('./main/types').Method} method 
 	 * @param {string[]} path 
+	 * @param {import('./main/types').Context} ctx 
 	 * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
 	 */
-	find(method, path) { return [] }
+	find(method, path, ctx) { return [] }
 	/**
 	 * 
 	 * @param {Router[]} routers 
