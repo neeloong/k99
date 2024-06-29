@@ -8,12 +8,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://gitee.com/fierflame/k99.git"
+    "url": "https://gitee.com/neeloong/k99.git"
   },
   "bugs": {
-    "url": "https://gitee.com/fierflame/k99/issues"
+    "url": "https://gitee.com/neeloong/k99/issues"
   },
-  "homepage": "https://gitee.com/fierflame/k99#git-readme",
+  "homepage": "https://gitee.com/neeloong/k99#git-readme",
   "author": "猛火Fierflame",
   "license": "MIT",
   "scripts": {
