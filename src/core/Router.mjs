@@ -2,7 +2,8 @@
 /**
  * @callback Guard
  * @param {import('./main/types').Context} ctx
- * @returns {PromiseLike<boolean | import('./main/types').Handler | void> | boolean | import('./main/types').Handler | void}
+ * @param {() => Promise<import('./main/types').HandlerResult>} [next]
+ * @returns {PromiseLike<boolean | import('./main/types').Handler | import('./main/types').HandlerResult | void> | boolean | import('./main/types').HandlerResult | import('./main/types').Handler | void}
  */
 
 /**
@@ -34,6 +35,7 @@ async function execGuard(guards, ctx, setParams, params) {
 			params: { value: { ...params } },
 		}));
 		if (ret === false) { return false; }
+		// @ts-ignore
 		if (typeof ret === 'function') { return ret; }
 	}
 	return true;
@@ -67,6 +69,44 @@ async function find(route, path, ctx, setParams, params) {
 }
 /**
  * 
+ * @param {Router | import('./main/types').Handler} route 
+ * @param {string[]} path 
+ * @param {import('./main/types').Context} ctx 
+ * @param {(v: any) => void} setParams 
+ * @param {object} params 
+ * @returns {Promise<import('./main/types').Handler | null>}
+ */
+async function findByOnion(route, path, ctx, setParams, params) {
+	if (!(route instanceof Router)) {
+		setParams(params);
+		return route;
+	}
+	if (route.disabled) { return null; }
+	for await (const [r, result, p] of route.find(ctx.method, path, ctx)) {
+		if (ctx.destroyed) { return null; }
+		const handler = await findByOnion(r, p, ctx, setParams, { ...params, ...result });
+		if (!handler) { continue; }
+		const guards = [...route.guards];
+		/**
+		 * 
+		 * @param {import('./main/types').Context} ctx 
+		 * @param {number} k 
+		 * @returns 
+		 */
+		const run = async (ctx, k) => {
+			const guard = guards[k];
+			if (typeof guard !== 'function') { return handler(ctx); }
+			const nextK = k + 1;
+			const result = guard(ctx, () => run(ctx, nextK));
+			if (typeof result === 'function') { return; }
+			return result;
+		};
+		return ctx => run(ctx, 0);
+	}
+	return null;
+}
+/**
+ * 
  * @param {string} t 
  * @returns 
  */
@@ -89,18 +129,20 @@ class Router {
 	 * @param {import('./main/types').Context} ctx 
 	 * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
 	 */
-	find(method, path, ctx) { return [] }
+	find(method, path, ctx) { return []; }
 	/**
 	 * 
 	 * @param {Router[]} routers 
+	 * @param {boolean} [onion]
 	 * @returns {import('./main/types').FindHandler}
 	 */
-	static make(routers) {
+	static make(routers, onion) {
+		const findFn = onion ? findByOnion : find;
 		return async (ctx, setParams) => {
 			const list = routers.flat();
 			const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
 			for (const route of list) {
-				const res = await find(route, path, ctx, setParams, {});
+				const res = await findFn(route, path, ctx, setParams, {});
 				if (res) { return res; }
 			}
 			return null;
