@@ -11,8 +11,8 @@
 /**
  * @callback Finder
  * @this {Router}
- * @property {import('./main/types').Method} method
- * @property {string[]} path
+ * @param {import('./main/types').Method} method
+ * @param {string[]} path
  * @param {import('./main/types').Context} ctx 
  * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
  */
