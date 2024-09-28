@@ -2,8 +2,14 @@
 /**
  * @callback Guard
  * @param {import('./main/types').Context} ctx
- * @param {() => Promise<import('./main/types').HandlerResult>} [next]
- * @returns {PromiseLike<boolean | import('./main/types').Handler | import('./main/types').HandlerResult | void> | boolean | import('./main/types').HandlerResult | import('./main/types').Handler | void}
+ * @returns {PromiseLike<boolean | import('./main/types').Handler | void> | boolean | import('./main/types').Handler | void}
+ */
+
+/**
+ * @callback Onionskin
+ * @param {import('./main/types').Context} ctx
+ * @param {() => Promise<import('./main/types').HandlerResult>} next
+ * @returns {PromiseLike<import('./main/types').HandlerResult> | import('./main/types').HandlerResult}
  */
 
 /**
@@ -63,48 +69,11 @@ async function find(route, path, ctx, setParams, params) {
 	for await (const [r, result, p] of route.find(ctx.method, path, ctx)) {
 		if (ctx.destroyed) { return null; }
 		const res = await find(r, p, ctx, setParams, { ...params, ...result });
-		if (res) { return res; }
+		if (res) { return route.__onionskin(res); }
 	}
 	return null;
 }
-/**
- * 
- * @param {Router | import('./main/types').Handler} route 
- * @param {string[]} path 
- * @param {import('./main/types').Context} ctx 
- * @param {(v: any) => void} setParams 
- * @param {object} params 
- * @returns {Promise<import('./main/types').Handler | null>}
- */
-async function findByOnion(route, path, ctx, setParams, params) {
-	if (!(route instanceof Router)) {
-		setParams(params);
-		return route;
-	}
-	if (route.disabled) { return null; }
-	for await (const [r, result, p] of route.find(ctx.method, path, ctx)) {
-		if (ctx.destroyed) { return null; }
-		const handler = await findByOnion(r, p, ctx, setParams, { ...params, ...result });
-		if (!handler) { continue; }
-		const guards = [...route.guards];
-		/**
-		 * 
-		 * @param {import('./main/types').Context} ctx 
-		 * @param {number} k 
-		 * @returns 
-		 */
-		const run = async (ctx, k) => {
-			const guard = guards[k];
-			if (typeof guard !== 'function') { return handler(ctx); }
-			const nextK = k + 1;
-			const result = guard(ctx, () => run(ctx, nextK));
-			if (typeof result === 'function') { return; }
-			return result;
-		};
-		return ctx => run(ctx, 0);
-	}
-	return null;
-}
+
 /**
  * 
  * @param {string} t 
@@ -133,16 +102,14 @@ class Router {
 	/**
 	 * 
 	 * @param {Router[]} routers 
-	 * @param {boolean} [onion]
 	 * @returns {import('./main/types').FindHandler}
 	 */
-	static make(routers, onion) {
-		const findFn = onion ? findByOnion : find;
+	static make(routers) {
 		return async (ctx, setParams) => {
 			const list = routers.flat();
 			const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
 			for (const route of list) {
-				const res = await findFn(route, path, ctx, setParams, {});
+				const res = await find(route, path, ctx, setParams, {});
 				if (res) { return res; }
 			}
 			return null;
@@ -161,5 +128,19 @@ class Router {
 	}
 	/** @readonly @type {Set<Guard>} */
 	guards = new Set();
+	/**
+	 * 
+	 * @param {import('./main/types').Handler} h 
+	 * @returns {import('./main/types').Handler}
+	 */
+	__onionskin = (h) => h;
+	/** @param {Onionskin} os */
+	onionskin(os) {
+		let run = this.__onionskin;
+		this.__onionskin = h => {
+			const h2 = run(h)
+			return async (ctx) => os(ctx, async () => h2(ctx));
+		};
+	}
 }
 export default Router;
