@@ -4,14 +4,6 @@
  * @param {import('./main/types').Context} ctx
  * @returns {PromiseLike<boolean | import('./main/types').Handler | void> | boolean | import('./main/types').Handler | void}
  */
-
-/**
- * @callback Onionskin
- * @param {import('./main/types').Context} ctx
- * @param {() => Promise<import('./main/types').HandlerResult>} next
- * @returns {PromiseLike<import('./main/types').HandlerResult> | import('./main/types').HandlerResult}
- */
-
 /**
  * @typedef {[import('./main/types').Handler | Router, Record<string, any>, string[]]} FindItem
  */
@@ -134,7 +126,7 @@ class Router {
 	 * @returns {import('./main/types').Handler}
 	 */
 	__onionskin = (h) => h;
-	/** @param {Onionskin} os */
+	/** @param {import('./onionskin.mjs').Onionskin} os */
 	onionskin(os) {
 		let run = this.__onionskin;
 		this.__onionskin = h => {
