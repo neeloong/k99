@@ -102,6 +102,7 @@ export interface Options {
 	runner?: Runner;
 	method?: string | ((request: Request) => string);
 	error?(error: unknown): void;
+	catch?(error: unknown): PromiseLike<Response | null> | Response | null;
 	environment?: object;
 }
 

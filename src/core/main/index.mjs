@@ -63,7 +63,7 @@ function getMethod(request, toMethod) {
  */
 export default function main(
 	request, getHandler,
-	{ runner, error: echoError, method: toMethod, environment } = {},
+	{ runner, error: echoError, catch: catchError, method: toMethod, environment } = {},
 ) {
 	/**
 	 *
@@ -192,7 +192,7 @@ export default function main(
 				error = e || true;
 				reject(error);
 				return Promise.reject(e);
-			});
+			}).catch(catchError);
 		}
 		return runner ? runner(context, run) : run();
 	}
