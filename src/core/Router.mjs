@@ -1,3 +1,4 @@
+import packer from './packer.mjs';
 
 /**
  * @callback Guard
@@ -127,12 +128,6 @@ class Router {
 	 */
 	__onionskin = (h) => h;
 	/** @param {import('./onionskin.mjs').Onionskin} os */
-	onionskin(os) {
-		let run = this.__onionskin;
-		this.__onionskin = h => {
-			const h2 = run(h)
-			return async (ctx) => os(ctx, async () => h2(ctx));
-		};
-	}
+	onionskin(os) { this.__onionskin = packer(os, this.__onionskin); }
 }
 export default Router;
