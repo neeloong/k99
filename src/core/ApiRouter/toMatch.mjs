@@ -9,8 +9,8 @@
 
 const regex = /^:([a-zA-Z][a-zA-Z0-9]*)(?:\((.+)\))?([ius]+)?([?+*]?)$/;
 /**
- * 
- * @param {string} p 
+ *
+ * @param {string} p
  * @returns {Pattern | string}
  */
 function parse(p) {
@@ -67,10 +67,10 @@ function parse(p) {
 
 }
 /**
- * 
- * @param {(Pattern | string)[]} match 
- * @param {string[]} path 
- * @param {boolean} end 
+ *
+ * @param {(Pattern | string)[]} match
+ * @param {string[]} path
+ * @param {boolean} end
  * @returns {[Record<string, string | string[]>, string[]] | undefined}
  */
 function exec(match, path, end) {
@@ -98,9 +98,9 @@ function exec(match, path, end) {
 
 }
 /**
- * 
- * @param {string} path 
- * @param {boolean} end 
+ *
+ * @param {string} path
+ * @param {boolean} end
  * @returns {import('./index.mjs').Match | undefined}
  */
 export default function toMatch(path, end) {

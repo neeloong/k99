@@ -39,10 +39,10 @@ import getMethods from './getMethods.mjs';
  * @returns {T extends import('../Router.mjs').Finder ? Router : T}
  */
 /**
- * 
- * @param {(Route | RouterRoute)[]} routes 
- * @param {string} path 
- * @param {Router | import('../Router.mjs').Finder} [r] 
+ *
+ * @param {(Route | RouterRoute)[]} routes
+ * @param {string} path
+ * @param {Router | import('../Router.mjs').Finder} [r]
  * @returns {Router}
  */
 function bindRouter(routes, path, r) {
@@ -97,10 +97,10 @@ export default class ApiRouter extends Router {
 		return bindRouter(this.#routes, path, r);
 	}
 	/**
-	 * 
-	 * @param {import('../main/types').Method} method 
-	 * @param {string[]} path 
-	 * @param {import('../main/types').Context} ctx 
+	 *
+	 * @param {import('../main/types').Method} method
+	 * @param {string[]} path
+	 * @param {import('../main/types').Context} ctx
 	 * @returns {Iterable<import('../Router.mjs').FindItem>}
 	 */
 	*find(method, path, ctx) {
@@ -142,7 +142,7 @@ export default class ApiRouter extends Router {
 	 * @returns {Binder}
 	 */
 	/**
-	 * @param {import('../main/types').Method | Iterable<import('../main/types').Method> | ArrayLike<import('../main/types').Method>} methods 
+	 * @param {import('../main/types').Method | Iterable<import('../main/types').Method> | ArrayLike<import('../main/types').Method>} methods
 	 * @param {string| import('../main/types').Handler} [path]
 	 * @param {import('../main/types').Handler} [handler]
 	 * @returns {Binder | (() => void)}

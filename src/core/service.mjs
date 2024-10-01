@@ -1,28 +1,28 @@
 /**
- * 
+ *
  * @template T
  * @template {any[]} P
  * @overload
- * @param {(ctx: import('./main/types').Context, ...p: P) => T} exec 
- * @param {((ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy] 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {(ctx: import('./main/types').Context, ...p: P) => T} exec
+ * @param {((ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy]
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').Service<T, P>}
  */
 /**
- * 
+ *
  * @template T
  * @template {any[]} P
  * @overload
- * @param {(ctx: import('./main/types').Context, ...p: P) => T} exec 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {(ctx: import('./main/types').Context, ...p: P) => T} exec
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').Service<T, P>}
  */
 /**
  * @template T
  * @template {any[]} P
- * @param {(ctx: import('./main/types').Context, ...p: P) => T} exec 
- * @param {((ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void) | import('./main/types').Service.Options | null} [destroy] 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {(ctx: import('./main/types').Context, ...p: P) => T} exec
+ * @param {((ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void) | import('./main/types').Service.Options | null} [destroy]
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').Service<T, P>}
  */
 function service(exec, destroy, options) {

@@ -6,8 +6,8 @@ import {
 
 const noBodyMethods = new Set(['GET', 'OPTIONS']);
 /**
- * 
- * @param {AbortSignal} signal 
+ *
+ * @param {AbortSignal} signal
  * @returns {Promise<never>}
  */
 function signal2promise(signal) {
@@ -24,10 +24,10 @@ function signal2promise(signal) {
 }
 
 /**
- * 
- * @param {Headers} headers 
- * @param {string} name 
- * @param {string} [value] 
+ *
+ * @param {Headers} headers
+ * @param {string} name
+ * @param {string} [value]
  */
 function setHeader(headers, name, value) {
 	if (value) {
@@ -37,9 +37,9 @@ function setHeader(headers, name, value) {
 	}
 }
 /**
- * 
- * @param {Request} request 
- * @param {string | ((request: Request) => string)} [toMethod] 
+ *
+ * @param {Request} request
+ * @param {string | ((request: Request) => string)} [toMethod]
  * @returns {import('./types').Method}
  */
 function getMethod(request, toMethod) {
@@ -55,9 +55,9 @@ function getMethod(request, toMethod) {
 	return /** @type {import('./types').Method} */(methodStr.toUpperCase());
 }
 /**
- * 
- * @param {Request} request 
- * @param {import('./types').FindHandler} getHandler 
+ *
+ * @param {Request} request
+ * @param {import('./types').FindHandler} getHandler
  * @param {import('./types').Options} [options]
  * @returns {Promise<Response | null>}
  */
@@ -66,9 +66,9 @@ export default function main(
 	{ runner, error: echoError, method: toMethod, environment } = {},
 ) {
 	/**
-	 * 
-	 * @param {Request} request 
-	 * @param {import('./types').Context} [parent] 
+	 *
+	 * @param {Request} request
+	 * @param {import('./types').Context} [parent]
 	 * @returns {Promise<Response | null>}
 	 */
 	function exec(request, parent) {
@@ -90,7 +90,7 @@ export default function main(
 
 		let resolve = () => {};
 		/** @type {(error: unknown) => void} */
-		let reject = (error) => {};
+		let reject = () => {};
 		/** @type {Promise<void>} */
 		const donePromise = new Promise((a, b) => { resolve = a; reject = b; });
 		donePromise.catch(() => {});
@@ -160,9 +160,9 @@ export default function main(
 				setCookiesHeader(responseHeaders, sentCookies);
 			},
 			/**
-			 * 
-			 * @param {string | import('./types').CookieOption} [name] 
-			 * @param {import('./types').CookieOption | boolean} [opt] 
+			 *
+			 * @param {string | import('./types').CookieOption} [name]
+			 * @param {import('./types').CookieOption | boolean} [opt]
 			 * @returns {void}
 			 */
 			clearCookie(name, opt) {

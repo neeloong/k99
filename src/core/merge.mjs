@@ -1,7 +1,7 @@
 /**
- * 
- * @param {import('./main/types').Context} context 
- * @param {import('./main/types').Handler[]} handlers 
+ *
+ * @param {import('./main/types').Context} context
+ * @param {import('./main/types').Handler[]} handlers
  * @returns {Promise<string | boolean | object | undefined>}
  */
 async function runHandles(context, handlers) {
@@ -14,8 +14,8 @@ async function runHandles(context, handlers) {
 }
 
 /**
- * 
- * @param  {...(import('./main/types').Handler | import('./main/types').Handler[])} handlers 
+ *
+ * @param  {...(import('./main/types').Handler | import('./main/types').Handler[])} handlers
  * @returns {import('./main/types').Handler}
  */
 export default function merge(...handlers) {

@@ -1,7 +1,7 @@
 /**
- * 
- * @param {import('./types').Cookie[]} sentCookies 
- * @param {string} [name] 
+ *
+ * @param {import('./types').Cookie[]} sentCookies
+ * @param {string} [name]
  * @returns {Iterable<import('./types').Cookie>}
  */
 export function *getCookie(sentCookies, name) {
@@ -13,9 +13,9 @@ export function *getCookie(sentCookies, name) {
 }
 
 /**
- * 
- * @param {Headers} headers 
- * @param {import('./types').Cookie[]} cookies 
+ *
+ * @param {Headers} headers
+ * @param {import('./types').Cookie[]} cookies
  * @returns {void}
  */
 export function setCookiesHeader(headers, cookies) {
@@ -33,8 +33,8 @@ export function setCookiesHeader(headers, cookies) {
 	}
 }
 /**
- * 
- * @param {string} cookie 
+ *
+ * @param {string} cookie
  * @returns {Record<string, string>}
  */
 export function getRequestCookies(cookie) {
@@ -48,11 +48,11 @@ export function getRequestCookies(cookie) {
 	return cookies;
 }
 /**
- * 
- * @param {import('./types').Cookie[]} sentCookies 
- * @param {Record<string, string>} cookies 
- * @param {string | import('./types').CookieOption} [name] 
- * @param {import('./types').CookieOption | boolean} [opt] 
+ *
+ * @param {import('./types').Cookie[]} sentCookies
+ * @param {Record<string, string>} cookies
+ * @param {string | import('./types').CookieOption} [name]
+ * @param {import('./types').CookieOption | boolean} [opt]
  * @returns {void}
  */
 export function clearCookie(

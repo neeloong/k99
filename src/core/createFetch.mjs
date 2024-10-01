@@ -1,7 +1,7 @@
 /**
- * 
- * @param {(request: Request) => Promise<Response | null>} run 
- * @param {((request: Request) => Response | Promise<Response>)?} [notFound] 
+ *
+ * @param {(request: Request) => Promise<Response | null>} run
+ * @param {((request: Request) => Response | Promise<Response>)?} [notFound]
  * @returns {(input: RequestInfo, init?: RequestInit) => Promise<Response>}
  */
 export default function createFetch(run, notFound) {

@@ -1,36 +1,36 @@
 /**
- * 
+ *
  * @template T
  * @overload
- * @param {(ctx: import('./main/types').Context) => T} init 
- * @param {import('./main/types').Service.Options} [options] 
+ * @param {(ctx: import('./main/types').Context) => T} init
+ * @param {import('./main/types').Service.Options} [options]
  * @returns {import('./main/types').StateService<T>}
  */
 /**
- * 
+ *
  * @template T
  * @overload
- * @param {(ctx: import('./main/types').Context) => T} init 
- * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy] 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {(ctx: import('./main/types').Context) => T} init
+ * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy]
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').StateService<T>}
  */
 /**
- * 
+ *
  * @template T
  * @overload
- * @param {(ctx: import('./main/types').Context) => T} init 
- * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy] 
- * @param {((state: T, ctx: import('./main/types').Context) => any)?} [exec] 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {(ctx: import('./main/types').Context) => T} init
+ * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy]
+ * @param {((state: T, ctx: import('./main/types').Context) => any)?} [exec]
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').StateService<T>}
  */
 /**
  * @template T
- * @param {(ctx: import('./main/types').Context) => T} init 
- * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void) | import('./main/types').Service.Options | null} [destroy] 
- * @param {((state: T, ctx: import('./main/types').Context) => any) | import('./main/types').Service.Options | null} [exec] 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {(ctx: import('./main/types').Context) => T} init
+ * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void) | import('./main/types').Service.Options | null} [destroy]
+ * @param {((state: T, ctx: import('./main/types').Context) => any) | import('./main/types').Service.Options | null} [exec]
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').StateService<T>}
  */
 function stateService(init, destroy, exec, options) {

@@ -1,14 +1,14 @@
 /**
- * 
- * @param {string} str 
+ *
+ * @param {string} str
  * @returns {Uint8Array}
  */
 function str2utf8bin(str) {
 	return new TextEncoder().encode(str);
 }
 /**
- * 
- * @param {unknown} chunk 
+ *
+ * @param {unknown} chunk
  * @returns {chunk is ArrayBuffer | SharedArrayBuffer}
  */
 function isBufferSource(chunk) {
@@ -21,9 +21,9 @@ function isBufferSource(chunk) {
 	return false;
 }
 /**
- * 
+ *
  * @template T
- * @param {any} result 
+ * @param {any} result
  * @returns {result is Iterable<T> | AsyncIterable<T>}
  */
 function isIterable(result) {
@@ -32,7 +32,7 @@ function isIterable(result) {
 }
 /**
  * 向可写流中写入数据
- * @param {WritableStreamDefaultWriter<Uint8Array>} writer 
+ * @param {WritableStreamDefaultWriter<Uint8Array>} writer
  * @param {unknown} chunk 要写入的数据
  * @returns {Promise<void>}
  */
@@ -57,9 +57,9 @@ async function write(writer, chunk) {
 }
 
 /**
- * 
- * @param {any} k 
- * @param {any} v 
+ *
+ * @param {any} k
+ * @param {any} v
  * @returns {any}
  */
 function replacer(k, v) {
@@ -70,9 +70,9 @@ function replacer(k, v) {
 }
 
 /**
- * 
- * @param {any} result 
- * @param {Promise<never>} [aborted] 
+ *
+ * @param {any} result
+ * @param {Promise<never>} [aborted]
  * @returns {[BodyInit, number, string] | null}
  */
 function toBodyData(result, aborted) {
@@ -105,7 +105,7 @@ function toBodyData(result, aborted) {
 	/** @type {TransformStream<Uint8Array, Uint8Array>} */
 	const { writable, readable } = new TransformStream();
 	const writer = writable.getWriter();
-	aborted?.catch((e) => {
+	aborted?.catch(e => {
 		writable.abort(e || new DOMException('The user aborted a request.')).catch(() => {});
 	});
 	(async () => {
@@ -118,11 +118,11 @@ function toBodyData(result, aborted) {
 	return [readable, 0, ''];
 }
 /**
- * 
- * @param {any} result 
- * @param {Headers} headers 
- * @param {Promise<never>} [aborted] 
- * @returns 
+ *
+ * @param {any} result
+ * @param {Headers} headers
+ * @param {Promise<never>} [aborted]
+ * @returns
  */
 export default function toBody(result, headers, aborted) {
 	const bodyData = toBodyData(result, aborted);

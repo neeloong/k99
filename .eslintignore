@@ -2,8 +2,8 @@
 build
 
 *.js
-*.mjs
-
+.ts
+.mts
 # Logs
 logs
 *.log

@@ -3,23 +3,19 @@ module.exports = {
 		es6: true,
 		node: true,
 	},
-	parser: '@typescript-eslint/parser',
 	parserOptions: {
 		sourceType: 'module',
 		allowImportExportEverywhere: false,
 	},
-	plugins: ['@typescript-eslint'],
 	rules: {
-		// 禁止不必要的括号
-		'@typescript-eslint/no-extra-parens': 'error',
 		// 驼峰法命名
 		'camelcase': 'error',
 		// 单引号
-		'@typescript-eslint/quotes': ['error', 'single'],
+		'quotes': ['error', 'single'],
 		// 行尾部分号
-		'@typescript-eslint/semi':['error', 'always'],
+		'semi':['error', 'always'],
 		// tab 缩进
-		'@typescript-eslint/indent': ['error', 'tab'],
+		'indent': ['error', 'tab'],
 		// 禁止 if 语句中有 return 之后有 else
 		'no-else-return':'error',
 		// 禁止或强制在单行代码块中使用空格

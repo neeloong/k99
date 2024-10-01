@@ -1,32 +1,32 @@
 /**
- * 
+ *
  * @template T
  * @overload
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').StoreService<T>}
  */
 /**
- * 
+ *
  * @template T
  * @overload
- * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy] 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy]
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').StoreService<T>}
  */
 /**
- * 
+ *
  * @template T
  * @overload
- * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy] 
- * @param {((state: T | undefined, ctx: import('./main/types').Context) => any)?} [exec] 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void)?} [destroy]
+ * @param {((state: T | undefined, ctx: import('./main/types').Context) => any)?} [exec]
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').StoreService<T>}
  */
 /**
  * @template T
- * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void) | import('./main/types').Service.Options | null} [destroy] 
- * @param {((state: T | undefined, ctx: import('./main/types').Context) => any) | import('./main/types').Service.Options | null} [exec] 
- * @param {import('./main/types').Service.Options?} [options] 
+ * @param {((state: T | undefined, ctx: import('./main/types').Context, error?: unknown) => PromiseLike<void> | void) | import('./main/types').Service.Options | null} [destroy]
+ * @param {((state: T | undefined, ctx: import('./main/types').Context) => any) | import('./main/types').Service.Options | null} [exec]
+ * @param {import('./main/types').Service.Options?} [options]
  * @returns {import('./main/types').StoreService<T>}
  */
 function storeService(destroy, exec, options) {

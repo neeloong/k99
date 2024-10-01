@@ -7,16 +7,16 @@
 
 const noop = () => {};
 /**
- * 
- * @param  {...(Onionskin | Onionskin[])} handlers 
+ *
+ * @param  {...(Onionskin | Onionskin[])} handlers
  * @returns {import('./main/types').Handler}
  */
 export default function onionskin(...handlers) {
 	/** @type {import('./main/types').Handler} */
 	let handler = noop;
-	for(const os of handlers.flat()) {
+	for (const os of handlers.flat()) {
 		const currentHandler = handler;
-		handler = async (ctx) => os(ctx, async () => currentHandler(ctx));
+		handler = async ctx => os(ctx, async () => currentHandler(ctx));
 	}
 	return handler;
 }
