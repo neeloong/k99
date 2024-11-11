@@ -115,7 +115,7 @@ class Router {
 	 * @returns {Router}
 	 */
 	static create(find) {
-		return Object.create(Router.prototype, {
+		return Object.defineProperties(new Router(), {
 			'find': { configurable: true, value: find, writable: true },
 		});
 	}
