@@ -8,20 +8,6 @@ function str2utf8bin(str) {
 }
 /**
  *
- * @param {unknown} chunk
- * @returns {chunk is ArrayBuffer | SharedArrayBuffer}
- */
-function isBufferSource(chunk) {
-	if (chunk instanceof ArrayBuffer) { return true; }
-	try {
-		if (chunk instanceof SharedArrayBuffer) { return true; }
-	} catch {
-
-	}
-	return false;
-}
-/**
- *
  * @template T
  * @param {any} result
  * @returns {result is Iterable<T> | AsyncIterable<T>}
@@ -44,7 +30,7 @@ async function write(writer, chunk) {
 	if (ArrayBuffer.isView(chunk)) {
 		return writer.write(new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength));
 	}
-	if (isBufferSource(chunk)) {
+	if (chunk instanceof ArrayBuffer) {
 		return writer.write(new Uint8Array(chunk));
 	}
 	if (!isIterable(chunk)) {
@@ -88,7 +74,7 @@ function toBodyData(result, aborted) {
 	if (result instanceof FormData) {
 		return [result, 0, ''];
 	}
-	if (ArrayBuffer.isView(result) || isBufferSource(result)) {
+	if (ArrayBuffer.isView(result) || result instanceof ArrayBuffer) {
 		return [result, result.byteLength, ''];
 	}
 	if (typeof result === 'string') {
