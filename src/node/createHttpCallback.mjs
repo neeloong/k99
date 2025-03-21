@@ -1,4 +1,6 @@
+/** @import { IncomingMessage, ServerResponse } from 'node:http' */
 import { Http2ServerResponse } from 'node:http2';
+/** @import { Http2ServerRequest } from 'node:http2' */
 import toWebRequest from './toWebRequest.mjs';
 import linkResponse from './linkResponse.mjs';
 
@@ -10,8 +12,8 @@ function echoError(e) {
 	console.error(e);
 }
 /**
- * @template {import('node:http').IncomingMessage | import('node:http2').Http2ServerRequest} TReq
- * @template {import('node:http').ServerResponse | import('node:http2').Http2ServerResponse} TRes
+ * @template {IncomingMessage | Http2ServerRequest} TReq
+ * @template {ServerResponse | Http2ServerResponse} TRes
  * @typedef {object} HttpCallbackOptions
  * @property {(req: TReq, res: TRes, next?: () => void) => any} [notFound]
  * @property {(e: any) => void} [onError]
@@ -19,8 +21,8 @@ function echoError(e) {
  */
 /**
  * 
- * @template {import('node:http').IncomingMessage | import('node:http2').Http2ServerRequest} TReq
- * @template {import('node:http').ServerResponse | import('node:http2').Http2ServerResponse} TRes
+ * @template {IncomingMessage | Http2ServerRequest} TReq
+ * @template {ServerResponse | Http2ServerResponse} TRes
  * @param {(request: Request) => Promise<Response | null>} run 
  * @param {HttpCallbackOptions<TReq, TRes>} [options] 
  * @returns {(req: TReq, res: TRes, next?: () => void) => any}
@@ -31,7 +33,7 @@ export default function createHttpCallback(run, {
 		errorInResponse,
 	} = {}) {
 	return function httpCallback(req, res, next) {
-		return run(toWebRequest(req)).then(r => {
+		return run(toWebRequest(req, res)).then(r => {
 			if (r) { return linkResponse(res, r, onError); }
 			if (notFound) { return notFound(req, res, next); }
 			if (next) { return next(); }

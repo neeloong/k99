@@ -1,10 +1,13 @@
+/** @import { IncomingMessage, ServerResponse } from 'node:http' */
+/** @import { Http2ServerRequest, Http2ServerResponse } from 'node:http2' */
 import { Readable } from 'node:stream';
 /**
  * 
- * @param {import('node:http').IncomingMessage | import('node:http2').Http2ServerRequest} req 
+ * @param {IncomingMessage | Http2ServerRequest} req 
+ * @param {ServerResponse | Http2ServerResponse} [res] 
  * @returns {AbortSignal}
  */
-function createAbortSignal(req) {
+function createAbortSignal(req, res) {
 	const ac = new AbortController();
 	/**
 	 * 
@@ -12,12 +15,11 @@ function createAbortSignal(req) {
 	 * @returns 
 	 */
 	const end = (err) => {
-		req.off('end', end);
+		res?.off('close', end);
 		req.off('error', end);
-		if (!err) { return; }
 		ac.abort(err);
 	};
-	req.on('end', end);
+	res?.on('close', end);
 	req.on('error', end);
 
 	return ac.signal;
@@ -25,11 +27,14 @@ function createAbortSignal(req) {
 
 /**
  * 
- * @param {import('node:http').IncomingMessage | import('node:http2').Http2ServerRequest} req 
+ * @param {IncomingMessage | Http2ServerRequest} req 
+ * @param {AbortSignal | ServerResponse | Http2ServerResponse} [signalOrRes] 
  * @returns {Request}
  */
-export default function toWebRequest(req) {
-	const signal = createAbortSignal(req);
+export default function toWebRequest(req, signalOrRes) {
+	const signal = signalOrRes instanceof AbortSignal
+		? signalOrRes
+		: createAbortSignal(req, signalOrRes);
 	const host = req.headers['host'] || '127.0.0.1';
 	const url = new URL(req.url || '/', `http://${ host }`);
 	const method = (req.method || 'GET').toUpperCase();

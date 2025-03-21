@@ -1,9 +1,10 @@
+/** @import { ServerResponse } from 'node:http' */
 import { Http2ServerResponse } from 'node:http2';
 import { Readable } from 'node:stream';
 
 /**
  * 
- * @param {import('node:http').ServerResponse | Http2ServerResponse} res 
+ * @param {ServerResponse | Http2ServerResponse} res 
  * @param {Response} response 
  * @param {(e: any) => void} onError 
  * @returns 
