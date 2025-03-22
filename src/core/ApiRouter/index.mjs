@@ -1,3 +1,5 @@
+/** @import { Context, Handler, Method } from '../main/types' */
+/** @import { Finder, FindItem } from '../Router.mjs' */
 import Router from '../Router.mjs';
 import toMatch from './toMatch.mjs';
 
@@ -12,7 +14,7 @@ import getMethods from './getMethods.mjs';
 
 /**
  * @callback Binder
- * @param {import('../main/types').Handler} handler
+ * @param {Handler} handler
  * @returns {() => void}
  */
 
@@ -21,8 +23,8 @@ import getMethods from './getMethods.mjs';
  * @property {Match} [match] 路径匹配
  * @property {null} [router]
  * @property {string} [plugin] 所属插件
- * @property {import('../main/types').Handler} handler 处理函数
- * @property {Set<import('../main/types').Method>} methods 方法列表
+ * @property {Handler} handler 处理函数
+ * @property {Set<Method>} methods 方法列表
  */
 
 /**
@@ -33,16 +35,16 @@ import getMethods from './getMethods.mjs';
 
 
 /**
- * @template {Router | import('../Router.mjs').Finder} [T=ApiRouter]
+ * @template {Router | Finder} [T=ApiRouter]
  * @callback RouteBinder
  * @param {T} [router] 要注册的子路由或子路由的 Finder
- * @returns {T extends import('../Router.mjs').Finder ? Router : T}
+ * @returns {T extends Finder ? Router : T}
  */
 /**
  *
  * @param {(Route | RouterRoute)[]} routes
  * @param {string} path
- * @param {Router | import('../Router.mjs').Finder} [r]
+ * @param {Router | Finder} [r]
  * @returns {Router}
  */
 function bindRouter(routes, path, r) {
@@ -57,18 +59,18 @@ export default class ApiRouter extends Router {
 	#routes = [];
 	/**
 	 * 添加子路由
-	 * @template {Router | import('../Router.mjs').Finder} [T=ApiRouter]
+	 * @template {Router | Finder} [T=ApiRouter]
 	 * @overload
 	 * @param {T} [router] 要注册的子路由或子路由的 Finder
-	 * @returns {T extends import('../Router.mjs').Finder ? Router : T}
+	 * @returns {T extends Finder ? Router : T}
 	 */
 	/**
 	 * 添加子路由
-	 * @template {Router | import('../Router.mjs').Finder} [T=ApiRouter]
+	 * @template {Router | Finder} [T=ApiRouter]
 	 * @overload
 	 * @param {string} path   要注册的路径
 	 * @param {T} [router] 要注册的子路由或子路由的 Finder
-	 * @returns {T extends import('../Router.mjs').Finder ? Router : T}
+	 * @returns {T extends Finder ? Router : T}
 	 */
 	/**
 	 * 添加子路由
@@ -87,7 +89,7 @@ export default class ApiRouter extends Router {
 		if (a && typeof a === 'object' && !(a instanceof Router)) {
 			const path = String.raw(a, ...p.slice(1));
 			/**
-			 * @param { import('../Router.mjs').Finder | Router} [r];
+			 * @param { Finder | Router} [r];
 			 * @returns {any}
 			 */
 			return r => bindRouter(this.#routes, path, r);
@@ -98,10 +100,10 @@ export default class ApiRouter extends Router {
 	}
 	/**
 	 *
-	 * @param {import('../main/types').Method} method
+	 * @param {Method} method
 	 * @param {string[]} path
-	 * @param {import('../main/types').Context} ctx
-	 * @returns {Iterable<import('../Router.mjs').FindItem>}
+	 * @param {Context} ctx
+	 * @returns {Iterable<FindItem>}
 	 */
 	*find(method, path, ctx) {
 		for (const route of Array.from(this.#routes)) {
@@ -122,29 +124,29 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册处理函数
 	 * @overload
-	 * @param {import('../main/types').Method | Iterable<import('../main/types').Method> | ArrayLike<import('../main/types').Method>} method  要注册的方法
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Method | Iterable<Method> | ArrayLike<Method>} method  要注册的方法
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册处理函数
 	 * @overload
-	 * @param {import('../main/types').Method | Iterable<import('../main/types').Method> | ArrayLike<import('../main/types').Method>} method  要注册的方法
+	 * @param {Method | Iterable<Method> | ArrayLike<Method>} method  要注册的方法
 	 * @param {string} path 要注册的路径
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册处理函数
 	 * @overload
-	 * @param {import('../main/types').Method | Iterable<import('../main/types').Method> | ArrayLike<import('../main/types').Method>} method  要注册的方法
+	 * @param {Method | Iterable<Method> | ArrayLike<Method>} method  要注册的方法
 	 * @param {string} path   要注册的路径
 	 * @returns {Binder}
 	 */
 	/**
-	 * @param {import('../main/types').Method | Iterable<import('../main/types').Method> | ArrayLike<import('../main/types').Method>} methods
-	 * @param {string| import('../main/types').Handler} [path]
-	 * @param {import('../main/types').Handler} [handler]
+	 * @param {Method | Iterable<Method> | ArrayLike<Method>} methods
+	 * @param {string| Handler} [path]
+	 * @param {Handler} [handler]
 	 * @returns {Binder | (() => void)}
 	 */
 	verb(methods, path, handler) {
@@ -155,14 +157,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP GET/POST/PUT/DELETE 处理函数
 	 * @overload
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -188,14 +190,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP GET 处理函数
 	 * @overload
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP GET 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -219,14 +221,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP POST 处理函数
 	 * @overload
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP POST 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -250,14 +252,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP PUT 处理函数
 	 * @overload
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP PUT 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -281,14 +283,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP DELETE 处理函数
 	 * @overload
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP DELETE 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -312,14 +314,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP HEAD 处理函数
 	 * @overload
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP HEAD 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -343,14 +345,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP OPTIONS 处理函数
 	 * @overload
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP OPTIONS 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {import('../main/types').Handler} handler 要注册的处理函数
+	 * @param {Handler} handler 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**

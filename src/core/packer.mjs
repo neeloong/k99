@@ -1,13 +1,15 @@
+/** @import { Handler } from './main/types' */
+/** @import { Onionskin } from './onionskin.mjs' */
 /**
  * @callback Packer
- * @param {import('./main/types').Handler} handler
- * @returns {import('./main/types').Handler}
+ * @param {Handler} handler
+ * @returns {Handler}
  */
 /** @type {Packer} */
 const noop = h => h;
 /**
  *
- * @param {import('./onionskin.mjs').Onionskin} onionskin
+ * @param {Onionskin} onionskin
  * @param {Packer} [packer]
  * @returns {Packer}
  */

@@ -1,14 +1,15 @@
+/** @import { Method } from '../main/types' */
 const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']);
 /**
  *
  * @param {any} v
- * @returns {v is import('../main/types').Method}
+ * @returns {v is Method}
  */
 function isMethod(v) { return methods.has(v); }
 /**
  *
- * @param {import('../main/types').Method | Iterable<import('../main/types').Method> | ArrayLike<import('../main/types').Method>} [methods]
- * @returns {import('../main/types').Method[]}
+ * @param {Method | Iterable<Method> | ArrayLike<Method>} [methods]
+ * @returns {Method[]}
  */
 export default function getMethods(methods) {
 	if (!methods) {

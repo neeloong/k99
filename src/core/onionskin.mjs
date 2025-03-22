@@ -1,18 +1,19 @@
+/** @import { Context, Handler, HandlerResult } from './main/types' */
 /**
  * @callback Onionskin
- * @param {import('./main/types').Context} ctx
- * @param {() => Promise<import('./main/types').HandlerResult>} next
- * @returns {PromiseLike<import('./main/types').HandlerResult> | import('./main/types').HandlerResult}
+ * @param {Context} ctx
+ * @param {() => Promise<HandlerResult>} next
+ * @returns {PromiseLike<HandlerResult> | HandlerResult}
  */
 
 const noop = () => {};
 /**
  *
  * @param  {...(Onionskin | Onionskin[])} handlers
- * @returns {import('./main/types').Handler}
+ * @returns {Handler}
  */
 export default function onionskin(...handlers) {
-	/** @type {import('./main/types').Handler} */
+	/** @type {Handler} */
 	let handler = noop;
 	for (const os of handlers.flat()) {
 		const currentHandler = handler;

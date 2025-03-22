@@ -1,3 +1,4 @@
+/** @import { Service } from 'k99' */
 /**
  * 
  * @param {string} s 
@@ -45,7 +46,7 @@ async function parse(request) {
 	} catch { }
 	return null;
 }
-/** @type {import('k99').Service<Promise<any> | null>} */
+/** @type {Service<Promise<any> | null>} */
 const formBodyService = function (ctx) {
 	const [mime, charset] = ctx.requestType.replace(/\s/g, '').split(';');
 	if (mime !== 'application/x-www-form-urlencoded') { return () => null; }

@@ -1,15 +1,17 @@
+/** @import { Handler, Method } from '../main/types' */
+/** @import { Binder, Route, RouterRoute } from './index.mjs' */
 import toMatch from './toMatch.mjs';
 
 /**
  *
- * @param {(import('./index.mjs').Route | import('./index.mjs').RouterRoute)[]} routes
- * @param {import('../main/types').Method[]} methods
+ * @param {(Route | RouterRoute)[]} routes
+ * @param {Method[]} methods
  * @param {string} path
- * @param {import('../main/types').Handler} handler
+ * @param {Handler} handler
  * @returns {() => void}
  */
 function bind(routes, methods, path, handler) {
-	/** @type {import('./index.mjs').Route} */
+	/** @type {Route} */
 	const route = {
 		match: toMatch(path || '', true),
 		methods: new Set(methods),
@@ -25,14 +27,14 @@ function bind(routes, methods, path, handler) {
 		routes.splice(index, 1);
 	};
 }
-/** @type {(v: any) => v is import('../main/types').Handler} */
+/** @type {(v: any) => v is Handler} */
 const findHandler = v => typeof v === 'function';
 /**
  *
- * @param {(import('./index.mjs').Route | import('./index.mjs').RouterRoute)[]} routes
- * @param {import('../main/types').Method[]} methods
+ * @param {(Route | RouterRoute)[]} routes
+ * @param {Method[]} methods
  * @param {any[]} p
- * @returns {import('./index.mjs').Binder | (() => void)}
+ * @returns {Binder | (() => void)}
  */
 export default function verb(routes, methods, p) {
 	if (!p.length) {

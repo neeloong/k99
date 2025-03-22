@@ -1,6 +1,7 @@
 /** @import { IncomingMessage, ServerResponse } from 'node:http' */
 import { Http2ServerResponse } from 'node:http2';
 /** @import { Http2ServerRequest } from 'node:http2' */
+/** @import { Writable } from 'node:stream' */
 import toWebRequest from './toWebRequest.mjs';
 import linkResponse from './linkResponse.mjs';
 
@@ -46,7 +47,7 @@ export default function createHttpCallback(run, {
 				res.end();
 				return;
 			}
-			/** @type {import('node:stream').Writable} */
+			/** @type {Writable} */
 			const stream =
 					res instanceof Http2ServerResponse ? res.stream : res;
 			if (e instanceof Error) {

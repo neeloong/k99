@@ -1,29 +1,31 @@
+/** @import { Context, FindHandler, Handler, Method } from './main/types' */
+/** @import { Onionskin } from './onionskin.mjs' */
 import packer from './packer.mjs';
 
 /**
  * @callback Guard
- * @param {import('./main/types').Context} ctx
- * @returns {PromiseLike<boolean | import('./main/types').Handler | void> | boolean | import('./main/types').Handler | void}
+ * @param {Context} ctx
+ * @returns {PromiseLike<boolean | Handler | void> | boolean | Handler | void}
  */
 /**
- * @typedef {[import('./main/types').Handler | Router, Record<string, any>, string[]]} FindItem
+ * @typedef {[Handler | Router, Record<string, any>, string[]]} FindItem
  */
 /**
  * @callback Finder
  * @this {Router}
- * @param {import('./main/types').Method} method
+ * @param {Method} method
  * @param {string[]} path
- * @param {import('./main/types').Context} ctx 
+ * @param {Context} ctx 
  * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
  */
 
 /**
  * 
  * @param {Set<Guard>} guards 
- * @param {import('./main/types').Context} ctx 
+ * @param {Context} ctx 
  * @param {(v: any) => void} setParams 
  * @param {object} params 
- * @returns {Promise<boolean | import('./main/types').Handler>}
+ * @returns {Promise<boolean | Handler>}
  */
 async function execGuard(guards, ctx, setParams, params) {
 	if (!guards.size) { return true; }
@@ -42,12 +44,12 @@ async function execGuard(guards, ctx, setParams, params) {
 
 /**
  * 
- * @param {Router | import('./main/types').Handler} route 
+ * @param {Router | Handler} route 
  * @param {string[]} path 
- * @param {import('./main/types').Context} ctx 
+ * @param {Context} ctx 
  * @param {(v: any) => void} setParams 
  * @param {object} params 
- * @returns {Promise<import('./main/types').Handler | null>}
+ * @returns {Promise<Handler | null>}
  */
 async function find(route, path, ctx, setParams, params) {
 	if (!(route instanceof Router)) {
@@ -86,16 +88,16 @@ class Router {
 	disabled = false;
 	/**
 	 * @abstract
-	 * @param {import('./main/types').Method} method 
+	 * @param {Method} method 
 	 * @param {string[]} path 
-	 * @param {import('./main/types').Context} ctx 
+	 * @param {Context} ctx 
 	 * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
 	 */
 	find(method, path, ctx) { return []; }
 	/**
 	 * 
 	 * @param {Router[]} routers 
-	 * @returns {import('./main/types').FindHandler}
+	 * @returns {FindHandler}
 	 */
 	static make(routers) {
 		return async (ctx, setParams) => {
@@ -123,11 +125,11 @@ class Router {
 	guards = new Set();
 	/**
 	 * 
-	 * @param {import('./main/types').Handler} h 
-	 * @returns {import('./main/types').Handler}
+	 * @param {Handler} h 
+	 * @returns {Handler}
 	 */
 	__onionskin = (h) => h;
-	/** @param {import('./onionskin.mjs').Onionskin} os */
+	/** @param {Onionskin} os */
 	onionskin(os) { this.__onionskin = packer(os, this.__onionskin); }
 }
 export default Router;

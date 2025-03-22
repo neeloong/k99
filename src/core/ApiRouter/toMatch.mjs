@@ -1,4 +1,4 @@
-
+/** @import { Match } from './index.mjs' */
 /**
  * @typedef {object} Pattern
  * @property {string} name
@@ -101,7 +101,7 @@ function exec(match, path, end) {
  *
  * @param {string} path
  * @param {boolean} end
- * @returns {import('./index.mjs').Match | undefined}
+ * @returns {Match | undefined}
  */
 export default function toMatch(path, end) {
 	/** @type {(Pattern | string)[]} */

@@ -1,9 +1,10 @@
 import main from './main/index.mjs';
+/** @import { FindHandler, Options } from './main/types' */
 
 /**
  *
- * @param {import('./main/types').FindHandler} getHandler
- * @param {import('./main/types').Options} options
+ * @param {FindHandler} getHandler
+ * @param {Options} options
  * @returns {(request: Request) => Promise<Response | null>}
  */
 export default function make(getHandler, options) {

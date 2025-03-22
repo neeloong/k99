@@ -1,4 +1,5 @@
-/** @type {import('k99').Service<Promise<any> | null>} */
+/** @import { Service } from 'k99' */
+/** @type {Service<Promise<any> | null>} */
 const jsonBodyService = function (ctx) {
 	const [mime, charset] = ctx.requestType.replace(/\s/g, '').split(';');
 	if (mime !== 'application/json' && mime !== 'text/json') { return () => null; }
