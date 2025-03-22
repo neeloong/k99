@@ -99,8 +99,7 @@ function toBodyData(result, aborted) {
 			if (!data) { continue; }
 			await write(writer, data);
 		}
-		await writable.close();
-	})().catch(() => {});
+	})().then(() => writable.close(), r => writable.abort(r)).catch(() => {});
 	return [readable, 0, ''];
 }
 /**
