@@ -9,7 +9,7 @@ import getMethods from './getMethods.mjs';
 /**
  * @callback Match
  * @param {string[]} paths
- * @returns {[Record<string, string | string[]>, string[]] | undefined}
+ * @returns {[Record<string | symbol, string | string[]>, string[]] | undefined}
  */
 
 /**
@@ -43,7 +43,7 @@ import getMethods from './getMethods.mjs';
 /**
  *
  * @param {(Route | RouterRoute)[]} routes
- * @param {string} path
+ * @param {string | [string[], any[]]} path
  * @param {Router | Finder} [r]
  * @returns {Router}
  */
@@ -87,12 +87,11 @@ export default class ApiRouter extends Router {
 	route(...p) {
 		const [a] = p;
 		if (a && typeof a === 'object' && !(a instanceof Router)) {
-			const path = String.raw(a, ...p.slice(1));
 			/**
 			 * @param { Finder | Router} [r];
 			 * @returns {any}
 			 */
-			return r => bindRouter(this.#routes, path, r);
+			return r => bindRouter(this.#routes, [a, p.slice(1)], r);
 		}
 		const path = typeof a === 'string' ? a : '';
 		const r = typeof a === 'string' ? p[1] : a;

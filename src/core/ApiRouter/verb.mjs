@@ -6,7 +6,7 @@ import toMatch from './toMatch.mjs';
  *
  * @param {(Route | RouterRoute)[]} routes
  * @param {Method[]} methods
- * @param {string} path
+ * @param {string | [string[], any[]]} path
  * @param {Handler} handler
  * @returns {() => void}
  */
@@ -42,8 +42,7 @@ export default function verb(routes, methods, p) {
 	}
 	const [a, b] = p;
 	if (a && typeof a === 'object') {
-		const path = String.raw(a, ...p.slice(1));
-		return handler => bind(routes, methods, path, handler);
+		return handler => bind(routes, methods, [a, p.slice(1)], handler);
 	}
 	const path = typeof a === 'string' ? a : '';
 	const handler = [a, b].find(findHandler);

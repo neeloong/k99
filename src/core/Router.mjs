@@ -8,7 +8,7 @@ import packer from './packer.mjs';
  * @returns {PromiseLike<boolean | Handler | void> | boolean | Handler | void}
  */
 /**
- * @typedef {[Handler | Router, Record<string, any>, string[]]} FindItem
+ * @typedef {[Handler | Router, Record<string | symbol, any>, string[]]} FindItem
  */
 /**
  * @callback Finder

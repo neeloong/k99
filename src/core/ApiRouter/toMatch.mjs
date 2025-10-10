@@ -1,9 +1,9 @@
 /** @import { Match } from './index.mjs' */
 /**
  * @typedef {object} Pattern
- * @property {string} name
- * @property {boolean} optional
- * @property {boolean} many
+ * @property {string | symbol} name
+ * @property {boolean} [optional]
+ * @property {boolean} [many]
  * @property {RegExp} pattern
  */
 
@@ -74,7 +74,7 @@ function parse(p) {
  * @returns {[Record<string, string | string[]>, string[]] | undefined}
  */
 function exec(match, path, end) {
-	/** @type {Record<string, string | string[]>} */
+	/** @type {Record<string | symbol, string | string[]>} */
 	const params = {};
 	for (let i = 0; i < match.length; i++) {
 		const m = match[i];
@@ -98,17 +98,65 @@ function exec(match, path, end) {
 
 }
 /**
+ * 
+ * @param {string[]} paths 
+ * @param {*} values 
+ * @returns {Iterable<[string[], any[]]>}
+ */
+function* split([...paths], [...values]) {
+	let els = (paths.shift() || '').split('/');
+	let list = [els.pop() || ''];
+	for (const f of els) {
+		yield [[f], []];
+	}
+	for (const path of paths) {
+		const els = path.split('/');
+		if (els.length <= 1) {
+			list.push(path);
+			continue;
+		}
+		const pathValue = values.splice(0, list.length);
+		list.push(els.shift() || '');
+		yield [list, pathValue];
+		list = [els.pop() || ''];
+		for (const f of els) {
+			yield [[f], []];
+		}
+	}
+	yield [list, values];
+}
+/**
  *
- * @param {string} path
+ * @param {string | [string[], any[]]} path
  * @param {boolean} end
  * @returns {Match | undefined}
  */
 export default function toMatch(path, end) {
 	/** @type {(Pattern | string)[]} */
 	const list = [];
-	for (const p of path.split('/')) {
-		if (!p || /^\.+$/.test(p)) { continue; }
-		list.push(parse(p));
+	if (typeof path === 'string') {
+		for (const p of path.split('/')) {
+			if (!p || /^\.+$/.test(p)) { continue; }
+			list.push(parse(p));
+		}
+	} else {
+		for (const [paths, values] of split(...path)) {
+			if (paths.length === 2 && !paths[0] && !paths[1]) {
+				const name = values[0];
+				if (typeof name === 'symbol') {
+					list.push({ name, pattern: /^.*$/ });
+					continue;
+				}
+			}
+			const last = paths.pop() || '';
+			const strings = paths.map((v, i) => [v, values[i]]).flat();
+			strings.push(last);
+			const p = strings.join('');
+			if (!p || /^\.+$/.test(p)) { continue; }
+			list.push(parse(p));
+			continue;
+		}
+
 	}
 	if (!list.length) { return; }
 	return path => exec(list, path, end);
