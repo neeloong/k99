@@ -12,11 +12,7 @@ import getMethods from './getMethods.mjs';
  * @returns {[Params, string[]] | undefined}
  */
 
-/**
- * @callback Binder
- * @param {Handler} handler
- * @returns {() => void}
- */
+/** @typedef {(handler: Handler, ...handlers: Handler[]) => () => void} Binder */
 
 /**
  * @typedef {object} Route

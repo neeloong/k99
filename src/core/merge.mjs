@@ -5,7 +5,7 @@
  * @param {Handler[]} handlers
  * @returns {Promise<string | boolean | object | undefined>}
  */
-async function runHandles(context, handlers) {
+export async function runHandles(context, handlers) {
 	for (const handle of handlers) {
 		const result = await handle(context);
 		if (result === undefined) { continue; }

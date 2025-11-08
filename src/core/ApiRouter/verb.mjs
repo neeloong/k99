@@ -1,22 +1,19 @@
 /** @import { Handler, Method } from '../main/types' */
-/** @import { Binder, Route, RouterRoute } from './index.mjs' */
+/** @import { Binder, Match, Route, RouterRoute } from './index.mjs' */
+import { runHandles } from '../merge.mjs';
 import toMatch from './toMatch.mjs';
 
 /**
  *
  * @param {(Route | RouterRoute)[]} routes
- * @param {Method[]} methods
- * @param {string | [string[], any[]]} path
- * @param {Handler} handler
+ * @param {Set<Method>} methods
+ * @param {Match | undefined} match
+ * @param {Handler[]} handlers
  * @returns {() => void}
  */
-function bind(routes, methods, path, handler) {
+function bind(routes, methods, match, handlers) {
 	/** @type {Route} */
-	const route = {
-		match: toMatch(path || '', true),
-		methods: new Set(methods),
-		handler,
-	};
+	const route = { match, methods, handler: ctx => runHandles(ctx, handlers) };
 	routes.push(route);
 	let removed = false;
 	return () => {
@@ -32,22 +29,28 @@ const findHandler = v => typeof v === 'function';
 /**
  *
  * @param {(Route | RouterRoute)[]} routes
- * @param {Method[]} methods
+ * @param {Iterable<Method>} methods
  * @param {any[]} p
  * @returns {Binder | (() => void)}
  */
 export default function verb(routes, methods, p) {
+	const methodSet = new Set(methods);
 	if (!p.length) {
-		return handler => bind(routes, methods, '', handler);
+		const match = undefined;
+		/** @type {Binder} */
+		return (...handlers) => bind(routes, methodSet, match, handlers);
 	}
-	const [a, b] = p;
-	if (a && typeof a === 'object') {
-		return handler => bind(routes, methods, [a, p.slice(1)], handler);
+	const [path] = p;
+	if (path && typeof path === 'object') {
+		const match = toMatch([path, p.slice(1)], true);
+		/** @type {Binder} */
+		return (...handlers) => bind(routes, methodSet, match, handlers);
 	}
-	const path = typeof a === 'string' ? a : '';
-	const handler = [a, b].find(findHandler);
-	if (!handler) {
-		return handler => bind(routes, methods, path, handler);
+	const match = toMatch(typeof path === 'string' ? path : '', true);
+	const handlers = p.filter(findHandler);
+	if (!handlers.length) {
+		/** @type {Binder} */
+		return (...handlers) => bind(routes, methodSet, match, handlers);
 	}
-	return bind(routes, methods, path, handler);
+	return bind(routes, methodSet, match, handlers);
 }
