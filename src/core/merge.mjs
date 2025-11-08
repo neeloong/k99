@@ -8,8 +8,7 @@
 async function runHandles(context, handlers) {
 	for (const handle of handlers) {
 		const result = await handle(context);
-		if (typeof result === 'boolean') { return result; }
-		if (!result) { continue; }
+		if (result === undefined) { continue; }
 		return result;
 	}
 }
