@@ -21,6 +21,9 @@ export declare namespace Service {
 }
 export type StoreService<T> = Service<T | undefined, [s?: T]>;
 export type StateService<T> = Service<T, []>;
+
+export type Params = Record<string | symbol, string | string[]>;
+
 export interface Context {
 	readonly environment?: object | null;
 	/** 当前的路由 */
@@ -42,7 +45,7 @@ export interface Context {
 	/** 请求 url (不含协议及主机名等) */
 	readonly url: URL;
 	/** 路径参数 */
-	readonly params: Readonly<{ [p: string]: string }>;
+	readonly params: Readonly<Params>;
 	/** 请求方法 */
 	readonly method: Method;
 	/** 请求头 */
@@ -131,6 +134,6 @@ export interface Handler {
 export interface FindHandler {
 	(
 		ctx: Context,
-		setParams: (v: any) => void,
+		setParams: (v: Params) => void,
 	): PromiseLike<Handler | null> | Handler | null
 }

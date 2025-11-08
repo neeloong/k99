@@ -1,4 +1,4 @@
-/** @import { Context, FindHandler, Handler, Method } from './main/types' */
+/** @import { Context, FindHandler, Handler, Method, Params } from './main/types' */
 /** @import { Onionskin } from './onionskin.mjs' */
 import packer from './packer.mjs';
 
@@ -47,8 +47,8 @@ async function execGuard(guards, ctx, setParams, params) {
  * @param {Router | Handler} route 
  * @param {string[]} path 
  * @param {Context} ctx 
- * @param {(v: any) => void} setParams 
- * @param {object} params 
+ * @param {(v: Params) => void} setParams 
+ * @param {Params} params 
  * @returns {Promise<Handler | null>}
  */
 async function find(route, path, ctx, setParams, params) {

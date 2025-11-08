@@ -1,4 +1,4 @@
-/** @import { Context, Handler, Method } from '../main/types' */
+/** @import { Context, Handler, Method, Params } from '../main/types' */
 /** @import { Finder, FindItem } from '../Router.mjs' */
 import Router from '../Router.mjs';
 import toMatch from './toMatch.mjs';
@@ -9,7 +9,7 @@ import getMethods from './getMethods.mjs';
 /**
  * @callback Match
  * @param {string[]} paths
- * @returns {[Record<string | symbol, string | string[]>, string[]] | undefined}
+ * @returns {[Params, string[]] | undefined}
  */
 
 /**

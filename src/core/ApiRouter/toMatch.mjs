@@ -1,4 +1,5 @@
 /** @import { Match } from './index.mjs' */
+/** @import { Params } from '../main/types.js' */
 /**
  * @typedef {object} Pattern
  * @property {string | symbol} name
@@ -74,7 +75,7 @@ function parse(p) {
  * @returns {[Record<string, string | string[]>, string[]] | undefined}
  */
 function exec(match, path, end) {
-	/** @type {Record<string | symbol, string | string[]>} */
+	/** @type {Params} */
 	const params = {};
 	for (let i = 0; i < match.length; i++) {
 		const m = match[i];

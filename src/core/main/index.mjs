@@ -1,4 +1,4 @@
-/** @import { Context, Cookie, CookieOption, FindHandler, Method, Options, Service } from './types' */
+/** @import { Context, Cookie, CookieOption, FindHandler, Method, Options, Params, Service } from './types' */
 
 import toBody from './toBody.mjs';
 import {
@@ -96,7 +96,7 @@ export default function main(
 		const donePromise = new Promise((a, b) => { resolve = a; reject = b; });
 		donePromise.catch(() => {});
 
-		/** @type {any} */
+		/** @type {Params} */
 		let params = {};
 		/** @type {Context} */
 		const context = {
