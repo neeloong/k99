@@ -142,11 +142,27 @@ export default function toMatch(path, end) {
 		}
 	} else {
 		for (const [paths, values] of split(...path)) {
-			if (paths.length === 2 && !paths[0] && !paths[1]) {
-				const name = values[0];
-				if (typeof name === 'symbol') {
-					list.push({ name, pattern: /^.*$/ });
-					continue;
+			if (paths.length === 2 && !paths[0]) {
+				const modifier = paths[1];
+				if (['', '?', '+', '*'].includes(modifier)) {
+					const value = values[0];
+					if (typeof value === 'symbol') {
+						list.push({
+							name: value, pattern: /^.*$/,
+							optional: modifier === '?' || modifier === '*',
+							many: modifier === '+' || modifier === '*',
+						});
+						continue;
+					} else if (value && typeof value === 'object') {
+						const {name, pattern} = value;
+						if (typeof name === 'symbol') {
+							list.push({
+								name, pattern: pattern instanceof RegExp ? pattern : /^.*$/,
+								optional: modifier === '?' || modifier === '*',
+								many: modifier === '+' || modifier === '*',
+							});
+						}
+					}
 				}
 			}
 			const last = paths.pop() || '';
