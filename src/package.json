@@ -22,7 +22,6 @@
   },
   "exports": {
     ".": "./core/index.mjs",
-    "./services": "./services/index.mjs",
-    "./node": "./node/index.mjs"
+    "./services": "./services/index.mjs"
   }
 }

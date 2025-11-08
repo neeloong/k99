@@ -44,7 +44,6 @@ await fsPromises.writeFile('build/package.json', JSON.stringify({
 			unpkg: './services.min.js',
 			jsdelivr: './services.min.js',
 		},
-		"./node": "./node/index.cjs"
 	}
 }, null, 2));
 
@@ -54,13 +53,6 @@ console.log('打包...');
 const external = [
 	...Object.keys(dependencies),
 	'k99',
-	'k99/node',
-	'node:http',
-	'node:http2',
-	'node:stream',
-	'http',
-	'http2',
-	'stream',
 ];
 const globals = {
 	'k99': 'k99',
@@ -84,16 +76,6 @@ function plugins() {
 	return plugins;
 }
 
-async function createBaseItem(id) {
-	const inputName = `src/${ id }/index`
-	const input = `${inputName}.mjs`;
-	const dtsInput = `typings/src/${ id }/index.d.mts`;
-	return [{ input, external, plugins: plugins(), output: [
-		{ banner, file: `build/${ id }/index.cjs`, format: 'cjs' },
-	]}, { input: dtsInput, external, plugins: [ dts() ], output: [
-		{ format: 'esm', banner, file: `build/${ id }/index.d.cts` },
-	] }];
-}
 async function createBrowserItem(id, name = 'k99') {
 	const inputName = `src/${ id || 'core' }/index`
 	const input = `${inputName}.mjs`;
@@ -125,9 +107,6 @@ for (const k of await createBrowserItem()) {
 	await pack(k);
 }
 for (const k of await createBrowserItem('services', 'k99Services')) {
-	await pack(k);
-}
-for (const k of await createBaseItem('node')) {
 	await pack(k);
 }
 
