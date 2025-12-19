@@ -161,6 +161,7 @@ export default function toMatch(path, end) {
 								optional: modifier === '?' || modifier === '*',
 								many: modifier === '+' || modifier === '*',
 							});
+							continue;
 						}
 					}
 				}
