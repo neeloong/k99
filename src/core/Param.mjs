@@ -6,7 +6,7 @@ export default class Param {
 	get pattern() { return this.#pattern; }
 	/**
 	 * 
-	 * @param {RegExp} pattern 
+	 * @param {RegExp?} [pattern] 
 	 */
 	constructor(pattern) {
 		this.#pattern = pattern;
