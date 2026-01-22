@@ -22,30 +22,6 @@ import packer from './packer.mjs';
 
 /**
  * 
- * @param {Router | Handler[] | Handler} route 
- * @param {string[]} path 
- * @param {Context} ctx 
- * @param {(v: Params) => void} setParams 
- * @param {Params} params 
- * @returns {Promise<Handler | Handler[] | null>}
- */
-async function find(route, path, ctx, setParams, params) {
-	if (!(route instanceof Router)) {
-		setParams(params);
-		return route;
-	}
-	if (route.disabled) { return null; }
-	if (ctx.destroyed) { return null; }
-	for await (const [r, result, p] of route.find(ctx.method, path, ctx)) {
-		if (ctx.destroyed) { return null; }
-		const res = await find(r, p, ctx, setParams, { ...params, ...result });
-		if (res) { return route.__onionskin(res); }
-	}
-	return null;
-}
-
-/**
- * 
  * @param {string} t 
  * @returns 
  */
@@ -61,6 +37,29 @@ function uriDecode(t) {
  */
 class Router {
 	disabled = false;
+	/**
+	 * 
+	 * @param {Router | Handler[] | Handler} route 
+	 * @param {string[]} path 
+	 * @param {Context} ctx 
+	 * @param {(v: Params) => void} setParams 
+	 * @param {Params} params 
+	 * @returns {Promise<Handler[] | null>}
+	 */
+	static async #find(route, path, ctx, setParams, params) {
+		if (!(route instanceof Router)) {
+			setParams(params);
+			return [route].flat();
+		}
+		if (route.disabled) { return null; }
+		if (ctx.destroyed) { return null; }
+		for await (const [r, result, p] of route.find(ctx.method, path, ctx)) {
+			if (ctx.destroyed) { return null; }
+			const res = await Router.#find(r, p, ctx, setParams, { ...params, ...result });
+			if (res) { return [route.#guards, route.#onionskin(res)].flat(); }
+		}
+		return null;
+	}
 	/**
 	 * @abstract
 	 * @param {Method} method 
@@ -79,11 +78,26 @@ class Router {
 			const list = routers.flat();
 			const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
 			for (const route of list) {
-				const res = await find(route, path, ctx, setParams, {});
+				const res = await Router.#find(route, path, ctx, setParams, {});
 				if (res) { return res; }
 			}
 			return null;
 		};
+	}
+
+
+	/** @type {Handler[]} */
+	#guards = [];
+	/**
+	 * 
+	 * @param  {...Handler | Handler[]} guards 
+	 */
+	guard(...guards) {
+		const list =this.#guards;
+		for (const guard of guards.flat()) {
+			if (typeof guard !== 'function') { continue; }
+			list.push(guard)
+		}
 	}
 
 	/**
@@ -101,8 +115,8 @@ class Router {
 	 * @param {Handler | Handler[]} h 
 	 * @returns {Handler | Handler[]}
 	 */
-	__onionskin = (h) => h;
+	#onionskin = (h) => h;
 	/** @param {Onionskin} os */
-	onionskin(os) { this.__onionskin = packer(os, this.__onionskin); }
+	onionskin(os) { this.#onionskin = packer(os, this.#onionskin); }
 }
 export default Router;
