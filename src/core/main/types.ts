@@ -130,8 +130,6 @@ export type HandlerResult =
 /** 处理函数定义 */
 export interface Handler {
 	(ctx: Context): PromiseLike<HandlerResult> | HandlerResult;
-	/** 所属组 */
-	plugin?: string;
 }
 
 export interface FindHandler {

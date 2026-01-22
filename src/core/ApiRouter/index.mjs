@@ -18,7 +18,6 @@ import getMethods from './getMethods.mjs';
  * @typedef {object} Route
  * @property {Match} [match] 路径匹配
  * @property {null} [router]
- * @property {string} [plugin] 所属插件
  * @property {Handler[]} handlers 处理函数
  * @property {Set<Method>} methods 方法列表
  */
