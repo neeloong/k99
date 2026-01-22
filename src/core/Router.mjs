@@ -19,28 +19,6 @@ import packer from './packer.mjs';
  * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
  */
 
-/**
- * 
- * @param {Set<Guard>} guards 
- * @param {Context} ctx 
- * @param {(v: any) => void} setParams 
- * @param {object} params 
- * @returns {Promise<boolean | Handler>}
- */
-async function execGuard(guards, ctx, setParams, params) {
-	if (!guards.size) { return true; }
-	setParams(params);
-	for (const guard of guards) {
-		if (ctx.destroyed) { return false; }
-		const ret = await guard(Object.create(ctx, {
-			params: { value: { ...params } },
-		}));
-		if (ret === false) { return false; }
-		// @ts-ignore
-		if (typeof ret === 'function') { return ret; }
-	}
-	return true;
-}
 
 /**
  * 
@@ -57,9 +35,6 @@ async function find(route, path, ctx, setParams, params) {
 		return route;
 	}
 	if (route.disabled) { return null; }
-	const guardResult = await execGuard(route.guards, ctx, setParams, params);
-	if (!guardResult) { return null; }
-	if (typeof guardResult === 'function') { return guardResult; }
 	if (ctx.destroyed) { return null; }
 	for await (const [r, result, p] of route.find(ctx.method, path, ctx)) {
 		if (ctx.destroyed) { return null; }
@@ -121,8 +96,6 @@ class Router {
 			'find': { configurable: true, value: find, writable: true },
 		});
 	}
-	/** @readonly @type {Set<Guard>} */
-	guards = new Set();
 	/**
 	 * 
 	 * @param {Handler} h 
