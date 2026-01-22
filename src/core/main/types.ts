@@ -135,5 +135,5 @@ export interface FindHandler {
 	(
 		ctx: Context,
 		setParams: (v: Params) => void,
-	): PromiseLike<Handler | null> | Handler | null
+	): PromiseLike<Handler | Handler[] | null> | Handler | Handler[] | null
 }

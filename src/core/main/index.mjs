@@ -1,4 +1,4 @@
-/** @import { Context, Cookie, CookieOption, FindHandler, Method, Options, Params, Service } from './types' */
+/** @import { Context, Cookie, CookieOption, FindHandler, HandlerResult, Method, Options, Params, Service } from './types' */
 
 import toBody from './toBody.mjs';
 import {
@@ -89,12 +89,12 @@ export default function main(
 		/** @type {any} */
 		let error = null;
 
-		let resolve = () => {};
+		let resolve = () => { };
 		/** @type {(error: unknown) => void} */
-		let reject = () => {};
+		let reject = () => { };
 		/** @type {Promise<void>} */
 		const donePromise = new Promise((a, b) => { resolve = a; reject = b; });
-		donePromise.catch(() => {});
+		donePromise.catch(() => { });
 
 		/** @type {Params} */
 		let params = {};
@@ -157,7 +157,7 @@ export default function main(
 			set responseType(type) { setHeader(responseHeaders, 'content-type', type); },
 			getCookie(name) { return getCookie(sentCookies, name); },
 			setCookie(name, value, { expire, domain, path, secure, httpOnly } = {}) {
-				sentCookies.push({name, value, expire, domain, path, secure, httpOnly});
+				sentCookies.push({ name, value, expire, domain, path, secure, httpOnly });
 				setCookiesHeader(responseHeaders, sentCookies);
 			},
 			/**
@@ -175,16 +175,22 @@ export default function main(
 			return Promise.race([
 				aborted,
 				Promise.resolve().then(() => getHandler(context, v => { params = v; })),
-			]).then(handler => handler ? Promise.race([aborted, handler(context)]).then(result => {
-				if (result instanceof Response) {
-					return result;
+			]).then(async handlers => {
+				const allHandlers = [handlers].flat().filter(h => typeof h === 'function');
+				if (!allHandlers.length) { return null; }
+				/** @type {HandlerResult?} */
+				let result;
+				for (const handle of allHandlers) {
+					result = await Promise.race([aborted, handle(context)]);
+					if (result !== undefined) { break; }
 				}
+				if (result instanceof Response) { return result; }
 				const headers = new Headers(context.responseHeaders);
 				const { status } = context;
 				if (!result) { return new Response(null, { status, headers }); }
 				const body = toBody(result, headers, aborted);
 				return new Response(body, { status, headers });
-			}) : null).then(response => {
+			}).then(response => {
 				destroyed = true;
 				resolve();
 				return response;
