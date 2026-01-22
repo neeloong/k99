@@ -1,6 +1,5 @@
 /** @import { Handler, Method } from '../main/types' */
 /** @import { Binder, Match, Route, RouterRoute } from './index.mjs' */
-import { runHandles } from '../merge.mjs';
 import toMatch from './toMatch.mjs';
 
 /**
@@ -13,7 +12,7 @@ import toMatch from './toMatch.mjs';
  */
 function bind(routes, methods, match, handlers) {
 	/** @type {Route} */
-	const route = { match, methods, handler: ctx => runHandles(ctx, handlers) };
+	const route = { match, methods, handlers: handlers };
 	routes.push(route);
 	let removed = false;
 	return () => {

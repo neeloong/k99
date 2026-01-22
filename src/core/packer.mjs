@@ -2,9 +2,12 @@
 /** @import { Onionskin } from './onionskin.mjs' */
 /**
  * @callback Packer
- * @param {Handler} handler
- * @returns {Handler}
+ * @param {Handler | Handler[]} handler
+ * @returns {Handler | Handler[]}
  */
+
+import { runHandles } from './merge.mjs';
+
 /** @type {Packer} */
 const noop = h => h;
 /**
@@ -16,6 +19,6 @@ const noop = h => h;
 export default function packer(onionskin, packer = noop) {
 	return h => {
 		const handler = packer(h)
-		return async (ctx) => onionskin(ctx, async () => handler(ctx));
+		return async (ctx) => onionskin(ctx, async () => runHandles(ctx, [handler].flat()));
 	};
 }

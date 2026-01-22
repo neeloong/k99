@@ -8,7 +8,7 @@ import packer from './packer.mjs';
  * @returns {PromiseLike<boolean | Handler | void> | boolean | Handler | void}
  */
 /**
- * @typedef {[Handler | Router, Record<string | symbol, any>, string[]]} FindItem
+ * @typedef {[Handler | Handler[] | Router, Record<string | symbol, any>, string[]]} FindItem
  */
 /**
  * @callback Finder
@@ -22,12 +22,12 @@ import packer from './packer.mjs';
 
 /**
  * 
- * @param {Router | Handler} route 
+ * @param {Router | Handler[] | Handler} route 
  * @param {string[]} path 
  * @param {Context} ctx 
  * @param {(v: Params) => void} setParams 
  * @param {Params} params 
- * @returns {Promise<Handler | null>}
+ * @returns {Promise<Handler | Handler[] | null>}
  */
 async function find(route, path, ctx, setParams, params) {
 	if (!(route instanceof Router)) {
@@ -98,8 +98,8 @@ class Router {
 	}
 	/**
 	 * 
-	 * @param {Handler} h 
-	 * @returns {Handler}
+	 * @param {Handler | Handler[]} h 
+	 * @returns {Handler | Handler[]}
 	 */
 	__onionskin = (h) => h;
 	/** @param {Onionskin} os */

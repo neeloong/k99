@@ -19,7 +19,7 @@ import getMethods from './getMethods.mjs';
  * @property {Match} [match] 路径匹配
  * @property {null} [router]
  * @property {string} [plugin] 所属插件
- * @property {Handler} handler 处理函数
+ * @property {Handler[]} handlers 处理函数
  * @property {Set<Method>} methods 方法列表
  */
 
@@ -106,14 +106,14 @@ export default class ApiRouter extends Router {
 			const {match} = route;
 			if (!match) {
 				if (route.router || !path.length) {
-					yield [route.router || route.handler, {}, path];
+					yield [route.router || route.handlers, {}, path];
 				}
 				continue;
 			}
 			if (!path.length) { continue; }
 			const result = match(path);
 			if (!result) { continue; }
-			yield [route.router || route.handler, ...result];
+			yield [route.router || route.handlers, ...result];
 		}
 	}
 	/**
@@ -141,25 +141,25 @@ export default class ApiRouter extends Router {
 	/**
 	 * @param {Method | Iterable<Method> | ArrayLike<Method>} methods
 	 * @param {string| Handler} [path]
-	 * @param {Handler} [handler]
+	 * @param {...Handler} handler
 	 * @returns {Binder | (() => void)}
 	 */
-	verb(methods, path, handler) {
+	verb(methods, path, ...handler) {
 		const allMethods = getMethods(methods);
 		if (!allMethods.length) { return () => {}; }
-		return verb(this.#routes, allMethods, [path, handler]);
+		return verb(this.#routes, allMethods, [path, ...handler]);
 	}
 	/**
 	 * 注册 HTTP GET/POST/PUT/DELETE 处理函数
 	 * @overload
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -185,14 +185,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP GET 处理函数
 	 * @overload
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP GET 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -216,14 +216,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP POST 处理函数
 	 * @overload
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP POST 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -247,14 +247,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP PUT 处理函数
 	 * @overload
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP PUT 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -278,14 +278,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP DELETE 处理函数
 	 * @overload
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP DELETE 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -309,14 +309,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP HEAD 处理函数
 	 * @overload
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP HEAD 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
@@ -340,14 +340,14 @@ export default class ApiRouter extends Router {
 	/**
 	 * 注册 HTTP OPTIONS 处理函数
 	 * @overload
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
 	 * 注册 HTTP OPTIONS 处理函数
 	 * @overload
 	 * @param {string} path 要注册的路径
-	 * @param {Handler} handler 要注册的处理函数
+	 * @param {...Handler} handlers 要注册的处理函数
 	 * @returns {() => void}
 	 */
 	/**
