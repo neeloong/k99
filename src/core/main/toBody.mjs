@@ -4,6 +4,7 @@
  * @returns {Uint8Array<ArrayBuffer>}
  */
 function str2utf8bin(str) {
+	// @ts-ignore
 	return new TextEncoder().encode(str);
 }
 /**

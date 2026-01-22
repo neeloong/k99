@@ -1,9 +1,9 @@
-/** @import { Context, Handler } from './main/types' */
+/** @import { Context, Handler, HandlerResult } from './main/types' */
 /**
  *
  * @param {Context} context
  * @param {Handler[]} handlers
- * @returns {Promise<string | boolean | object | undefined>}
+ * @returns {Promise<HandlerResult>}
  */
 export async function runHandles(context, handlers) {
 	for (const handle of handlers) {
