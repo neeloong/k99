@@ -107,6 +107,7 @@ export interface Options {
 	error?(error: unknown): void;
 	catch?(error: unknown): PromiseLike<Response | null> | Response | null;
 	environment?: object;
+	replacer?(this: any, key: string, value: any): any;
 }
 
 export type HandlerResult =
@@ -122,6 +123,8 @@ export type HandlerResult =
 	| ReadableStream
 	| Blob
 	| FormData
+	| number
+	| bigint
 	| boolean;
 
 /** 处理函数定义 */

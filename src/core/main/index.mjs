@@ -57,15 +57,32 @@ function getMethod(request, toMethod) {
 }
 /**
  *
+ * @param {any} k
+ * @param {any} v
+ * @returns {any}
+ */
+function defaultReplacer(k, v) {
+	if (typeof v === 'bigint') {
+		return String(v);
+	}
+	return v;
+}
+/**
+ *
  * @param {Request} request
  * @param {FindHandler} getHandler
  * @param {Options} [options]
  * @returns {Promise<Response | null>}
  */
-export default function main(
-	request, getHandler,
-	{ runner, error: echoError, catch: catchError, method: toMethod, environment } = {},
-) {
+export default function main(request, getHandler, {
+	runner,
+	error: echoError,
+	catch: catchError,
+	method: toMethod,
+	environment,
+	replacer: JSONReplacer,
+} = {}) {
+	const replacer = typeof JSONReplacer === 'function' ? JSONReplacer : defaultReplacer;
 	/**
 	 *
 	 * @param {Request} request
@@ -112,7 +129,7 @@ export default function main(
 				if (!data || noBodyMethods.has(method.toUpperCase())) {
 					return exec(new Request(fetchUrl, { method, headers, signal }), context);
 				}
-				const body = toBody(data, headers);
+				const body = toBody(data, headers, replacer);
 				return exec(new Request(fetchUrl, { method, headers, signal, body }), context);
 			},
 			done(onfulfilled, onrejected) {
@@ -188,7 +205,7 @@ export default function main(
 				const headers = new Headers(context.responseHeaders);
 				const { status } = context;
 				if (!result) { return new Response(null, { status, headers }); }
-				const body = toBody(result, headers, aborted);
+				const body = toBody(result, headers, replacer, aborted);
 				return new Response(body, { status, headers });
 			}).then(response => {
 				destroyed = true;

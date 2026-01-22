@@ -1,7 +1,7 @@
 /**
  *
  * @param {string} str
- * @returns {Uint8Array}
+ * @returns {Uint8Array<ArrayBuffer>}
  */
 function str2utf8bin(str) {
 	return new TextEncoder().encode(str);
@@ -42,26 +42,15 @@ async function write(writer, chunk) {
 	}
 }
 
-/**
- *
- * @param {any} k
- * @param {any} v
- * @returns {any}
- */
-function replacer(k, v) {
-	if (typeof v === 'bigint') {
-		return String(v);
-	}
-	return v;
-}
 
 /**
  *
  * @param {any} result
+ * @param {(this: any, key: string, value: any) => any} replacer
  * @param {Promise<never>} [aborted]
  * @returns {[BodyInit, number, string] | null}
  */
-function toBodyData(result, aborted) {
+function toBodyData(result, replacer, aborted) {
 	if (result instanceof ReadableStream) {
 		return [result, 0, ''];
 	}
@@ -75,11 +64,16 @@ function toBodyData(result, aborted) {
 		return [result, 0, ''];
 	}
 	if (ArrayBuffer.isView(result) || result instanceof ArrayBuffer) {
+		// @ts-ignore
 		return [result, result.byteLength, ''];
 	}
 	if (typeof result === 'string') {
 		const body = str2utf8bin(result);
-		return [body, body.byteLength, ''];
+		return [body, body.byteLength, 'text/plain'];
+	}
+	if (['bigint', 'boolean', 'number'].includes(typeof result)) {
+		const body = str2utf8bin(JSON.stringify(result, replacer));
+		return [body, body.byteLength, 'application/json'];
 	}
 	if (typeof result !== 'object') {
 		return null;
@@ -106,11 +100,12 @@ function toBodyData(result, aborted) {
  *
  * @param {any} result
  * @param {Headers} headers
+ * @param {(this: any, key: string, value: any) => any} replacer
  * @param {Promise<never>} [aborted]
  * @returns
  */
-export default function toBody(result, headers, aborted) {
-	const bodyData = toBodyData(result, aborted);
+export default function toBody(result, headers, replacer, aborted) {
+	const bodyData = toBodyData(result, replacer, aborted);
 	if (!bodyData) { return null; }
 	const [body, size, type] = bodyData;
 	if (type && !headers.get('Content-Type')) {
