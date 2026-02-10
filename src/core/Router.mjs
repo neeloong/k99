@@ -15,7 +15,6 @@ import packer from './packer.mjs';
  * @this {Router}
  * @param {Method} method
  * @param {string[]} path
- * @param {Context} ctx 
  * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
  */
 
@@ -40,23 +39,40 @@ class Router {
 	/**
 	 * 
 	 * @param {Router | Handler[] | Handler} route 
+	 * @param {Method} method 
 	 * @param {string[]} path 
-	 * @param {Context} ctx 
-	 * @param {(v: Params) => void} setParams 
+	 * @param {(() => boolean) | void | null} destroyed 
+	 * @param {((v: Params) => void) | void | null} setParams 
 	 * @param {Params} params 
 	 * @returns {Promise<Handler[] | null>}
 	 */
-	static async #find(route, path, ctx, setParams, params) {
+	static async #find(route, method, path, destroyed, setParams, params) {
 		if (!(route instanceof Router)) {
-			setParams(params);
+			if (typeof setParams === 'function') { setParams(params); }
 			return [route].flat();
 		}
 		if (route.disabled) { return null; }
-		if (ctx.destroyed) { return null; }
-		for await (const [r, result, p] of route.find(ctx.method, path, ctx)) {
-			if (ctx.destroyed) { return null; }
-			const res = await Router.#find(r, p, ctx, setParams, { ...params, ...result });
+		if (destroyed?.()) { return null; }
+		for await (const [r, result, p] of route.find(method, path)) {
+			if (destroyed?.()) { return null; }
+			const res = await Router.#find(r, method, p, destroyed, setParams, { ...params, ...result });
 			if (res) { return [route.#guards, route.#onionskin(res)].flat(); }
+		}
+		return null;
+	}
+	/**
+	 * 
+	 * @param {Router[]} routers 
+	 * @param {Method} method 
+	 * @param {string[]} path 
+	 * @param {(() => boolean) | void | null} [destroyed] 
+	 * @param {((v: Params) => void) | void | null} [setParams] 
+	 * @returns {Promise<Handler[] | null>}
+	 */
+	static async find(routers, method, path, destroyed, setParams) {
+		for (const route of routers.flat()) {
+			const res = await Router.#find(route, method, path, destroyed, setParams, {});
+			if (res) { return res; }
 		}
 		return null;
 	}
@@ -64,10 +80,9 @@ class Router {
 	 * @abstract
 	 * @param {Method} method 
 	 * @param {string[]} path 
-	 * @param {Context} ctx 
 	 * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
 	 */
-	find(method, path, ctx) { return []; }
+	find(method, path) { return []; }
 	/**
 	 * 
 	 * @param {Router[]} routers 
@@ -75,13 +90,8 @@ class Router {
 	 */
 	static make(routers) {
 		return async (ctx, setParams) => {
-			const list = routers.flat();
-			const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
-			for (const route of list) {
-				const res = await Router.#find(route, path, ctx, setParams, {});
-				if (res) { return res; }
-			}
-			return null;
+		const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
+			return Router.find(routers, ctx.method, path, () => ctx.destroyed, setParams);
 		};
 	}
 

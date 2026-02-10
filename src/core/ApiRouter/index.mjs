@@ -96,10 +96,9 @@ export default class ApiRouter extends Router {
 	 *
 	 * @param {Method} method
 	 * @param {string[]} path
-	 * @param {Context} ctx
 	 * @returns {Iterable<FindItem>}
 	 */
-	*find(method, path, ctx) {
+	*find(method, path) {
 		for (const route of Array.from(this.#routes)) {
 			if (!route.router && !route.methods.has(method)) { continue; }
 			const {match} = route;
