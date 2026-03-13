@@ -1,6 +1,4 @@
 /** @import { Context, FindHandler, Handler, Method, Params } from './main/types' */
-/** @import { Onionskin } from './onionskin.mjs' */
-import packer from './packer.mjs';
 
 /**
  * @callback Guard
@@ -56,7 +54,7 @@ class Router {
 		for await (const [r, result, p] of route.find(method, path)) {
 			if (destroyed?.()) { return null; }
 			const res = await Router.#find(r, method, p, destroyed, setParams, { ...params, ...result });
-			if (res) { return [route.#guards, route.#onionskin(res)].flat(); }
+			if (res) { return [...route.#guards, ...res]; }
 		}
 		return null;
 	}
@@ -120,13 +118,5 @@ class Router {
 			'find': { configurable: true, value: find, writable: true },
 		});
 	}
-	/**
-	 * 
-	 * @param {Handler | Handler[]} h 
-	 * @returns {Handler | Handler[]}
-	 */
-	#onionskin = (h) => h;
-	/** @param {Onionskin} os */
-	onionskin(os) { this.#onionskin = packer(os, this.#onionskin); }
 }
 export default Router;
