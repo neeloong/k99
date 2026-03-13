@@ -1,4 +1,4 @@
-/** @import { FindHandler, Handler, Method, Params } from './main/types' */
+/** @import { Method, Params } from './main/types' */
 
 /**
  * @template {Function} T
@@ -13,19 +13,6 @@
  * @returns {AsyncIterable<FindItem<T>> | Iterable<FindItem<T>>}
  */
 
-
-/**
- * 
- * @param {string} t 
- * @returns 
- */
-function uriDecode(t) {
-	try {
-		return decodeURIComponent(t);
-	} catch {
-		return t;
-	}
-}
 /**
  * @abstract
  * @template {Function} T
@@ -82,17 +69,6 @@ class Router {
 	 * @returns {AsyncIterable<FindItem<T>> | Iterable<FindItem<T>>}
 	 */
 	find(method, path) { return []; }
-	/**
-	 * 
-	 * @param {Router<Handler>[]} routers 
-	 * @returns {FindHandler}
-	 */
-	static make(routers) {
-		return async (ctx, setParams) => {
-			const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
-			return Router.find(routers, ctx.method, path, () => ctx.destroyed, setParams);
-		};
-	}
 
 
 	/** @type {T[]} */

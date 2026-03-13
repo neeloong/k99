@@ -9,6 +9,7 @@ export type * from './ApiRouter/index.mjs';
 
 export { default as main } from './main/index.mjs';
 export { default as make } from './make.mjs';
+export { default as bind } from './bind.mjs';
 export { default as merge } from './merge.mjs';
 export { default as service } from './service.mjs';
 export { default as stateService } from './stateService.mjs';
