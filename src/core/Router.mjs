@@ -1,19 +1,16 @@
-/** @import { Context, FindHandler, Handler, Method, Params } from './main/types' */
+/** @import { FindHandler, Handler, Method, Params } from './main/types' */
 
 /**
- * @callback Guard
- * @param {Context} ctx
- * @returns {PromiseLike<boolean | Handler | void> | boolean | Handler | void}
+ * @template {Function} T
+ * @typedef {[T | T[] | Router<T>, Record<string | symbol, any>, string[]]} FindItem
  */
 /**
- * @typedef {[Handler | Handler[] | Router, Record<string | symbol, any>, string[]]} FindItem
- */
-/**
+ * @template {Function} T
  * @callback Finder
- * @this {Router}
+ * @this {Router<T>}
  * @param {Method} method
  * @param {string[]} path
- * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
+ * @returns {AsyncIterable<FindItem<T>> | Iterable<FindItem<T>>}
  */
 
 
@@ -31,22 +28,25 @@ function uriDecode(t) {
 }
 /**
  * @abstract
+ * @template {Function} T
  */
 class Router {
 	disabled = false;
 	/**
 	 * 
-	 * @param {Router | Handler[] | Handler} route 
+	 * @template {Function} T
+	 * @param {Router<T> | T[] | T} route 
 	 * @param {Method} method 
 	 * @param {string[]} path 
 	 * @param {(() => boolean) | void | null} destroyed 
 	 * @param {((v: Params) => void) | void | null} setParams 
 	 * @param {Params} params 
-	 * @returns {Promise<Handler[] | null>}
+	 * @returns {Promise<T[] | null>}
 	 */
 	static async #find(route, method, path, destroyed, setParams, params) {
 		if (!(route instanceof Router)) {
 			if (typeof setParams === 'function') { setParams(params); }
+			// @ts-ignore
 			return [route].flat();
 		}
 		if (route.disabled) { return null; }
@@ -60,12 +60,13 @@ class Router {
 	}
 	/**
 	 * 
-	 * @param {Router[]} routers 
+	 * @template {Function} T
+	 * @param {Router<T>[]} routers 
 	 * @param {Method} method 
 	 * @param {string[]} path 
 	 * @param {(() => boolean) | void | null} [destroyed] 
 	 * @param {((v: Params) => void) | void | null} [setParams] 
-	 * @returns {Promise<Handler[] | null>}
+	 * @returns {Promise<T[] | null>}
 	 */
 	static async find(routers, method, path, destroyed, setParams) {
 		for (const route of routers.flat()) {
@@ -78,40 +79,42 @@ class Router {
 	 * @abstract
 	 * @param {Method} method 
 	 * @param {string[]} path 
-	 * @returns {AsyncIterable<FindItem> | Iterable<FindItem>}
+	 * @returns {AsyncIterable<FindItem<T>> | Iterable<FindItem<T>>}
 	 */
 	find(method, path) { return []; }
 	/**
 	 * 
-	 * @param {Router[]} routers 
+	 * @param {Router<Handler>[]} routers 
 	 * @returns {FindHandler}
 	 */
 	static make(routers) {
 		return async (ctx, setParams) => {
-		const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
+			const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
 			return Router.find(routers, ctx.method, path, () => ctx.destroyed, setParams);
 		};
 	}
 
 
-	/** @type {Handler[]} */
+	/** @type {T[]} */
 	#guards = [];
 	/**
 	 * 
-	 * @param  {...Handler | Handler[]} guards 
+	 * @param  {...T | T[]} guards 
 	 */
 	guard(...guards) {
-		const list =this.#guards;
+		const list = this.#guards;
 		for (const guard of guards.flat()) {
 			if (typeof guard !== 'function') { continue; }
-			list.push(guard)
+			// @ts-ignore
+			list.push(guard);
 		}
 	}
 
 	/**
 	 * 
-	 * @param {Finder} find 
-	 * @returns {Router}
+	 * @template {Function} T
+	 * @param {Finder<T>} find 
+	 * @returns {Router<T>}
 	 */
 	static create(find) {
 		return Object.defineProperties(new Router(), {
