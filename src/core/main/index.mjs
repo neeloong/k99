@@ -204,7 +204,7 @@ export default function main(request, getHandler, {
 				if (result instanceof Response) { return result; }
 				const headers = new Headers(context.responseHeaders);
 				const { status } = context;
-				if (!result) { return new Response(null, { status, headers }); }
+				if (!result == null) { return new Response(null, { status, headers }); }
 				const body = toBody(result, headers, replacer, aborted);
 				return new Response(body, { status, headers });
 			}).then(response => {
