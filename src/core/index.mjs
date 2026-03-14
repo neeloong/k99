@@ -4,7 +4,7 @@ export { default as bind } from './bind.mjs';
 export { default as service } from './service.mjs';
 export { default as stateService } from './stateService.mjs';
 export { default as storeService } from './storeService.mjs';
-export { default as ApiRouter } from './ApiRouter/index.mjs';
+export { default as MapRouter } from './MapRouter/index.mjs';
 export { default as Router } from './Router.mjs';
 export { default as createFetch } from './createFetch.mjs';
 export { default as Param } from './Param.mjs';

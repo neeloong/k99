@@ -70,7 +70,7 @@ import getMethods from './getMethods.mjs';
 
 /**
  * @template {Function} T
- * @template {Router<T> | Finder<T>} [P=ApiRouter<T>]
+ * @template {Router<T> | Finder<T>} [P=MapRouter<T>]
  * @callback RouteBinder
  * @param {P} [router] 要注册的子路由或子路由的 Finder<T>
  * @returns {P extends Finder<T> ? Router<T> : P}
@@ -87,7 +87,7 @@ function bindRouter(routes, path, r) {
 	/** @type {Router<T>} */
 	const router = r instanceof Router ? r
 		: typeof r === 'function' ? Router.create(r)
-			: new ApiRouter();
+			: new MapRouter();
 	routes.push({ match: toMatch(path, false), router });
 	return router;
 }
@@ -96,19 +96,19 @@ function bindRouter(routes, path, r) {
  * @template {Function} T
  * @extends {Router<T>}
  */
-export default class ApiRouter extends Router {
+export default class MapRouter extends Router {
 	/** @readonly @type {(Route<T> | RouterRoute<T>)[]} 路由列表 */
 	#routes = [];
 	/**
 	 * 添加子路由
-	 * @template {Router<T> | Finder<T>} [P=ApiRouter<T>]
+	 * @template {Router<T> | Finder<T>} [P=MapRouter<T>]
 	 * @overload
 	 * @param {P} [router] 要注册的子路由或子路由的 Finder<T>
 	 * @returns {P extends Finder<T> ? Router<T> : P}
 	 */
 	/**
 	 * 添加子路由
-	 * @template {Router<T> | Finder<T>} [P=ApiRouter<T>]
+	 * @template {Router<T> | Finder<T>} [P=MapRouter<T>]
 	 * @overload
 	 * @param {string} path   要注册的路径
 	 * @param {P} [router] 要注册的子路由或子路由的 Finder<T>
