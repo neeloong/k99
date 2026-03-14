@@ -1,4 +1,4 @@
-/** @import { Context, Handler, Method, Params } from '../main/types' */
+/** @import { Handler, Method, Params } from '../main/types' */
 /** @import { Finder, FindItem } from '../Router.mjs' */
 import Router from '../Router.mjs';
 import toMatch from './toMatch.mjs';
@@ -15,6 +15,40 @@ import getMethods from './getMethods.mjs';
 /**
  * @template {Function} T
  * @typedef {(handler: T, ...handlers: T[]) => () => void} Binder
+ */
+
+
+/**
+ * @template {Function} T
+ * @callback Verb1
+ * @param {T} handler 要注册的处理函数
+ * @param {...T} handlers 要注册的处理函数
+ * @returns {() => void}
+ */
+/**
+ * @template {Function} T
+ * @callback Verb2
+ * @param {string} path 要注册的路径
+ * @param {T} handler 要注册的处理函数
+ * @param {...T} handlers 要注册的处理函数
+ * @returns {() => void}
+ */
+/**
+ * @template {Function} T
+ * @callback Verb3
+ * @param {string} path 要注册的路径
+ * @returns {Binder<T>}
+ */
+/**
+ * @template {Function} T
+ * @callback Verb4
+ * @param {TemplateStringsArray} template 要注册的路径模板
+ * @param {...any} substitutions 要注册的路径模板代替内容
+ * @returns {Binder<T>}
+ */
+/**
+ * @template {Function} T
+ * @typedef {Verb1<T> & Verb2<T> & Verb3<T> & Verb4<T>} Verb
  */
 
 /**
@@ -159,6 +193,16 @@ export default class ApiRouter extends Router {
 		const allMethods = getMethods(methods);
 		if (!allMethods.length) { return () => {}; }
 		return verb(this.#routes, allMethods, [path, ...handler]);
+	}
+
+	/**
+	 * @param {Method | Iterable<Method> | ArrayLike<Method>} method  要注册的方法
+	 * @returns {Verb<T>}
+	 */
+	method(method) {
+		const methods = getMethods(method);
+		// @ts-ignore
+		return (...p) => verb(this.#routes, methods, p);
 	}
 	/**
 	 * 注册 HTTP GET/POST/PUT/DELETE 处理函数

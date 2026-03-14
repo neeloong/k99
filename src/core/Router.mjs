@@ -56,8 +56,9 @@ class Router {
 	 * @returns {Promise<T[] | null>}
 	 */
 	static async find(routers, method, path, signal, setParams) {
+		const m = `${method}`.toLowerCase();
 		for (const route of routers.flat()) {
-			const res = await Router.#find(route, method, path, {}, signal, setParams);
+			const res = await Router.#find(route, m, path, {}, signal, setParams);
 			if (res) { return res; }
 		}
 		return null;

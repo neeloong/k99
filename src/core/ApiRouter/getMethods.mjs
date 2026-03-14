@@ -1,11 +1,10 @@
 /** @import { Method } from '../main/types' */
-const methods = new Set(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS']);
 /**
  *
  * @param {any} v
  * @returns {v is Method}
  */
-function isMethod(v) { return methods.has(v); }
+function isMethod(v) { return Boolean(v); }
 /**
  *
  * @param {Method | Iterable<Method> | ArrayLike<Method>} [methods]

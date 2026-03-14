@@ -1,4 +1,4 @@
-export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
+export type Method = string | 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
 export interface CookieOption {
 	domain?: string;
