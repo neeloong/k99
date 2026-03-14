@@ -25,22 +25,22 @@ class Router {
 	 * @param {Router<T> | T[] | T} route 
 	 * @param {Method} method 
 	 * @param {string[]} path 
-	 * @param {(() => boolean) | void | null} destroyed 
-	 * @param {((v: Params) => void) | void | null} setParams 
 	 * @param {Params} params 
+	 * @param {AbortSignal?} [signal] 
+	 * @param {((v: Params) => void)?} [setParams] 
 	 * @returns {Promise<T[] | null>}
 	 */
-	static async #find(route, method, path, destroyed, setParams, params) {
+	static async #find(route, method, path, params, signal, setParams) {
 		if (!(route instanceof Router)) {
 			if (typeof setParams === 'function') { setParams(params); }
 			// @ts-ignore
 			return [route].flat();
 		}
 		if (route.disabled) { return null; }
-		if (destroyed?.()) { return null; }
+		if (signal?.aborted) { return null; }
 		for await (const [r, result, p] of route.find(method, path)) {
-			if (destroyed?.()) { return null; }
-			const res = await Router.#find(r, method, p, destroyed, setParams, { ...params, ...result });
+			if (signal?.aborted) { return null; }
+			const res = await Router.#find(r, method, p, { ...params, ...result }, signal, setParams);
 			if (res) { return [...route.#guards, ...res]; }
 		}
 		return null;
@@ -51,13 +51,13 @@ class Router {
 	 * @param {Router<T>[]} routers 
 	 * @param {Method} method 
 	 * @param {string[]} path 
-	 * @param {(() => boolean) | void | null} [destroyed] 
-	 * @param {((v: Params) => void) | void | null} [setParams] 
+	 * @param {AbortSignal?} [signal] 
+	 * @param {((v: Params) => void)?} [setParams] 
 	 * @returns {Promise<T[] | null>}
 	 */
-	static async find(routers, method, path, destroyed, setParams) {
+	static async find(routers, method, path, signal, setParams) {
 		for (const route of routers.flat()) {
-			const res = await Router.#find(route, method, path, destroyed, setParams, {});
+			const res = await Router.#find(route, method, path, {}, signal, setParams);
 			if (res) { return res; }
 		}
 		return null;

@@ -28,7 +28,7 @@ export default function make(routers, options) {
 	/** @type {FindHandler} */
 	const getHandler = (ctx, setParams) => {
 		const path = ctx.url.pathname.split('/').filter(Boolean).map(uriDecode);
-		return Router.find(list, ctx.method, path, () => ctx.destroyed, setParams);
+		return Router.find(list, ctx.method, path, ctx.signal, setParams);
 	};
 	return r => main(r, getHandler, options);
 }
