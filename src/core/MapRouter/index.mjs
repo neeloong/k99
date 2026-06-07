@@ -423,4 +423,35 @@ export default class MapRouter extends Router {
 	 * @returns {Binder<T> | (() => void)}
 	 */
 	options(...p) { return verb(this.#routes, ['OPTIONS'], p); }
+	/**
+	 * 注册 WebSocket 处理函数
+	 * @overload
+	 * @param {...Handler} handlers 要注册的处理函数
+	 * @returns {() => void}
+	 */
+	/**
+	 * 注册 WebSocket 处理函数
+	 * @overload
+	 * @param {string} path 要注册的路径
+	 * @param {...Handler} handlers 要注册的处理函数
+	 * @returns {() => void}
+	 */
+	/**
+	 * 注册 WebSocket 处理函数
+	 * @overload
+	 * @param {string} path 要注册的路径
+	 * @returns {Binder<T>}
+	 */
+	/**
+	 * 注册 WebSocket 处理函数
+	 * @overload
+	 * @param {TemplateStringsArray} template 要注册的路径模板
+	 * @param {...any} substitutions 要注册的路径模板代替内容
+	 * @returns {Binder<T>}
+	 */
+	/**
+	 * @param {...any} p 要注册的路径
+	 * @returns {Binder<T> | (() => void)}
+	 */
+	ws(...p) { return verb(this.#routes, ['WS'], p); }
 }
