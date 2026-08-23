@@ -2,7 +2,7 @@
   "name": "k99",
   "private": true,
   "description": "前后端均可用的 web 服务器",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "dependencies": {},
   "keywords": [
     "k99",
