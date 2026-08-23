@@ -18,7 +18,7 @@ function uriDecode(t) {
  *
  * @param {Router<Handler> | Router<Handler>[] | FindHandler} routers
  * @param {Options} options
- * @returns {(request: Request) => Promise<Response | null>}
+ * @returns {(request: Request & {remoteAddress?: string}) => Promise<Response | null>}
  */
 export default function make(routers, options) {
 	if (typeof routers === 'function') {

@@ -69,7 +69,7 @@ function defaultReplacer(k, v) {
 }
 /**
  *
- * @param {Request} request
+ * @param {Request & {remoteAddress?: string}} request
  * @param {FindHandler} getHandler
  * @param {Options} [options]
  * @returns {Promise<Response | null>}
@@ -85,7 +85,7 @@ export default function main(request, getHandler, {
 	const replacer = typeof JSONReplacer === 'function' ? JSONReplacer : defaultReplacer;
 	/**
 	 *
-	 * @param {Request} request
+	 * @param {Request & {remoteAddress?: string}} request
 	 * @param {Context} [parent]
 	 * @returns {Promise<Response | null>}
 	 */
@@ -117,6 +117,7 @@ export default function main(request, getHandler, {
 		let params = {};
 		/** @type {Context} */
 		const context = {
+			remoteAddress: request.remoteAddress || null,
 			environment,
 			parent,
 			get error() { return error; },

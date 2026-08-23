@@ -5,7 +5,7 @@ import main from './main/index.mjs';
  *
  * @param {FindHandler} getHandler
  * @param {Options} options
- * @returns {(request: Request) => Promise<Response | null>}
+ * @returns {(request: Request & {remoteAddress?: string}) => Promise<Response | null>}
  */
 export default function bind(getHandler, options) {
 	return r => main(r, getHandler, options);

@@ -25,6 +25,7 @@ export type StateService<T> = Service<T, []>;
 export type Params = Record<string | symbol, string | string[]>;
 
 export interface Context {
+	readonly remoteAddress?: string | null;
 	readonly environment?: object | null;
 	/** 当前的路由 */
 	readonly parent?: Context;
