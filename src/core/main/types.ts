@@ -3,9 +3,11 @@ export type Method = string | 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTI
 export interface CookieOption {
 	domain?: string;
 	path?: string;
+	sameSite?: 'Strict' | 'Lax' | 'None';
 	secure?: boolean;
 	httpOnly?: boolean;
 	expire?: string;
+	partitioned?: boolean;
 }
 
 export type Cookie = CookieOption & { name: string; value: string; };

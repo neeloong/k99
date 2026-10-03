@@ -14,6 +14,19 @@ export function *getCookie(sentCookies, name) {
 }
 
 /**
+ * 
+ * @param {string | null} [sameSite] 
+ */
+function getSameSiteValue(sameSite) {
+	if (!sameSite || typeof sameSite !== 'string') { return ''; }
+	switch(sameSite.replace(/[\s\n]+/g, '').toLowerCase()) {
+		case 'strict': return 'Strict';
+		case 'lax': return 'Lax';
+		case 'none': return 'None';
+	}
+	return '';
+}
+/**
  *
  * @param {Headers} headers
  * @param {Cookie[]} cookies
@@ -21,15 +34,18 @@ export function *getCookie(sentCookies, name) {
  */
 export function setCookiesHeader(headers, cookies) {
 	headers.delete('set-cookie');
-	for (const { name, value, expire, domain, path, secure, httpOnly } of cookies) {
+	for (const { name, value, expire, domain, path, sameSite, secure, httpOnly, partitioned } of cookies) {
 		if (!name) { continue; }
+		const sameSiteValue = getSameSiteValue(sameSite);
 		headers.append('set-cookie', [
 			`${ encodeURI(name) }=${ encodeURI(value || '') }`,
 			expire && `Expires=${ expire }`,
 			domain && `Domain=${ encodeURI(domain) }`,
 			path && `Path=${ encodeURI(path) }`,
+			sameSiteValue && `SameSite=${sameSiteValue}`,
 			secure && 'Secure',
 			httpOnly && 'HttpOnly',
+			partitioned && 'Partitioned',
 		].filter(Boolean).join('; '));
 	}
 }
@@ -66,15 +82,15 @@ export function clearCookie(
 	if (typeof name === 'string') {
 		if (!name) { return; }
 		/** @type {CookieOption} */
-		const { domain, path, secure, httpOnly } = opt !== true && opt || {};
-		sentCookies.push({ name, value: 'delete', expire, domain, path, secure, httpOnly });
+		const { domain, path, sameSite, secure, httpOnly, partitioned } = opt !== true && opt || {};
+		sentCookies.push({ name, value: 'delete', expire, domain, path, sameSite, secure, httpOnly, partitioned });
 	} else {
 		/** @type {CookieOption} */
-		const { domain, path, secure, httpOnly } = name || {};
+		const { domain, path, sameSite, secure, httpOnly, partitioned } = name || {};
 		sentCookies.length = 0;
 		if (opt) {
 			for (let name in cookies) {
-				sentCookies.push({ name, value: 'delete', expire, domain, path, secure, httpOnly });
+				sentCookies.push({ name, value: 'delete', expire, domain, path, sameSite, secure, httpOnly, partitioned });
 			}
 		}
 	}
